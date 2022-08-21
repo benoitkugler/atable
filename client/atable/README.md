@@ -1,3 +1,3 @@
 # atable
 
-The flutter client project for the **A table !** application.
+L'application Flutter pour le client du projet **A table !**.

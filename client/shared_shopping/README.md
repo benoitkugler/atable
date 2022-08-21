@@ -1,3 +1,3 @@
 # Shared shopping
 
-Guest client web page to concurrently edit a shopping list.
+Page web "invitée" pour l'édition d'une liste de courses.
