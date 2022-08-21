@@ -1,11 +1,17 @@
+import 'dart:math';
+
+import 'package:atable/logic/models.dart';
+import 'package:atable/logic/sql.dart';
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  final db = await DBApi.open();
+  runApp(MyApp(db));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  final DBApi db;
+  const MyApp(this.db, {Key? key}) : super(key: key);
 
   // This widget is the root of your application.
   @override
@@ -24,13 +30,18 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      // home: const ExampleHomePage(title: 'Flutter Demo Home Page'),
+      home: Scaffold(
+          appBar: AppBar(
+            title: const Text("Ingrédients"),
+          ),
+          body: IngredientList(db)),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
+class ExampleHomePage extends StatefulWidget {
+  const ExampleHomePage({Key? key, required this.title}) : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -44,10 +55,10 @@ class MyHomePage extends StatefulWidget {
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<ExampleHomePage> createState() => _ExampleHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _ExampleHomePageState extends State<ExampleHomePage> {
   int _counter = 0;
 
   void _incrementCounter() {
@@ -110,6 +121,78 @@ class _MyHomePageState extends State<MyHomePage> {
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+}
+
+class IngredientList extends StatefulWidget {
+  final DBApi db;
+
+  const IngredientList(this.db, {Key? key}) : super(key: key);
+
+  @override
+  State<IngredientList> createState() => _IngredientListState();
+}
+
+class _IngredientListState extends State<IngredientList> {
+  List<Ingredient> ingredients = [];
+
+  fetchIngredients() async {
+    final l = await widget.db.getIngredients();
+    setState(() {
+      ingredients = l;
+    });
+  }
+
+  addIngredient() async {
+    var ing = Ingredient(
+      id: 0,
+      nom: "Nouvel Ingredient ${Random().nextInt(1000)}",
+      unite: Unite.values[Random().nextInt(Unite.values.length)],
+      categorie: CategorieIngredient
+          .values[Random().nextInt(CategorieIngredient.values.length)],
+    );
+    ing = await widget.db.insertIngredient(ing);
+    setState(() {
+      ingredients.add(ing);
+    });
+  }
+
+  deleteIngredient(Ingredient ing) async {
+    await widget.db.deleteIngredient(ing.id);
+    await fetchIngredients();
+  }
+
+  @override
+  void initState() {
+    fetchIngredients();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        ElevatedButton(onPressed: addIngredient, child: const Text("Ajouter")),
+        Expanded(
+          child: ListView(
+              children: ingredients
+                  .map((ing) => ListTile(
+                        leading: Text(
+                            ing.categorie == CategorieIngredient.inconnue
+                                ? ""
+                                : ing.categorie.name),
+                        title: Text(ing.nom),
+                        subtitle: Text(ing.unite.name),
+                        trailing: IconButton(
+                            onPressed: () => deleteIngredient(ing),
+                            icon: const Icon(
+                                IconData(0xe1b9, fontFamily: 'MaterialIcons'),
+                                color: Colors.red)),
+                      ))
+                  .toList()),
+        ),
+      ],
     );
   }
 }

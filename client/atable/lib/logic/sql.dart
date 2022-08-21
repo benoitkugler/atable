@@ -1,4 +1,5 @@
 import 'package:atable/logic/models.dart';
+import 'package:flutter/widgets.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -39,6 +40,8 @@ class DBApi {
   /// [open] se connecte à la base de données ou en créée une
   /// si besoin.
   static Future<DBApi> open({String? dbPath}) async {
+    WidgetsFlutterBinding.ensureInitialized(); // required
+
     if (dbPath == null) {
       const dbName = "atable_database.db";
       dbPath = join(await getDatabasesPath(), dbName);
