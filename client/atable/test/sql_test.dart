@@ -50,6 +50,7 @@ Future main() async {
     final got3 = await db.getIngredients();
     expect(got3.length, 2);
 
+    // TODO: ajouter des tests pour [deleteMenu], [insertMenuIngredient], [deleteMenuIngredient]
     await db.db.close();
   });
 }
