@@ -135,3 +135,18 @@ enum CategorieIngredient {
 /// CategoriePlat permet de regrouper les ingrédients
 /// d'un menu en sous plats
 enum CategoriePlat { entree, platPrincipal, dessert, divers }
+
+/// [MenuIngredientExt] regroupe un [Ingredient] et un [MenuIngredient].
+class MenuIngredientExt {
+  final Ingredient ingredient;
+  final double quantite;
+  final CategoriePlat categorie;
+  const MenuIngredientExt(this.ingredient, this.quantite, this.categorie);
+}
+
+/// [MenuExt] est un [Menu] associé à tous ses ingrédients.
+class MenuExt {
+  final Menu menu;
+  final List<MenuIngredientExt> ingredients;
+  const MenuExt(this.menu, this.ingredients);
+}
