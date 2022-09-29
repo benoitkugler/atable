@@ -1,3 +1,5 @@
+import 'package:atable/logic/utils.dart';
+
 /// Ingredient est l'objet fondamental composant
 /// un menu.
 class Ingredient {
@@ -76,6 +78,18 @@ class Menu {
       nbPersonnes: map["nbPersonnes"],
     );
   }
+
+  /// [formatJour] renvoie le jour du menu, formaté.
+  String formatJour() => formatDate(date);
+
+  /// [formatHeure] renvoie l'horaire du menu, formaté.
+  String formatHeure() {
+    final moment = MomentRepasE.fromDateTime(date);
+    if (moment != null) {
+      return moment.label;
+    }
+    return "${date.hour}h${date.minute}";
+  }
 }
 
 class MenuIngredient {
@@ -139,8 +153,12 @@ enum CategoriePlat { entree, platPrincipal, dessert, divers }
 /// [MenuIngredientExt] regroupe un [Ingredient] et un [MenuIngredient].
 class MenuIngredientExt {
   final Ingredient ingredient;
+
+  /// [quantite] est la quantité requise pour 1 personne,
+  /// exprimée dans l'unité de l'ingrédient
   final double quantite;
   final CategoriePlat categorie;
+
   const MenuIngredientExt(this.ingredient, this.quantite, this.categorie);
 }
 

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:atable/logic/models.dart';
 import 'package:flutter/widgets.dart';
 import 'package:path/path.dart';
@@ -12,13 +14,13 @@ const _createSQLStatement = """
     categorie INTEGER NOT NULL,
     UNIQUE(nom, categorie)
   );
-
+ 
   CREATE TABLE menus(
     id INTEGER PRIMARY KEY, 
     date TEXT NOT NULL,
     nbPersonnes INTEGER NOT NULL
   );
-
+ 
   CREATE TABLE menu_ingredients(
     idMenu INTEGER NOT NULL,
     idIngredient INTEGER NOT NULL,
@@ -26,9 +28,9 @@ const _createSQLStatement = """
     categorie INTEGER NOT NULL,
     FOREIGN KEY(idMenu) REFERENCES menus(id) ON DELETE CASCADE,
     FOREIGN KEY(idIngredient) REFERENCES ingredients(id),
-    UNIQUE(idMenu, idIngredient)
+    UNIQUE(idMenu, idIngredient, categorie)
   );
-""";
+  """;
 
 /// DBApi stocke une connection à la base de données
 /// et fournit les méthodes requises pour y lire et écrire.
@@ -49,13 +51,18 @@ class DBApi {
       dbPath = join(await getDatabasesPath(), dbName);
     }
 
-    // Open the database and store the reference.
+    final fi = File(dbPath);
+    if (await fi.exists()) {
+      await fi.delete();
+    }
+
+    // open/create the database
     final database = await openDatabase(
       dbPath,
       version: 1,
-      onCreate: (db, version) {
+      onCreate: (db, version) async {
         // Run the CREATE TABLE statements on the database.
-        return db.execute(_createSQLStatement);
+        await db.execute(_createSQLStatement);
       },
     );
 
@@ -79,6 +86,31 @@ class DBApi {
     // TODO: décider comment gérer les ingrédients utilisés dans un menu
     // Pour l'instant, une exception sera levée à cause la contrainte SQL
     await db.delete("ingredients", where: "id = ?", whereArgs: [id]);
+  }
+
+  /// [getMenus] renvoie la liste de tous les menus,
+  /// avec leurs ingrédients.
+  Future<List<MenuExt>> getMenus() async {
+    // load the ingredients
+    final ingredients = Map.fromEntries((await db.query("ingredients"))
+        .map(Ingredient.fromSQLMap)
+        .map((ing) => MapEntry(ing.id, ing)));
+    // load the menus
+    final menus = (await db.query("menus")).map(Menu.fromSQLMap);
+    // load the link objects
+    final menuIngredients =
+        (await db.query("menu_ingredients")).map(MenuIngredient.fromSQLMap);
+    final ingredientsByMenu = <int, List<MenuIngredientExt>>{};
+    for (var menuIngredient in menuIngredients) {
+      final l = ingredientsByMenu.putIfAbsent(menuIngredient.idMenu, () => []);
+      l.add(MenuIngredientExt(
+        ingredients[menuIngredient.idIngredient]!,
+        menuIngredient.quantite,
+        menuIngredient.categorie,
+      ));
+    }
+    // final build the complete menu
+    return menus.map((m) => MenuExt(m, ingredientsByMenu[m.id] ?? [])).toList();
   }
 
   /// [insertMenu] crée un nouveau menu et renvoie l'objet avec le champ `id`

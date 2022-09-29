@@ -1,15 +1,33 @@
+import 'package:atable/logic/debug.dart';
 import 'package:atable/logic/models.dart';
+import 'package:atable/logic/sql.dart';
 import 'package:flutter/material.dart';
 
 class MenuList extends StatefulWidget {
-  const MenuList({super.key});
+  final DBApi db;
+
+  const MenuList(this.db, {super.key});
 
   @override
   State<MenuList> createState() => _MenuListState();
 }
 
 class _MenuListState extends State<MenuList> {
-  final List<MenuExt> menus = [];
+  List<MenuExt> menus = [];
+
+  @override
+  void initState() {
+    _loadMenus();
+    super.initState();
+  }
+
+  void _loadMenus() async {
+    final l = await widget.db.getMenus();
+    setState(() {
+      menus = sampleMenus;
+      // menus = l;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +42,16 @@ class _MenuDetails extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Text("Menu ${menu.menu.id}"),
+      child: Column(
+        children: [
+          Row(children: [
+            Text(menu.menu.formatJour()),
+            const Spacer(),
+            Text(menu.menu.formatHeure()),
+          ]),
+          Column(children: menu.ingredients.map((e) => Text("$e")).toList())
+        ],
+      ),
     );
   }
 }
