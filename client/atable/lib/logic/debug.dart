@@ -15,6 +15,11 @@ const lait = Ingredient(
     nom: "Lait",
     unite: Unite.L,
     categorie: CategorieIngredient.laitages);
+const sel = Ingredient(
+    id: 4,
+    nom: "Sel",
+    unite: Unite.piece,
+    categorie: CategorieIngredient.epicerie);
 
 final sampleMenus = [
   MenuExt(Menu(id: 1, date: DateTime.now(), nbPersonnes: 10), const [
@@ -28,5 +33,6 @@ final sampleMenus = [
     MenuIngredientExt(tomates, 0.1, CategoriePlat.platPrincipal),
     MenuIngredientExt(pates, 0.1, CategoriePlat.platPrincipal),
     MenuIngredientExt(lait, 0.1, CategoriePlat.dessert),
+    MenuIngredientExt(sel, 8, CategoriePlat.divers),
   ]),
 ];

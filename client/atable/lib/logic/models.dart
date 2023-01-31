@@ -1,4 +1,5 @@
 import 'package:atable/logic/utils.dart';
+import 'package:diacritic/diacritic.dart';
 
 /// Ingredient est l'objet fondamental composant
 /// un menu.
@@ -18,6 +19,19 @@ class Ingredient {
   @override
   String toString() {
     return "Ingredient(id: $id, nom: $nom, unite: $unite, categorie: $categorie)";
+  }
+
+  Ingredient copyWith({
+    int? id,
+    String? nom,
+    Unite? unite,
+    CategorieIngredient? categorie,
+  }) {
+    return Ingredient(
+        id: id ?? this.id,
+        nom: nom ?? this.nom,
+        unite: unite ?? this.unite,
+        categorie: categorie ?? this.categorie);
   }
 
   factory Ingredient.fromSQLMap(Map<String, dynamic> map) {
@@ -42,11 +56,34 @@ class Ingredient {
   }
 }
 
+String _normalize(String nom) => removeDiacritics(nom.trim().toLowerCase());
+
+/// [searchIngredients] filtre la liste par nom
+List<Ingredient> searchIngredients(List<Ingredient> candidates, String nom) {
+  nom = _normalize(nom);
+  candidates =
+      candidates.where((ing) => _normalize(ing.nom).contains(nom)).toList();
+  // supprime les éventuels doublons
+  final seen = <String>{};
+  final List<Ingredient> out = [];
+  for (var ing in candidates) {
+    final nom = _normalize(ing.nom);
+    if (seen.contains(nom)) continue;
+    seen.add(nom);
+    out.add(ing);
+  }
+  return out;
+}
+
 /// [Menu] est un ensemble d'ingrédients
 /// prévu pour une date et un nombre de personnes.
+/// Les différents plats d'un même repas sont spécifiés
+/// pour chaque ingrédients.
 class Menu {
   final int id;
   final DateTime date;
+
+  /// [nbPersonnes] est liés aux quantités des ingrédients
   final int nbPersonnes;
 
   const Menu({
@@ -54,6 +91,17 @@ class Menu {
     required this.date,
     required this.nbPersonnes,
   });
+
+  Menu copyWith({
+    int? id,
+    DateTime? date,
+    int? nbPersonnes,
+  }) {
+    return Menu(
+        id: id ?? this.id,
+        date: date ?? this.date,
+        nbPersonnes: nbPersonnes ?? this.nbPersonnes);
+  }
 
   @override
   String toString() {
@@ -96,7 +144,8 @@ class MenuIngredient {
   final int idMenu;
   final int idIngredient;
 
-  /// [quantite] est la quantité requise pour 1 personne,
+  /// [quantite] est la quantité requise pour le nombre de personnes
+  /// défini dans le menu associé,
   /// exprimée dans l'unité de l'ingrédient
   final double quantite;
   final CategoriePlat categorie;
@@ -135,6 +184,17 @@ class MenuIngredient {
 /// Unite décrit comment est mesuré un ingrédient
 enum Unite { kg, L, piece }
 
+String formatUnite(Unite unite) {
+  switch (unite) {
+    case Unite.kg:
+      return "Kg";
+    case Unite.L:
+      return "L";
+    case Unite.piece:
+      return "P";
+  }
+}
+
 /// Categorie indique dans quel rayon se trouve un ingrédient
 enum CategorieIngredient {
   /// [inconnue] est la valeur par défaut d'une catégorie
@@ -143,12 +203,43 @@ enum CategorieIngredient {
   legumes,
   viandes,
   epicerie,
-  laitages
+  laitages,
+  boulangerie
+}
+
+String formatCategorieIngredient(CategorieIngredient cat) {
+  switch (cat) {
+    case CategorieIngredient.inconnue:
+      return "-";
+    case CategorieIngredient.legumes:
+      return "Fruits et légumes";
+    case CategorieIngredient.viandes:
+      return "Viandes et poissons";
+    case CategorieIngredient.epicerie:
+      return "Epicerie";
+    case CategorieIngredient.laitages:
+      return "Laitage";
+    case CategorieIngredient.boulangerie:
+      return "Boulangerie";
+  }
 }
 
 /// CategoriePlat permet de regrouper les ingrédients
 /// d'un menu en sous plats
 enum CategoriePlat { entree, platPrincipal, dessert, divers }
+
+String formatCategoriePlat(CategoriePlat cat) {
+  switch (cat) {
+    case CategoriePlat.entree:
+      return "Entrée";
+    case CategoriePlat.platPrincipal:
+      return "Plat principal";
+    case CategoriePlat.dessert:
+      return "Dessert";
+    case CategoriePlat.divers:
+      return "Autre";
+  }
+}
 
 /// [MenuIngredientExt] regroupe un [Ingredient] et un [MenuIngredient].
 class MenuIngredientExt {
@@ -160,6 +251,15 @@ class MenuIngredientExt {
   final CategoriePlat categorie;
 
   const MenuIngredientExt(this.ingredient, this.quantite, this.categorie);
+
+  factory MenuIngredientExt.from(Ingredient ing, MenuIngredient link) =>
+      MenuIngredientExt(ing, link.quantite, link.categorie);
+
+  MenuIngredientExt copyWith(
+      {Ingredient? ingredient, double? quantite, CategoriePlat? categorie}) {
+    return MenuIngredientExt(ingredient ?? this.ingredient,
+        quantite ?? this.quantite, categorie ?? this.categorie);
+  }
 }
 
 /// [MenuExt] est un [Menu] associé à tous ses ingrédients.
@@ -167,4 +267,15 @@ class MenuExt {
   final Menu menu;
   final List<MenuIngredientExt> ingredients;
   const MenuExt(this.menu, this.ingredients);
+
+  /// [plats] renvoie la liste des ingrédients regroupés par
+  /// plat
+  Map<CategoriePlat, List<MenuIngredientExt>> plats() {
+    final Map<CategoriePlat, List<MenuIngredientExt>> crible = {};
+    for (var ing in ingredients) {
+      final l = crible.putIfAbsent(ing.categorie, () => []);
+      l.add(ing);
+    }
+    return crible;
+  }
 }
