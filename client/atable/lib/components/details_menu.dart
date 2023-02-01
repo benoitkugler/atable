@@ -1,3 +1,5 @@
+import 'package:atable/components/import_dialog.dart';
+import 'package:atable/logic/import.dart';
 import 'package:atable/logic/ingredientsDB.dart';
 import 'package:atable/logic/models.dart';
 import 'package:atable/logic/sql.dart';
@@ -47,6 +49,10 @@ class _DetailsMenuState extends State<DetailsMenu> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Modifier les ingrédients "),
+        actions: [
+          IconButton(
+              onPressed: _showImportDialog, icon: const Icon(Icons.upload))
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         mini: false,
@@ -73,6 +79,16 @@ class _DetailsMenuState extends State<DetailsMenu> {
                   _addIngredient(ing, isNew);
                 },
               ),
+            ));
+  }
+
+  void _showImportDialog() async {
+    final cp = await Clipboard.getData(Clipboard.kTextPlain);
+    if (cp == null) return;
+    await showDialog(
+        context: context,
+        builder: (context) => Dialog(
+              child: ImportDialog(cp.text ?? ""),
             ));
   }
 
