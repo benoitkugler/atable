@@ -6,19 +6,17 @@ import 'package:diacritic/diacritic.dart';
 class Ingredient {
   final int id;
   final String nom;
-  final Unite unite;
   final CategorieIngredient categorie;
 
   const Ingredient({
     required this.id,
     required this.nom,
-    required this.unite,
     required this.categorie,
   });
 
   @override
   String toString() {
-    return "Ingredient(id: $id, nom: $nom, unite: $unite, categorie: $categorie)";
+    return "Ingredient(id: $id, nom: $nom, categorie: $categorie)";
   }
 
   Ingredient copyWith({
@@ -30,7 +28,6 @@ class Ingredient {
     return Ingredient(
         id: id ?? this.id,
         nom: nom ?? this.nom,
-        unite: unite ?? this.unite,
         categorie: categorie ?? this.categorie);
   }
 
@@ -38,7 +35,6 @@ class Ingredient {
     return Ingredient(
       id: map["id"],
       nom: map["nom"],
-      unite: Unite.values[map["unite"]],
       categorie: CategorieIngredient.values[map["categorie"]],
     );
   }
@@ -46,7 +42,6 @@ class Ingredient {
   Map<String, dynamic> toSQLMap(bool ignoreID) {
     final out = {
       "nom": nom,
-      "unite": unite.index,
       "categorie": categorie.index,
     };
     if (!ignoreID) {
@@ -146,20 +141,37 @@ class MenuIngredient {
 
   /// [quantite] est la quantité requise pour le nombre de personnes
   /// défini dans le menu associé,
-  /// exprimée dans l'unité de l'ingrédient
+  /// exprimée dans l'unité [unite]
   final double quantite;
+  final Unite unite;
   final CategoriePlat categorie;
 
   const MenuIngredient({
     required this.idMenu,
     required this.idIngredient,
     required this.quantite,
+    required this.unite,
     required this.categorie,
   });
 
+  MenuIngredient copyWith({
+    int? idMenu,
+    int? idIngredient,
+    double? quantite,
+    Unite? unite,
+    CategoriePlat? categorie,
+  }) {
+    return MenuIngredient(
+        idMenu: idMenu ?? this.idMenu,
+        idIngredient: idIngredient ?? this.idIngredient,
+        quantite: quantite ?? this.quantite,
+        unite: unite ?? this.unite,
+        categorie: categorie ?? this.categorie);
+  }
+
   @override
   String toString() {
-    return "MenuIngredient(idMenu: $idMenu, idIngredient: $idIngredient, quantite: $quantite, categorie: $categorie)";
+    return "MenuIngredient(idMenu: $idMenu, idIngredient: $idIngredient, quantite: $quantite, unite: $unite, categorie: $categorie)";
   }
 
   Map<String, dynamic> toSQLMap() {
@@ -167,6 +179,7 @@ class MenuIngredient {
       "idMenu": idMenu,
       "idIngredient": idIngredient,
       "quantite": quantite,
+      "unite": unite.index,
       "categorie": categorie.index,
     };
   }
@@ -176,6 +189,7 @@ class MenuIngredient {
       idMenu: map["idMenu"],
       idIngredient: map["idIngredient"],
       quantite: map["quantite"],
+      unite: Unite.values[map["unite"]],
       categorie: CategoriePlat.values[map["categorie"]],
     );
   }
@@ -244,21 +258,12 @@ String formatCategoriePlat(CategoriePlat cat) {
 /// [MenuIngredientExt] regroupe un [Ingredient] et un [MenuIngredient].
 class MenuIngredientExt {
   final Ingredient ingredient;
+  final MenuIngredient link;
 
-  /// [quantite] est la quantité requise pour 1 personne,
-  /// exprimée dans l'unité de l'ingrédient
-  final double quantite;
-  final CategoriePlat categorie;
+  const MenuIngredientExt(this.ingredient, this.link);
 
-  const MenuIngredientExt(this.ingredient, this.quantite, this.categorie);
-
-  factory MenuIngredientExt.from(Ingredient ing, MenuIngredient link) =>
-      MenuIngredientExt(ing, link.quantite, link.categorie);
-
-  MenuIngredientExt copyWith(
-      {Ingredient? ingredient, double? quantite, CategoriePlat? categorie}) {
-    return MenuIngredientExt(ingredient ?? this.ingredient,
-        quantite ?? this.quantite, categorie ?? this.categorie);
+  MenuIngredientExt copyWith({Ingredient? ingredient, MenuIngredient? link}) {
+    return MenuIngredientExt(ingredient ?? this.ingredient, link ?? this.link);
   }
 }
 
@@ -273,7 +278,7 @@ class MenuExt {
   Map<CategoriePlat, List<MenuIngredientExt>> plats() {
     final Map<CategoriePlat, List<MenuIngredientExt>> crible = {};
     for (var ing in ingredients) {
-      final l = crible.putIfAbsent(ing.categorie, () => []);
+      final l = crible.putIfAbsent(ing.link.categorie, () => []);
       l.add(ing);
     }
     return crible;

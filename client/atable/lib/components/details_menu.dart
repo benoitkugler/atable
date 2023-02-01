@@ -56,7 +56,7 @@ class _DetailsMenuState extends State<DetailsMenu> {
       body: ListView(
         children: CategoriePlat.values
             .map((e) => _PlatCard(e, plats[e] ?? [], _removeIngredient,
-                _swapCategorie, _updateQuantite))
+                _swapCategorie, _updateLink))
             .toList(),
       ),
     );
@@ -98,10 +98,11 @@ class _DetailsMenuState extends State<DetailsMenu> {
         idMenu: widget.menu.menu.id,
         idIngredient: ing.id,
         quantite: 1,
+        unite: Unite.kg,
         categorie: CategoriePlat.entree);
     await widget.db.insertMenuIngredient(link);
     setState(() {
-      widget.menu.ingredients.add(MenuIngredientExt.from(ing, link));
+      widget.menu.ingredients.add(MenuIngredientExt(ing, link));
     });
   }
 
@@ -119,35 +120,31 @@ class _DetailsMenuState extends State<DetailsMenu> {
   }
 
   void _swapCategorie(MenuIngredientExt ing, CategoriePlat newCategorie) async {
-    if (ing.categorie == newCategorie) return;
+    if (ing.link.categorie == newCategorie) return;
 
-    await widget.db.updateMenuIngredient(MenuIngredient(
-        idMenu: widget.menu.menu.id,
-        idIngredient: ing.ingredient.id,
-        quantite: ing.quantite,
-        categorie: newCategorie));
+    final newLink = ing.link.copyWith(categorie: newCategorie);
+    await widget.db.updateMenuIngredient(newLink);
 
     setState(() {
       final index = widget.menu.ingredients
           .indexWhere((element) => element.ingredient.id == ing.ingredient.id);
       widget.menu.ingredients[index] =
-          widget.menu.ingredients[index].copyWith(categorie: newCategorie);
+          widget.menu.ingredients[index].copyWith(link: newLink);
     });
   }
 
-  void _updateQuantite(MenuIngredientExt ing, double newQuantite) async {
-    if (ing.quantite == newQuantite) return;
-    await widget.db.updateMenuIngredient(MenuIngredient(
-        idMenu: widget.menu.menu.id,
-        idIngredient: ing.ingredient.id,
-        quantite: newQuantite,
-        categorie: ing.categorie));
+  void _updateLink(
+      MenuIngredientExt ing, double newQuantite, Unite newUnite) async {
+    if (ing.link.quantite == newQuantite && ing.link.unite == newUnite) return;
+
+    final newLink = ing.link.copyWith(quantite: newQuantite, unite: newUnite);
+    await widget.db.updateMenuIngredient(newLink);
 
     setState(() {
       final index = widget.menu.ingredients
           .indexWhere((element) => element.ingredient.id == ing.ingredient.id);
       widget.menu.ingredients[index] =
-          widget.menu.ingredients[index].copyWith(quantite: newQuantite);
+          widget.menu.ingredients[index].copyWith(link: newLink);
     });
   }
 }
@@ -159,10 +156,11 @@ class _PlatCard extends StatelessWidget {
   final void Function(MenuIngredientExt) removeIngredient;
   final void Function(MenuIngredientExt ing, CategoriePlat newCategorie)
       swapCategorie;
-  final void Function(MenuIngredientExt ing, double newQuantite) updateQuantite;
+  final void Function(MenuIngredientExt ing, double newQuantite, Unite newUnite)
+      updateLink;
 
   const _PlatCard(this.plat, this.ingredients, this.removeIngredient,
-      this.swapCategorie, this.updateQuantite,
+      this.swapCategorie, this.updateLink,
       {super.key});
 
   @override
@@ -201,7 +199,9 @@ class _PlatCard extends StatelessWidget {
                               ),
                               onDismissed: (_) => removeIngredient(e),
                               child: _IngredientRow(
-                                  e, (q) => updateQuantite(e, q)),
+                                  e,
+                                  (q) => updateLink(e, q, e.link.unite),
+                                  (u) => updateLink(e, e.link.quantite, u)),
                             ))
                         .toList()),
               ),
@@ -217,8 +217,10 @@ class _IngredientRow extends StatefulWidget {
   final MenuIngredientExt ingredient;
 
   final void Function(double quantite) onEditQuantite;
+  final void Function(Unite unite) onEditUnite;
 
-  const _IngredientRow(this.ingredient, this.onEditQuantite, {super.key});
+  const _IngredientRow(this.ingredient, this.onEditQuantite, this.onEditUnite,
+      {super.key});
 
   @override
   State<_IngredientRow> createState() => _IngredientRowState();
@@ -231,51 +233,61 @@ class _IngredientRowState extends State<_IngredientRow> {
   Widget build(BuildContext context) {
     final ing = widget.ingredient;
     return Draggable<MenuIngredientExt>(
-      affinity: Axis.vertical,
-      data: ing,
-      feedback: Card(
-          child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Row(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(ing.ingredient.nom),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child:
-                  Text("${ing.quantite} ${formatUnite(ing.ingredient.unite)}"),
-            )
-          ],
-        ),
-      )),
-      child: ListTile(
-          visualDensity: const VisualDensity(vertical: -3),
-          dense: true,
-          title: Text(ing.ingredient.nom),
-          subtitle: Text(formatCategorieIngredient(ing.ingredient.categorie)),
-          trailing: isEditingQuantity
-              ? SizedBox(
-                  width: 80,
-                  child: TextField(
-                    autofocus: true,
-                    textAlign: TextAlign.center,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                        suffixText: formatUnite(ing.ingredient.unite)),
-                    onSubmitted: (value) {
-                      widget.onEditQuantite(double.parse(value));
-                      setState(() => isEditingQuantity = false);
-                    },
-                  ),
-                )
-              : TextButton(
-                  onPressed: () => setState(() => isEditingQuantity = true),
-                  child: Text(
-                      "${ing.quantite} ${formatUnite(ing.ingredient.unite)}"),
-                )),
-    );
+        affinity: Axis.vertical,
+        data: ing,
+        feedback: Card(
+            child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(ing.ingredient.nom),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child:
+                    Text("${ing.link.quantite} ${formatUnite(ing.link.unite)}"),
+              )
+            ],
+          ),
+        )),
+        child: ListTile(
+            visualDensity: const VisualDensity(vertical: -3),
+            dense: true,
+            title: Text(ing.ingredient.nom),
+            subtitle: Text(formatCategorieIngredient(ing.ingredient.categorie)),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                isEditingQuantity
+                    ? SizedBox(
+                        width: 60,
+                        child: TextField(
+                          decoration: const InputDecoration(isDense: true),
+                          autofocus: true,
+                          textAlign: TextAlign.center,
+                          keyboardType: TextInputType.number,
+                          onSubmitted: (value) {
+                            widget.onEditQuantite(double.parse(value));
+                            setState(() => isEditingQuantity = false);
+                          },
+                        ),
+                      )
+                    : TextButton(
+                        style: TextButton.styleFrom(
+                            visualDensity: const VisualDensity(horizontal: -3)),
+                        onPressed: () =>
+                            setState(() => isEditingQuantity = true),
+                        child: Text("${ing.link.quantite}"),
+                      ),
+                _UniteEditor(
+                    ing.link.unite,
+                    (u) => setState(() {
+                          widget.onEditUnite(u);
+                        }))
+              ],
+            )));
   }
 }
 
@@ -291,8 +303,8 @@ class _NewIngredientEditor extends StatefulWidget {
 }
 
 class __NewIngredientEditorState extends State<_NewIngredientEditor> {
-  Ingredient edited = const Ingredient(
-      id: 0, nom: "", unite: Unite.kg, categorie: CategorieIngredient.legumes);
+  Ingredient edited =
+      const Ingredient(id: 0, nom: "", categorie: CategorieIngredient.legumes);
 
   @override
   Widget build(BuildContext context) {
@@ -333,13 +345,6 @@ class __NewIngredientEditorState extends State<_NewIngredientEditor> {
             onSelected: _onAutoComplete,
           ),
 
-          // unite editor
-          _UniteEditor(
-              edited.unite,
-              (u) => setState(() {
-                    edited = edited.copyWith(unite: u);
-                  })),
-
           // categorie editor
           _CategorieIngredientEditor(
               edited.categorie,
@@ -365,8 +370,7 @@ class __NewIngredientEditorState extends State<_NewIngredientEditor> {
     } else {
       // utilise juste la complétion
       setState(() {
-        edited = edited.copyWith(
-            nom: ing.nom, categorie: ing.categorie, unite: ing.unite);
+        edited = edited.copyWith(nom: ing.nom, categorie: ing.categorie);
       });
     }
   }
@@ -385,18 +389,20 @@ class _UniteEditor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: DropdownButton<Unite>(
-          hint: const Text("Unité"),
-          value: value,
-          items: Unite.values
-              .map((e) => DropdownMenuItem<Unite>(
-                    value: e,
-                    child: Text(formatUnite(e)),
-                  ))
-              .toList(),
-          onChanged: (u) => u == null ? {} : onChange(u)),
+    return PopupMenuButton<Unite>(
+      initialValue: value,
+      itemBuilder: (context) => Unite.values
+          .map((e) => PopupMenuItem<Unite>(
+                value: e,
+                child: Text(formatUnite(e)),
+              ))
+          .toList(),
+      onSelected: onChange,
+      child: Text(
+        formatUnite(value),
+        style: TextStyle(
+            fontWeight: FontWeight.w500, color: Theme.of(context).primaryColor),
+      ),
     );
   }
 }

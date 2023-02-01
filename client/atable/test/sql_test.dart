@@ -15,19 +15,13 @@ Future main() async {
   test('SQL API', () async {
     final db = await DBApi.open(dbPath: inMemoryDatabasePath);
     final ing1 = await db.insertIngredient(const Ingredient(
-        id: 0,
-        nom: "INg1",
-        unite: Unite.L,
-        categorie: CategorieIngredient.epicerie));
+        id: 0, nom: "INg1", categorie: CategorieIngredient.epicerie));
 
     final got1 = (await db.getIngredients()).map((e) => e.toString());
     expect(got1, [ing1.toString()]); // Check content
 
     final ing2 = await db.insertIngredient(const Ingredient(
-        id: 0,
-        nom: "INg1",
-        unite: Unite.L,
-        categorie: CategorieIngredient.laitages));
+        id: 0, nom: "INg1", categorie: CategorieIngredient.laitages));
     final got2 = (await db.getIngredients()).map((e) => e.toString());
     expect(got2, [ing1.toString(), ing2.toString()]); // Check content
 
@@ -39,11 +33,13 @@ Future main() async {
           idMenu: menu.id,
           idIngredient: ing1.id,
           quantite: 0.1245,
+          unite: Unite.L,
           categorie: CategoriePlat.dessert),
       MenuIngredient(
           idMenu: menu.id,
           idIngredient: ing2.id,
           quantite: 0.1245,
+          unite: Unite.kg,
           categorie: CategoriePlat.divers),
     ]);
 

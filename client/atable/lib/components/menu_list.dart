@@ -89,16 +89,11 @@ class _MenuListState extends State<MenuList> {
     double factor =
         newMenu.nbPersonnes.toDouble() / oldMenu.menu.nbPersonnes.toDouble();
     final newIngs = oldMenu.ingredients
-        .map((e) => e.copyWith(quantite: factor * e.quantite))
+        .map((e) => e.copyWith(
+            link: e.link.copyWith(quantite: factor * e.link.quantite)))
         .toList();
 
-    await widget.db.updateMenuIngredients(newIngs
-        .map((e) => MenuIngredient(
-            idMenu: oldMenu.menu.id,
-            idIngredient: e.ingredient.id,
-            quantite: factor * e.quantite,
-            categorie: e.categorie))
-        .toList());
+    await widget.db.updateMenuIngredients(newIngs.map((e) => e.link).toList());
     setState(() {
       menus[oldMenuIndex] = MenuExt(newMenu, newIngs);
     });
@@ -238,7 +233,7 @@ class _MenuIngredientRow extends StatelessWidget {
       children: [
         Text(ing.ingredient.nom),
         const Spacer(),
-        Text("${ing.quantite} ${formatUnite(ing.ingredient.unite)}"),
+        Text("${ing.link.quantite} ${formatUnite(ing.link.unite)}"),
       ],
     );
   }

@@ -11,7 +11,6 @@ const _createSQLStatements = [
   CREATE TABLE ingredients(
     id INTEGER PRIMARY KEY,
     nom TEXT NOT NULL,
-    unite INTEGER NOT NULL,
     categorie INTEGER NOT NULL,
     UNIQUE(nom, categorie)
   );
@@ -28,6 +27,7 @@ const _createSQLStatements = [
     idMenu INTEGER NOT NULL,
     idIngredient INTEGER NOT NULL,
     quantite REAL NOT NULL,
+    unite INTEGER NOT NULL,
     categorie INTEGER NOT NULL,
     FOREIGN KEY(idMenu) REFERENCES menus(id) ON DELETE CASCADE,
     FOREIGN KEY(idIngredient) REFERENCES ingredients(id),
@@ -84,8 +84,7 @@ class DBApi {
   /// mis à jour
   Future<Ingredient> insertIngredient(Ingredient ing) async {
     final id = await db.insert("ingredients", ing.toSQLMap(true));
-    return Ingredient(
-        id: id, nom: ing.nom, unite: ing.unite, categorie: ing.categorie);
+    return Ingredient(id: id, nom: ing.nom, categorie: ing.categorie);
   }
 
   Future<void> deleteIngredient(int id) async {
@@ -111,7 +110,7 @@ class DBApi {
         menu,
         menuIngredients
             .map((link) =>
-                MenuIngredientExt.from(ingredients[link.idIngredient]!, link))
+                MenuIngredientExt(ingredients[link.idIngredient]!, link))
             .toList());
   }
 
@@ -131,7 +130,7 @@ class DBApi {
     final ingredientsByMenu = <int, List<MenuIngredientExt>>{};
     for (var menuIngredient in menuIngredients) {
       final l = ingredientsByMenu.putIfAbsent(menuIngredient.idMenu, () => []);
-      l.add(MenuIngredientExt.from(
+      l.add(MenuIngredientExt(
           ingredients[menuIngredient.idIngredient]!, menuIngredient));
     }
     // final build the complete menu

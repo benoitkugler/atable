@@ -27,7 +27,6 @@ class _IngredientListState extends State<IngredientList> {
     var ing = Ingredient(
       id: 0,
       nom: "Nouvel Ingredient ${Random().nextInt(1000)}",
-      unite: Unite.values[Random().nextInt(Unite.values.length)],
       categorie: CategorieIngredient
           .values[Random().nextInt(CategorieIngredient.values.length)],
     );
@@ -62,7 +61,6 @@ class _IngredientListState extends State<IngredientList> {
                                 ? ""
                                 : ing.categorie.name),
                         title: Text(ing.nom),
-                        subtitle: Text(ing.unite.name),
                         trailing: IconButton(
                             onPressed: () => deleteIngredient(ing),
                             icon: const Icon(
