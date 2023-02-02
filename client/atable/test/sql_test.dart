@@ -28,25 +28,29 @@ Future main() async {
     final menu =
         await db.insertMenu(Menu(id: 0, date: DateTime.now(), nbPersonnes: 7));
 
-    await db.insertMenuIngredients([
-      MenuIngredient(
-          idMenu: menu.id,
-          idIngredient: ing1.id,
-          quantite: 0.1245,
-          unite: Unite.L,
-          categorie: CategoriePlat.dessert),
-      MenuIngredient(
-          idMenu: menu.id,
-          idIngredient: ing2.id,
-          quantite: 0.1245,
-          unite: Unite.kg,
-          categorie: CategoriePlat.divers),
-    ]);
+    await db.insertMenuIngredient(MenuIngredient(
+        idMenu: menu.id,
+        idIngredient: ing1.id,
+        quantite: 0.1245,
+        unite: Unite.L,
+        categorie: CategoriePlat.dessert));
+
+    await db.insertMenuIngredient(MenuIngredient(
+        idMenu: menu.id,
+        idIngredient: ing2.id,
+        quantite: 0.1245,
+        unite: Unite.kg,
+        categorie: CategoriePlat.divers));
 
     final got3 = await db.getIngredients();
     expect(got3.length, 2);
 
-    // TODO: ajouter des tests pour [deleteMenu], [insertMenuIngredient], [deleteMenuIngredient]
+    await db.deleteMenuIngredient(menu.id, ing2.id);
+
+    await db.deleteMenu(menu.id);
+    final menus2 = await db.getMenus();
+    expect(menus2.length, 0);
+
     await db.db.close();
   });
 }

@@ -55,12 +55,6 @@ class DBApi {
       dbPath = join(await getDatabasesPath(), dbName);
     }
 
-    // DEV MODE only : reset DB at start
-    final fi = File(dbPath);
-    if (await fi.exists()) {
-      await fi.delete();
-    }
-
     // open/create the database
     final database =
         await openDatabase(dbPath, version: 1, onCreate: (db, version) async {
@@ -145,15 +139,6 @@ class DBApi {
   Future<Menu> insertMenu(Menu menu) async {
     final id = await db.insert("menus", menu.toSQLMap(true));
     return Menu(id: id, date: menu.date, nbPersonnes: menu.nbPersonnes);
-  }
-
-  // TODO: vérifier si cette méthode est réellement utile
-  Future<void> insertMenuIngredients(List<MenuIngredient> ingredients) async {
-    final batch = db.batch();
-    for (var ingredient in ingredients) {
-      batch.insert("menu_ingredients", ingredient.toSQLMap());
-    }
-    await batch.commit();
   }
 
   /// [updateMenu] modifie le menu donné.
