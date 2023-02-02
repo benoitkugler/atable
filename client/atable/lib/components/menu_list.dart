@@ -1,4 +1,5 @@
 import 'package:atable/components/details_menu.dart';
+import 'package:atable/components/shop_list.dart';
 import 'package:atable/logic/models.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:atable/logic/utils.dart';
@@ -17,6 +18,8 @@ class _MenuListState extends State<MenuList> {
   List<MenuExt> menus = [];
   final _scrollController = ScrollController();
 
+  Set<int> selectedMenus = {};
+
   @override
   void initState() {
     _loadMenus();
@@ -26,6 +29,14 @@ class _MenuListState extends State<MenuList> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text("Repas"),
+        actions: [
+          IconButton(
+              onPressed: selectedMenus.isEmpty ? null : _showShop,
+              icon: const Icon(Icons.store))
+        ],
+      ),
       body: menus.isEmpty
           ? const Center(
               child: Text("Aucun repas."),
@@ -44,7 +55,13 @@ class _MenuListState extends State<MenuList> {
                     ),
                     child: _MenuCard(
                         menus[index],
+                        selectedMenus.contains(index),
                         () => _showMenuDetails(index),
+                        () => setState(() {
+                              selectedMenus.contains(index)
+                                  ? selectedMenus.remove(index)
+                                  : selectedMenus.add(index);
+                            }),
                         (m) => _editMenu(index, m)),
                   )),
       floatingActionButton: FloatingActionButton(
@@ -122,15 +139,29 @@ class _MenuListState extends State<MenuList> {
       menus[menuIndex] = menu;
     });
   }
+
+  void _showShop() async {
+    final selectedMenusL = selectedMenus.map((e) => menus[e]).toList();
+    await Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => ShopSession(selectedMenusL),
+    ));
+    setState(() {
+      selectedMenus.clear();
+    });
+  }
 }
 
 class _MenuCard extends StatefulWidget {
   final MenuExt menu;
+  final bool isSelected;
 
   final void Function() onTap;
+  final void Function() onLongPress;
   final void Function(Menu menu) onEdit;
 
-  const _MenuCard(this.menu, this.onTap, this.onEdit, {super.key});
+  const _MenuCard(
+      this.menu, this.isSelected, this.onTap, this.onLongPress, this.onEdit,
+      {super.key});
 
   @override
   State<_MenuCard> createState() => _MenuCardState();
@@ -142,9 +173,11 @@ class _MenuCardState extends State<_MenuCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: widget.isSelected ? Colors.yellow.shade100 : null,
       child: InkWell(
         borderRadius: const BorderRadius.all(Radius.circular(4)),
         onTap: widget.onTap,
+        onLongPress: widget.onLongPress,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -153,7 +186,7 @@ class _MenuCardState extends State<_MenuCard> {
               child: Row(children: [
                 Text(
                   "${widget.menu.menu.formatJour()} - ${widget.menu.menu.formatHeure()}",
-                  style: TextStyle(fontSize: 16),
+                  style: const TextStyle(fontSize: 16),
                 ),
                 const Spacer(),
                 isEditingNbPersonnes
@@ -224,7 +257,7 @@ class _PlatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 0.5,
-      color: plat.color,
+      color: plat.color.withOpacity(0.8),
       child: Padding(
         padding: const EdgeInsets.all(4.0),
         child: Column(

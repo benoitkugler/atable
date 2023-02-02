@@ -224,7 +224,7 @@ enum CategorieIngredient {
 String formatCategorieIngredient(CategorieIngredient cat) {
   switch (cat) {
     case CategorieIngredient.inconnue:
-      return "-";
+      return "Autre";
     case CategorieIngredient.legumes:
       return "Fruits et légumes";
     case CategorieIngredient.viandes:

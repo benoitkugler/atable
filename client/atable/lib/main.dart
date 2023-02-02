@@ -38,15 +38,6 @@ enum _View { menus, ingredients }
 class __HomeState extends State<_Home> {
   _View pageIndex = _View.menus;
 
-  String get title {
-    switch (pageIndex) {
-      case _View.menus:
-        return "Repas";
-      case _View.ingredients:
-        return "Ingrédients";
-    }
-  }
-
   Widget get body {
     switch (pageIndex) {
       case _View.menus:
@@ -59,9 +50,6 @@ class __HomeState extends State<_Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-      ),
       body: body,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: pageIndex.index,
