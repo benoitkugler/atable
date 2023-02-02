@@ -1,5 +1,5 @@
 import 'package:atable/components/import_dialog.dart';
-import 'package:atable/logic/import.dart';
+import 'package:atable/components/ingredient_editor.dart';
 import 'package:atable/logic/ingredientsDB.dart';
 import 'package:atable/logic/models.dart';
 import 'package:atable/logic/sql.dart';
@@ -48,7 +48,7 @@ class _DetailsMenuState extends State<DetailsMenu> {
     final plats = widget.menu.plats();
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Modifier les ingrédients "),
+        title: Text("Ingrédients pour ${widget.menu.menu.nbPersonnes}"),
         actions: [
           IconButton(
               onPressed: _showImportDialog, icon: const Icon(Icons.upload))
@@ -72,7 +72,7 @@ class _DetailsMenuState extends State<DetailsMenu> {
     await showDialog(
         context: context,
         builder: (context) => Dialog(
-              child: _NewIngredientEditor(
+              child: IngredientEditor(
                 _candidates(),
                 (ing, isNew) {
                   Navigator.of(context).pop();
@@ -84,12 +84,34 @@ class _DetailsMenuState extends State<DetailsMenu> {
 
   void _showImportDialog() async {
     final cp = await Clipboard.getData(Clipboard.kTextPlain);
-    if (cp == null) return;
-    await showDialog(
+    if (cp == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Le presse-papier est vide !")));
+      }
+      return;
+    }
+    final newIngredients = await showDialog<List<MenuIngredientExt>>(
         context: context,
         builder: (context) => Dialog(
-              child: ImportDialog(cp.text ?? ""),
+              child: ImportDialog(_candidates(), cp.text ?? "",
+                  (l) => Navigator.of(context).pop(l)),
             ));
+    if (newIngredients == null) return; // import annulé
+    // ajout des ingrédients
+    for (var item in newIngredients) {
+      Ingredient ing = item.ingredient;
+      if (ing.id < 0) {
+        // register first the new ingredient
+        ing = await widget.db.insertIngredient(ing);
+      }
+      final link =
+          item.link.copyWith(idMenu: widget.menu.menu.id, idIngredient: ing.id);
+      await widget.db.insertMenuIngredient(link);
+      setState(() {
+        widget.menu.ingredients.add(MenuIngredientExt(ing, link));
+      });
+    }
   }
 
   void _loadIngredients() async {
@@ -262,8 +284,8 @@ class _IngredientRowState extends State<_IngredientRow> {
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child:
-                    Text("${ing.link.quantite} ${formatUnite(ing.link.unite)}"),
+                child: Text(
+                    "${formatQuantite(ing.link.quantite)} ${formatUnite(ing.link.unite)}"),
               )
             ],
           ),
@@ -295,7 +317,7 @@ class _IngredientRowState extends State<_IngredientRow> {
                             visualDensity: const VisualDensity(horizontal: -3)),
                         onPressed: () =>
                             setState(() => isEditingQuantity = true),
-                        child: Text("${ing.link.quantite}"),
+                        child: Text(formatQuantite(ing.link.quantite)),
                       ),
                 _UniteEditor(
                     ing.link.unite,
@@ -304,96 +326,6 @@ class _IngredientRowState extends State<_IngredientRow> {
                         }))
               ],
             )));
-  }
-}
-
-class _NewIngredientEditor extends StatefulWidget {
-  final List<Ingredient> candidatesIngredients;
-  final void Function(Ingredient ing, bool isNew) onDone;
-
-  const _NewIngredientEditor(this.candidatesIngredients, this.onDone,
-      {super.key});
-
-  @override
-  State<_NewIngredientEditor> createState() => __NewIngredientEditorState();
-}
-
-class __NewIngredientEditorState extends State<_NewIngredientEditor> {
-  Ingredient edited =
-      const Ingredient(id: 0, nom: "", categorie: CategorieIngredient.legumes);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // name editor/selector
-          Autocomplete<Ingredient>(
-            optionsBuilder: (textEditingValue) =>
-                textEditingValue.text.length >= 2
-                    ? searchIngredients([
-                        ...widget.candidatesIngredients,
-                        ...ingredientsSuggestions,
-                      ], textEditingValue.text)
-                    : [],
-            fieldViewBuilder:
-                (context, textEditingController, focusNode, onFieldSubmitted) =>
-                    TextField(
-              autofocus: true,
-              decoration: const InputDecoration(
-                  labelText: "Nom", helperText: "Tapper pour rechercher..."),
-              controller: textEditingController,
-              focusNode: focusNode,
-              onSubmitted: (text) {
-                setState(() {
-                  edited = edited.copyWith(nom: text);
-                });
-                onFieldSubmitted();
-              },
-              inputFormatters: [
-                TextInputFormatter.withFunction((oldValue, newValue) =>
-                    newValue.copyWith(text: capitalize(newValue.text)))
-              ],
-            ),
-            displayStringForOption: (option) => option.nom,
-            onSelected: _onAutoComplete,
-          ),
-
-          // categorie editor
-          _CategorieIngredientEditor(
-              edited.categorie,
-              (c) => setState(() {
-                    edited = edited.copyWith(categorie: c);
-                  })),
-
-          ElevatedButton(
-              onPressed: isEntryValid ? _addNewIngredient : null,
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              child: const Text("Ajouter"))
-        ],
-      ),
-    );
-  }
-
-  bool get isEntryValid => edited.nom.isNotEmpty;
-
-  void _onAutoComplete(Ingredient ing) {
-    if (ing.id >= 0) {
-      // utilise l'ingrédient existant au lieu d'en créer un nouveau
-      widget.onDone(ing, false);
-    } else {
-      // utilise juste la complétion
-      setState(() {
-        edited = edited.copyWith(nom: ing.nom, categorie: ing.categorie);
-      });
-    }
-  }
-
-// crée un nouvel ingrédient
-  void _addNewIngredient() {
-    widget.onDone(edited, true);
   }
 }
 
@@ -415,32 +347,10 @@ class _UniteEditor extends StatelessWidget {
           .toList(),
       onSelected: onChange,
       child: Text(
-        formatUnite(value),
+        formatUnite(value).padRight(2),
         style: TextStyle(
             fontWeight: FontWeight.w500, color: Theme.of(context).primaryColor),
       ),
-    );
-  }
-}
-
-class _CategorieIngredientEditor extends StatelessWidget {
-  final CategorieIngredient value;
-  final void Function(CategorieIngredient) onChange;
-
-  const _CategorieIngredientEditor(this.value, this.onChange, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: DropdownButton<CategorieIngredient>(
-          hint: const Text("Catégorie"),
-          value: value,
-          items: CategorieIngredient.values
-              .map((e) => DropdownMenuItem<CategorieIngredient>(
-                  value: e, child: Text(formatCategorieIngredient(e))))
-              .toList(),
-          onChanged: (u) => u == null ? {} : onChange(u)),
     );
   }
 }

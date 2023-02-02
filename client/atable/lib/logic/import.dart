@@ -1,17 +1,20 @@
+import 'dart:math';
+
+import 'package:atable/logic/ingredientsDB.dart';
 import 'package:atable/logic/models.dart';
 import 'package:atable/logic/utils.dart';
 
-/// [MenuItem] correspond à un ingrédient avec quantité
-class MenuItem {
+/// [MenuImport] correspond à un ingrédient avec quantité
+class MenuImport {
   final String nom;
   final double quantite;
   final Unite unite;
 
-  const MenuItem(this.nom, this.quantite, this.unite);
+  const MenuImport(this.nom, this.quantite, this.unite);
 
   @override
   bool operator ==(Object other) {
-    return (other is MenuItem) &&
+    return (other is MenuImport) &&
         other.nom == nom &&
         other.quantite == quantite &&
         other.unite == unite;
@@ -65,12 +68,12 @@ _UniteQuantite _parseUnite(String word, double quantite) {
 
 /// [parseIngredients] attend un texte composé de lignes,
 /// une ligne décrivant un ingrédient associé à une quantité
-List<MenuItem> parseIngredients(String text) {
+List<MenuImport> parseIngredients(String text) {
   // suivant le format, des quotes peuvent entourer text
   if (text.startsWith('"')) text = text.substring(1);
   if (text.endsWith('"')) text = text.substring(0, text.length - 1);
 
-  final out = <MenuItem>[];
+  final out = <MenuImport>[];
   final lines = text.split('\n');
   for (var line in lines) {
     if (line.trim().isEmpty) continue;
@@ -93,7 +96,60 @@ List<MenuItem> parseIngredients(String text) {
     final uq = _parseUnite(words.first, quantite);
     final name = capitalize(
         uq.unite == Unite.piece ? words.join(" ") : words.sublist(1).join(" "));
-    out.add(MenuItem(name, uq.quantite, uq.unite));
+    out.add(MenuImport(name, uq.quantite, uq.unite));
   }
   return out;
+}
+
+/// [bestMatch] renvoie l'ingrédient le plus proche (en terme de nom)
+/// parmi [candidates] et les suggestions [ingredientsSuggestions]
+List<Ingredient> bestMatch(List<Ingredient> candidates, List<MenuImport> ings) {
+  candidates = [...candidates, ...ingredientsSuggestions];
+
+  return List<Ingredient>.generate(ings.length, (index) {
+    final nom = normalizeNom(ings[index].nom);
+
+    Ingredient bestIngredient = candidates[0];
+    int bestCost = _levenshtein(normalizeNom(bestIngredient.nom), nom);
+
+    for (var ing in candidates) {
+      final d = _levenshtein(normalizeNom(ing.nom), nom);
+      if (d < bestCost) {
+        bestCost = d;
+        bestIngredient = ing;
+      }
+    }
+
+    return bestIngredient;
+  });
+}
+
+/// Levenshtein algorithm implementation based on:
+/// http://en.wikipedia.org/wiki/Levenshtein_distance#Iterative_with_two_matrix_rows
+int _levenshtein(String s, String t) {
+  if (s == t) return 0;
+  if (s.isEmpty) return t.length;
+  if (t.isEmpty) return s.length;
+
+  final v0 = List<int>.filled(t.length + 1, 0);
+  final v1 = List<int>.filled(t.length + 1, 0);
+
+  for (int i = 0; i < t.length + 1; i < i++) {
+    v0[i] = i;
+  }
+
+  for (int i = 0; i < s.length; i++) {
+    v1[0] = i + 1;
+
+    for (int j = 0; j < t.length; j++) {
+      final cost = (s[i] == t[j]) ? 0 : 1;
+      v1[j + 1] = min(v1[j] + 1, min(v0[j + 1] + 1, v0[j] + cost));
+    }
+
+    for (int j = 0; j < t.length + 1; j++) {
+      v0[j] = v1[j];
+    }
+  }
+
+  return v1[t.length];
 }

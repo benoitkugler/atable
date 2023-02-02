@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 class TestD {
   final String text;
-  final List<MenuItem> expected;
+  final List<MenuImport> expected;
   const TestD(this.text, this.expected);
 }
 
@@ -20,13 +20,13 @@ main() {
 1 salade
 21 nectarines
 """, [
-        MenuItem("Petits pqts chips", 21, Unite.piece),
-        MenuItem("Thon", 1.2, Unite.kg),
-        MenuItem("Pots mayo", 4, Unite.piece),
-        MenuItem("Oeufs", 21, Unite.piece),
-        MenuItem("Champis", 1, Unite.kg),
-        MenuItem("Salade", 1, Unite.piece),
-        MenuItem("Nectarines", 21, Unite.piece),
+        MenuImport("Petits pqts chips", 21, Unite.piece),
+        MenuImport("Thon", 1.2, Unite.kg),
+        MenuImport("Pots mayo", 4, Unite.piece),
+        MenuImport("Oeufs", 21, Unite.piece),
+        MenuImport("Champis", 1, Unite.kg),
+        MenuImport("Salade", 1, Unite.piece),
+        MenuImport("Nectarines", 21, Unite.piece),
       ]),
       TestD("""
 4kg lentilles en boîte
@@ -36,13 +36,13 @@ main() {
 2concombres
 4 pqts lardons
 1/2 pasteque""", [
-        MenuItem("Lentilles en boîte", 4, Unite.kg),
-        MenuItem("Patates", 2, Unite.kg),
-        MenuItem("Avocats", 8, Unite.piece),
-        MenuItem("Tomates", 2, Unite.kg),
-        MenuItem("Concombres", 2, Unite.piece),
-        MenuItem("Pqts lardons", 4, Unite.piece),
-        MenuItem("Pasteque", 0.5, Unite.piece),
+        MenuImport("Lentilles en boîte", 4, Unite.kg),
+        MenuImport("Patates", 2, Unite.kg),
+        MenuImport("Avocats", 8, Unite.piece),
+        MenuImport("Tomates", 2, Unite.kg),
+        MenuImport("Concombres", 2, Unite.piece),
+        MenuImport("Pqts lardons", 4, Unite.piece),
+        MenuImport("Pasteque", 0.5, Unite.piece),
       ]),
       TestD("""
 21 tranches jambon
@@ -51,12 +51,12 @@ main() {
 1 Salade
 21 petits pqts chips
 42 abricots""", [
-        MenuItem("Tranches jambon", 21, Unite.piece),
-        MenuItem("Beurre", 0.5, Unite.kg),
-        MenuItem("Tomates", 1.2, Unite.kg),
-        MenuItem("Salade", 1, Unite.piece),
-        MenuItem("Petits pqts chips", 21, Unite.piece),
-        MenuItem("Abricots", 42, Unite.piece),
+        MenuImport("Tranches jambon", 21, Unite.piece),
+        MenuImport("Beurre", 0.5, Unite.kg),
+        MenuImport("Tomates", 1.2, Unite.kg),
+        MenuImport("Salade", 1, Unite.piece),
+        MenuImport("Petits pqts chips", 21, Unite.piece),
+        MenuImport("Abricots", 42, Unite.piece),
       ]),
       TestD("""
 2kg de pâtes
@@ -66,12 +66,12 @@ main() {
 pot/sac d'olives
 
 1kg raisin""", [
-        MenuItem("De pâtes", 2, Unite.kg),
-        MenuItem("Dés de jambon", 1.2, Unite.kg),
-        MenuItem("Tomates", 0.8, Unite.kg),
-        MenuItem("Maïs", 0.8, Unite.kg),
-        MenuItem("Pot/sac d'olives", 1, Unite.piece),
-        MenuItem("Raisin", 1, Unite.kg),
+        MenuImport("De pâtes", 2, Unite.kg),
+        MenuImport("Dés de jambon", 1.2, Unite.kg),
+        MenuImport("Tomates", 0.8, Unite.kg),
+        MenuImport("Maïs", 0.8, Unite.kg),
+        MenuImport("Pot/sac d'olives", 1, Unite.piece),
+        MenuImport("Raisin", 1, Unite.kg),
       ]),
       TestD("""
 4 melons
@@ -82,13 +82,13 @@ pot/sac d'olives
 200g compté
 2 concombres
 """, [
-        MenuItem("Melons", 4, Unite.piece),
-        MenuItem("Riz", 1.2, Unite.kg),
-        MenuItem("Tomate", 0.8, Unite.kg),
-        MenuItem("Oeufs", 10, Unite.piece),
-        MenuItem("Boites de lardons", 4, Unite.piece),
-        MenuItem("Compté", 0.2, Unite.kg),
-        MenuItem("Concombres", 2, Unite.piece),
+        MenuImport("Melons", 4, Unite.piece),
+        MenuImport("Riz", 1.2, Unite.kg),
+        MenuImport("Tomate", 0.8, Unite.kg),
+        MenuImport("Oeufs", 10, Unite.piece),
+        MenuImport("Boites de lardons", 4, Unite.piece),
+        MenuImport("Compté", 0.2, Unite.kg),
+        MenuImport("Concombres", 2, Unite.piece),
       ])
     ];
 

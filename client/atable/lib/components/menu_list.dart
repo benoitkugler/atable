@@ -66,8 +66,9 @@ class _MenuListState extends State<MenuList> {
     final date = menus.isEmpty
         ? DateTime.now()
         : MomentRepasE.nextRepas(menus.last.menu.date);
-    final newMenu =
-        await widget.db.insertMenu(Menu(id: 0, date: date, nbPersonnes: 8));
+    final nbPersonnes = menus.isEmpty ? 8 : menus.last.menu.nbPersonnes;
+    final newMenu = await widget.db
+        .insertMenu(Menu(id: 0, date: date, nbPersonnes: nbPersonnes));
     setState(() {
       menus.add(MenuExt(newMenu, [])); // préserve l'ordre
     });
@@ -151,15 +152,26 @@ class _MenuCardState extends State<_MenuCard> {
               padding: const EdgeInsets.all(8.0),
               child: Row(children: [
                 Text(
-                    "${widget.menu.menu.formatJour()} - ${widget.menu.menu.formatHeure()}"),
+                  "${widget.menu.menu.formatJour()} - ${widget.menu.menu.formatHeure()}",
+                  style: TextStyle(fontSize: 16),
+                ),
                 const Spacer(),
                 isEditingNbPersonnes
                     ? SizedBox(
-                        width: 60,
+                        width: 100,
                         child: TextField(
                           autofocus: true,
                           textAlign: TextAlign.center,
-                          decoration: const InputDecoration(isDense: true),
+                          textAlignVertical: TextAlignVertical.center,
+                          decoration: InputDecoration(
+                              isDense: true,
+                              prefixIcon: IconButton(
+                                  onPressed: () => setState(
+                                      () => isEditingNbPersonnes = false),
+                                  icon: const Icon(
+                                    Icons.clear,
+                                    color: Colors.orange,
+                                  ))),
                           keyboardType: const TextInputType.numberWithOptions(
                               signed: false, decimal: false),
                           onSubmitted: _onEditDone,
@@ -233,7 +245,8 @@ class _MenuIngredientRow extends StatelessWidget {
       children: [
         Text(ing.ingredient.nom),
         const Spacer(),
-        Text("${ing.link.quantite} ${formatUnite(ing.link.unite)}"),
+        Text(
+            "${formatQuantite(ing.link.quantite)} ${formatUnite(ing.link.unite)}"),
       ],
     );
   }

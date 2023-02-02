@@ -649,10 +649,7 @@ const ingredientsSuggestions = [
       id: -1, nom: "Kaki japonais", categorie: CategorieIngredient.legumes),
   Ingredient(
       id: -1, nom: "Corneille noire", categorie: CategorieIngredient.legumes),
-  Ingredient(
-      id: -1,
-      nom: "Salade de roquette",
-      categorie: CategorieIngredient.epicerie),
+  Ingredient(id: -1, nom: "Roquette", categorie: CategorieIngredient.legumes),
   Ingredient(
       id: -1, nom: "Myrtille noire", categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: "Tournesol", categorie: CategorieIngredient.inconnue),
@@ -1319,7 +1316,7 @@ const ingredientsSuggestions = [
   Ingredient(id: -1, nom: "Taco", categorie: CategorieIngredient.inconnue),
   Ingredient(id: -1, nom: "Tortilla", categorie: CategorieIngredient.inconnue),
   Ingredient(id: -1, nom: "Nachos", categorie: CategorieIngredient.inconnue),
-  Ingredient(id: -1, nom: "Salade", categorie: CategorieIngredient.inconnue),
+  Ingredient(id: -1, nom: "Salade", categorie: CategorieIngredient.legumes),
   Ingredient(
       id: -1, nom: "Dulce de leche", categorie: CategorieIngredient.laitages),
   Ingredient(id: -1, nom: "Garniture", categorie: CategorieIngredient.inconnue),

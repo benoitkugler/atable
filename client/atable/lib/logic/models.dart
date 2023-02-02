@@ -51,18 +51,18 @@ class Ingredient {
   }
 }
 
-String _normalize(String nom) => removeDiacritics(nom.trim().toLowerCase());
+String normalizeNom(String nom) => removeDiacritics(nom.trim().toLowerCase());
 
 /// [searchIngredients] filtre la liste par nom
 List<Ingredient> searchIngredients(List<Ingredient> candidates, String nom) {
-  nom = _normalize(nom);
+  nom = normalizeNom(nom);
   candidates =
-      candidates.where((ing) => _normalize(ing.nom).contains(nom)).toList();
+      candidates.where((ing) => normalizeNom(ing.nom).contains(nom)).toList();
   // supprime les éventuels doublons
   final seen = <String>{};
   final List<Ingredient> out = [];
   for (var ing in candidates) {
-    final nom = _normalize(ing.nom);
+    final nom = normalizeNom(ing.nom);
     if (seen.contains(nom)) continue;
     seen.add(nom);
     out.add(ing);
