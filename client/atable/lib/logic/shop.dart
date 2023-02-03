@@ -37,7 +37,7 @@ class IngredientQuantite {
   factory IngredientQuantite.fromJson(Map<String, dynamic> map) {
     return IngredientQuantite(map["id"], map["nom"],
         CategorieIngredient.values[map["categorie"] as int], map["quantite"],
-        checked: map["cheked"]);
+        checked: map["checked"]);
   }
 }
 
@@ -108,13 +108,42 @@ class ShopControllerLocal implements ShopController {
 
 /// [ShopControllerShared] uses a remote data store
 class ShopControllerShared implements ShopController {
-  final Uri url;
+  final String sessionID;
 
-  ShopControllerShared(String url) : url = Uri.parse(url);
+  ShopControllerShared(this.sessionID);
+
+  // PUT : crée une session
+  // GET (sessionID) : récupère la session demandée
+  // POST (sessionID) : modifie la session demandée
+  static const _apiEndpoint = "http://localhost:1323/api/session";
+
+  static const _guestEndpoint = "http://localhost:1323/shop";
+
+  /// [guestURL] renvoie l'url de la page d'accueil destinée
+  /// à un nouvel invité
+  String guestURL() => Uri.parse(_guestEndpoint).replace(
+        queryParameters: {"sessionID": sessionID},
+      ).toString();
+
+  /// [create] demande au serveur de créer une nouvelle session,
+  /// avec le contenu de [list]
+  static Future<ShopControllerShared> create(ShopList list) async {
+    final resp = await http.put(Uri.parse(_apiEndpoint),
+        body: jsonEncode(list._list.map((e) => e.toJson()).toList()),
+        headers: {
+          'Content-type': 'application/json',
+          'Accept': 'application/json',
+        });
+    final sessionID =
+        (jsonDecode(resp.body) as Map<String, dynamic>)["sessionID"];
+    return ShopControllerShared(sessionID);
+  }
 
   @override
   Future<ShopList> fetchList() async {
-    final resp = await http.get(url);
+    final apiURL = Uri.parse(_apiEndpoint)
+        .replace(queryParameters: {"sessionID": sessionID});
+    final resp = await http.get(apiURL);
     final l = jsonDecode(resp.body) as List;
     return ShopList(l
         .map((e) => IngredientQuantite.fromJson(e as Map<String, dynamic>))
@@ -123,7 +152,16 @@ class ShopControllerShared implements ShopController {
 
   @override
   Future<ShopList> updateShop(int id, bool checked) async {
-    final resp = await http.post(url, body: {"checked": checked, "id": id});
+    final apiURL = Uri.parse(_apiEndpoint)
+        .replace(queryParameters: {"sessionID": sessionID});
+    final resp = await http.post(apiURL,
+        body: jsonEncode(
+          {"checked": checked, "id": id},
+        ),
+        headers: {
+          'Content-type': 'application/json',
+          'Accept': 'application/json',
+        });
     final l = jsonDecode(resp.body) as List;
     return ShopList(l
         .map((e) => IngredientQuantite.fromJson(e as Map<String, dynamic>))

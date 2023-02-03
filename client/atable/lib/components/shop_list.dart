@@ -1,6 +1,7 @@
 import 'package:atable/logic/models.dart';
 import 'package:atable/logic/shop.dart';
 import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class ShopSession extends StatefulWidget {
   final List<MenuExt> menus;
@@ -40,12 +41,42 @@ class _ShopSessionState extends State<ShopSession> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: const Text("Liste de course")),
+        appBar: AppBar(title: const Text("Liste de course"), actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: _startSharing,
+          )
+        ]),
         body: ListView(
             children: list
                 .bySections()
                 .map((e) => _ShopSection(e, _updateChecked))
                 .toList()));
+  }
+
+  _startSharing() async {
+    if (shopController is ShopControllerShared) {
+      // si la session est déjà partagée, on ré-utilise le même code
+    } else {
+      // demande au serveur de créer une nouvelle session partagée
+      try {
+        final ct = await ShopControllerShared.create(list);
+        setState(() {
+          shopController = ct;
+        });
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Erreur pendant le partage :\n$e"),
+          backgroundColor: Colors.red,
+        ));
+        return;
+      }
+    }
+    final c = shopController as ShopControllerShared;
+
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => _ShareQRCode(c.guestURL()),
+    ));
   }
 }
 
@@ -100,6 +131,28 @@ class _IngredientRow extends StatelessWidget {
         checkColor: Colors.grey,
         value: ingredient.checked,
         onChanged: (value) => onUpdate(ingredient.id, value!),
+      ),
+    );
+  }
+}
+
+class _ShareQRCode extends StatelessWidget {
+  final String url;
+
+  const _ShareQRCode(this.url, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Partager la liste"),
+      ),
+      body: Center(
+        child: QrImage(
+          data: url,
+          version: QrVersions.auto,
+          // size: 200.0,
+        ),
       ),
     );
   }
