@@ -78,12 +78,10 @@ type update struct {
 }
 
 func (ct *Controller) UpdateSession(c echo.Context) error {
-	fmt.Println("update")
 	var args update
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
-	fmt.Println(args)
 
 	id := c.QueryParam("sessionID")
 	l, err := ct.updateSession(args, id)
