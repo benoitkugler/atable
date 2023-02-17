@@ -1,3 +1,4 @@
+import 'package:atable/logic/shop.dart';
 import 'package:atable/logic/utils.dart';
 import 'package:diacritic/diacritic.dart';
 
@@ -16,7 +17,7 @@ class Ingredient {
 
   @override
   String toString() {
-    return "Ingredient(id: $id, nom: $nom, categorie: $categorie)";
+    return "Ingredient(id: $id, nom: '$nom', categorie: $categorie)";
   }
 
   Ingredient copyWith({
@@ -70,43 +71,46 @@ List<Ingredient> searchIngredients(List<Ingredient> candidates, String nom) {
   return out;
 }
 
-/// [Menu] est un ensemble d'ingrédients
-/// prévu pour une date et un nombre de personnes.
+/// [Menu] est un ensemble d'ingrédients et quantités (relatives)
 /// Les différents plats d'un même repas sont spécifiés
 /// pour chaque ingrédients.
+/// Un même [Menu] peut être utilisé dans plusieurs [Repas].
 class Menu {
   final int id;
-  final DateTime date;
 
-  /// [nbPersonnes] est liés aux quantités des ingrédients
+  /// [nbPersonnes] défini pour combien
+  /// sont exprimés les quantités des ingrédients
   final int nbPersonnes;
+
+  /// [label] est un identifiant unique, optionnel
+  final String label;
 
   const Menu({
     required this.id,
-    required this.date,
     required this.nbPersonnes,
+    required this.label,
   });
 
   Menu copyWith({
     int? id,
-    DateTime? date,
     int? nbPersonnes,
+    String? label,
   }) {
     return Menu(
         id: id ?? this.id,
-        date: date ?? this.date,
-        nbPersonnes: nbPersonnes ?? this.nbPersonnes);
+        nbPersonnes: nbPersonnes ?? this.nbPersonnes,
+        label: label ?? this.label);
   }
 
   @override
   String toString() {
-    return "Repas(id: $id, date: $date, nbPersonnes: $nbPersonnes)";
+    return "Menu(id: $id, nbPersonnes: $nbPersonnes, label: $label)";
   }
 
   Map<String, dynamic> toSQLMap(bool ignoreID) {
     final out = {
-      "date": date.toIso8601String(),
       "nbPersonnes": nbPersonnes,
+      "label": label,
     };
     if (!ignoreID) {
       out["id"] = id;
@@ -117,6 +121,64 @@ class Menu {
   factory Menu.fromSQLMap(Map<String, dynamic> map) {
     return Menu(
       id: map["id"],
+      nbPersonnes: map["nbPersonnes"],
+      label: map["label"],
+    );
+  }
+}
+
+/// [Repas] est un menu pour une date et un nombre de personnes donnés
+class Repas {
+  final int id;
+  final int idMenu;
+
+  final DateTime date;
+
+  /// [nbPersonnes] est le nombre de personnes
+  /// à utiliser dans le calcul des quantités.
+  final int nbPersonnes;
+
+  const Repas({
+    required this.id,
+    required this.idMenu,
+    required this.date,
+    required this.nbPersonnes,
+  });
+
+  Repas copyWith({
+    int? id,
+    int? idMenu,
+    DateTime? date,
+    int? nbPersonnes,
+  }) {
+    return Repas(
+        id: id ?? this.id,
+        idMenu: idMenu ?? this.idMenu,
+        date: date ?? this.date,
+        nbPersonnes: nbPersonnes ?? this.nbPersonnes);
+  }
+
+  @override
+  String toString() {
+    return "Repas(id: $id, idMenu: $idMenu, date: $date, nbPersonnes: $nbPersonnes)";
+  }
+
+  Map<String, dynamic> toSQLMap(bool ignoreID) {
+    final out = {
+      "idMenu": idMenu,
+      "date": date.toIso8601String(),
+      "nbPersonnes": nbPersonnes,
+    };
+    if (!ignoreID) {
+      out["id"] = id;
+    }
+    return out;
+  }
+
+  factory Repas.fromSQLMap(Map<String, dynamic> map) {
+    return Repas(
+      id: map["id"],
+      idMenu: map["idMenu"],
       date: DateTime.parse(map["date"]),
       nbPersonnes: map["nbPersonnes"],
     );
@@ -267,20 +329,48 @@ class MenuIngredientExt {
   }
 }
 
+typedef Plats = Map<CategoriePlat, List<MenuIngredientExt>>;
+
+/// [buildPlats] renvoie la liste des ingrédients regroupés par
+/// plat
+Plats buildPlats(List<MenuIngredientExt> ingredients) {
+  final Map<CategoriePlat, List<MenuIngredientExt>> crible = {};
+  for (var ing in ingredients) {
+    final l = crible.putIfAbsent(ing.link.categorie, () => []);
+    l.add(ing);
+  }
+  return crible;
+}
+
 /// [MenuExt] est un [Menu] associé à tous ses ingrédients.
 class MenuExt {
   final Menu menu;
   final List<MenuIngredientExt> ingredients;
   const MenuExt(this.menu, this.ingredients);
 
-  /// [plats] renvoie la liste des ingrédients regroupés par
-  /// plat
-  Map<CategoriePlat, List<MenuIngredientExt>> plats() {
-    final Map<CategoriePlat, List<MenuIngredientExt>> crible = {};
-    for (var ing in ingredients) {
-      final l = crible.putIfAbsent(ing.link.categorie, () => []);
-      l.add(ing);
-    }
-    return crible;
+  MenuExt copyWith({Menu? menu, List<MenuIngredientExt>? ingredients}) {
+    return MenuExt(menu ?? this.menu, ingredients ?? this.ingredients);
+  }
+}
+
+class RepasExt {
+  final Repas repas;
+  final MenuExt menu;
+
+  const RepasExt(this.repas, this.menu);
+
+  RepasExt copyWith({Repas? repas, MenuExt? menu}) {
+    return RepasExt(repas ?? this.repas, menu ?? this.menu);
+  }
+
+  /// [requiredQuantites] renvoie les ingrédients avec les
+  /// quantités nécessaires au nombre de personne du repas
+  List<MenuIngredientExt> requiredQuantites() {
+    final factor =
+        repas.nbPersonnes.toDouble() / menu.menu.nbPersonnes.toDouble();
+    return menu.ingredients
+        .map((e) => e.copyWith(
+            link: e.link.copyWith(quantite: e.link.quantite * factor)))
+        .toList();
   }
 }

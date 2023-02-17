@@ -1,5 +1,5 @@
-import 'package:atable/components/ingredients_list.dart';
-import 'package:atable/components/menu_list.dart';
+import 'package:atable/components/menus_list.dart';
+import 'package:atable/components/repas_list.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:flutter/material.dart';
 
@@ -33,34 +33,54 @@ class _Home extends StatefulWidget {
   State<_Home> createState() => __HomeState();
 }
 
-enum _View { menus, ingredients }
+enum _View { repas, menus }
 
 class __HomeState extends State<_Home> {
-  _View pageIndex = _View.menus;
+  PageController controller = PageController();
 
-  Widget get body {
-    switch (pageIndex) {
+  var scrollToRepas = ValueNotifier<int>(-1);
+
+  Widget body(int index) {
+    switch (_View.values[index]) {
+      case _View.repas:
+        return RepasList(widget.db, scrollToRepas);
       case _View.menus:
-        return MenuList(widget.db);
-      case _View.ingredients:
-        return IngredientList(widget.db);
+        return MenusList(widget.db);
     }
+  }
+
+  void _showRepas(GoToRepasNotification notif) async {
+    await controller.animateToPage(_View.repas.index,
+        duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+    setState(() {});
+    scrollToRepas.value = notif.repas.id;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: body,
+      body: NotificationListener<GoToRepasNotification>(
+        child: PageView.builder(
+          controller: controller,
+          itemCount: _View.values.length,
+          itemBuilder: (context, index) => body(index),
+        ),
+        onNotification: (notification) {
+          _showRepas(notification);
+          return true;
+        },
+      ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: pageIndex.index,
+        currentIndex:
+            (controller.hasClients ? controller.page ?? 0 : 0.0).toInt(),
         items: const [
           BottomNavigationBarItem(
               icon: Icon(Icons.calendar_view_day_rounded), label: "Repas"),
           BottomNavigationBarItem(
-              icon: Icon(Icons.fastfood), label: "Ingrédients"),
+              icon: Icon(Icons.fastfood), label: "Menus favoris"),
         ],
         onTap: (value) => setState(() {
-          pageIndex = _View.values[value];
+          controller.jumpToPage(value);
         }),
       ),
     );

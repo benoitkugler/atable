@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class ShopSession extends StatefulWidget {
-  final List<MenuExt> menus;
+  final List<RepasExt> repass;
 
-  const ShopSession(this.menus, {super.key});
+  const ShopSession(this.repass, {super.key});
 
   @override
   State<ShopSession> createState() => _ShopSessionState();
@@ -19,7 +19,7 @@ class _ShopSessionState extends State<ShopSession> {
 
   @override
   void initState() {
-    shopController = ShopControllerLocal(ShopList.fromMenus(widget.menus));
+    shopController = ShopControllerLocal(ShopList.fromRepass(widget.repass));
     _refreshList();
     super.initState();
   }

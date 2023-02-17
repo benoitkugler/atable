@@ -1,179 +1,202 @@
 import 'package:atable/components/details_menu.dart';
+import 'package:atable/components/shared.dart';
 import 'package:atable/components/shop_list.dart';
 import 'package:atable/logic/models.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:atable/logic/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
-class MenuList extends StatefulWidget {
+class RepasList extends StatefulWidget {
   final DBApi db;
+  final ValueNotifier<int> scrollTo;
 
-  const MenuList(this.db, {super.key});
+  const RepasList(this.db, this.scrollTo, {super.key});
 
   @override
-  State<MenuList> createState() => _MenuListState();
+  State<RepasList> createState() => _RepasListState();
 }
 
-class _MenuListState extends State<MenuList> {
-  List<MenuExt> menus = [];
-  final _scrollController = ScrollController();
+class _RepasListState extends State<RepasList> {
+  List<RepasExt> repass = [];
+  final _scrollController = ItemScrollController();
 
-  Set<int> selectedMenus = {};
+  Set<int> selectedRepas = {};
 
   @override
   void initState() {
-    _loadMenus();
+    _loadRepas();
+    widget.scrollTo.addListener(_scrollToRepas);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    widget.scrollTo.removeListener(_scrollToRepas);
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Repas"),
+        title: const Text("Repas programmés"),
         actions: [
           IconButton(
-              onPressed: selectedMenus.isEmpty ? null : _showShop,
+              onPressed: selectedRepas.isEmpty ? null : _showShop,
               icon: const Icon(Icons.store))
         ],
       ),
-      body: menus.isEmpty
+      body: repass.isEmpty
           ? const Center(
               child: Text("Aucun repas."),
             )
-          : ListView.builder(
-              controller: _scrollController,
-              itemCount: menus.length,
-              itemBuilder: (context, index) => Dismissible(
-                    key: Key("${menus[index].menu.id}"),
-                    onDismissed: (direction) => _deleteMenu(menus[index]),
-                    background: Container(
-                      margin: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                          color: Colors.red,
-                          borderRadius: BorderRadius.circular(5)),
+          : ScrollablePositionedList.builder(
+              padding: const EdgeInsets.only(
+                  bottom: 50), // avoid add button hiding nbPersonnes field
+              itemScrollController: _scrollController,
+              itemCount: repass.length,
+              itemBuilder: (context, index) => DismissibleDelete(
+                    itemKey: repass[index].repas.id,
+                    onDissmissed: () => _deleteRepas(repass[index]),
+                    child: _RepasCard(
+                      repass[index],
+                      selectedRepas.contains(index),
+                      () => _showMenuDetails(index),
+                      () => setState(() {
+                        selectedRepas.contains(index)
+                            ? selectedRepas.remove(index)
+                            : selectedRepas.add(index);
+                      }),
+                      (m) => _editRepas(index, m),
                     ),
-                    child: _MenuCard(
-                        menus[index],
-                        selectedMenus.contains(index),
-                        () => _showMenuDetails(index),
-                        () => setState(() {
-                              selectedMenus.contains(index)
-                                  ? selectedMenus.remove(index)
-                                  : selectedMenus.add(index);
-                            }),
-                        (m) => _editMenu(index, m)),
                   )),
       floatingActionButton: FloatingActionButton(
-        mini: true,
-        onPressed: _addMenu,
+        onPressed: _addRepas,
         child: const Icon(Icons.add),
       ),
     );
   }
 
-  void _loadMenus() async {
-    final l = await widget.db.getMenus();
-    if (mounted) setState(() => menus = l);
+  void _scrollToRepas() async {
+    final id = widget.scrollTo.value;
+    final index = repass.indexWhere((element) => element.repas.id == id);
+    await _scrollToIndex(index);
   }
 
-  void _addMenu() async {
-    // Utilise la date courante si aucun menu n'existe encore
-    // Sinon utilise le dernier menu et passe au prochain repas
-    final date = menus.isEmpty
-        ? DateTime.now()
-        : MomentRepasE.nextRepas(menus.last.menu.date);
-    final nbPersonnes = menus.isEmpty ? 8 : menus.last.menu.nbPersonnes;
-    final newMenu = await widget.db
-        .insertMenu(Menu(id: 0, date: date, nbPersonnes: nbPersonnes));
-    setState(() {
-      menus.add(MenuExt(newMenu, [])); // préserve l'ordre
-    });
-    Future.delayed(
-        const Duration(milliseconds: 100),
-        () => _scrollController.animateTo(
-              _scrollController.position.maxScrollExtent + 100,
+  void _scrollToEnd() {
+    _scrollToIndex(repass.length - 1);
+  }
+
+  Future<void> _scrollToIndex(int index) async {
+    if (!_scrollController.isAttached) return; // widget not build yet
+    // scroll à la fin de la liste
+    await Future.delayed(
+        const Duration(milliseconds: 50),
+        () async => await _scrollController.scrollTo(
+              index: index,
               curve: Curves.fastOutSlowIn,
               duration: const Duration(milliseconds: 500),
             ));
   }
 
-  void _editMenu(int oldMenuIndex, Menu newMenu) async {
-    // met à jour le menu ...
-    await widget.db.updateMenu(newMenu);
-
-    final oldMenu = menus[oldMenuIndex];
-    // ... et modifie les quantités liées
-    double factor =
-        newMenu.nbPersonnes.toDouble() / oldMenu.menu.nbPersonnes.toDouble();
-    final newIngs = oldMenu.ingredients
-        .map((e) => e.copyWith(
-            link: e.link.copyWith(quantite: factor * e.link.quantite)))
-        .toList();
-
-    await widget.db.updateMenuIngredients(newIngs.map((e) => e.link).toList());
-    setState(() {
-      menus[oldMenuIndex] = MenuExt(newMenu, newIngs);
-    });
+  void _loadRepas() async {
+    final l = await widget.db.getRepas();
+    if (mounted) setState(() => repass = l);
   }
 
-  void _deleteMenu(MenuExt menu) async {
+  void _addRepas() async {
+    final newMenu = await widget.db
+        .createMenu(const Menu(id: 0, nbPersonnes: 10, label: ""));
+    final repasProps = (await widget.db.guessRepasProperties());
+
+    final newRepas =
+        await widget.db.createRepas(repasProps.copyWith(idMenu: newMenu.id));
+
     setState(() {
-      menus.removeWhere((element) => element.menu.id == menu.menu.id);
+      repass.add(RepasExt(newRepas, MenuExt(newMenu, []))); // préserve l'ordre
     });
-    await widget.db.deleteMenu(menu.menu.id);
+
+    _scrollToEnd();
+  }
+
+  void _editRepas(int oldRepasIndex, Repas newRepas) async {
+    // met à jour le menu ...
+    await widget.db.updateRepas(newRepas);
+
+    setState(() {
+      repass[oldRepasIndex] = repass[oldRepasIndex].copyWith(repas: newRepas);
+    });
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('Repas supprimé.')));
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Repas mis à jour.'),
+      backgroundColor: Colors.green,
+    ));
+  }
+
+  void _deleteRepas(RepasExt repas) async {
+    setState(() {
+      repass.removeWhere((element) => element.repas.id == repas.repas.id);
+    });
+    await widget.db.deleteRepas(repas.repas);
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Repas supprimé.'), backgroundColor: Colors.green));
   }
 
   void _showMenuDetails(int menuIndex) async {
-    var menu = menus[menuIndex];
+    var menu = repass[menuIndex].menu;
     await Navigator.of(context).push(MaterialPageRoute(
       builder: (context) => DetailsMenu(widget.db, menu),
     ));
+
     // met à jour les données
     menu = await widget.db.getMenu(menu.menu.id);
     setState(() {
-      menus[menuIndex] = menu;
+      for (var i = 0; i < repass.length; i++) {
+        if (repass[i].menu.menu.id == menu.menu.id) {
+          repass[i] = repass[i].copyWith(menu: menu);
+        }
+      }
     });
   }
 
   void _showShop() async {
-    final selectedMenusL = selectedMenus.map((e) => menus[e]).toList();
+    final selectedRepasL = selectedRepas.map((e) => repass[e]).toList();
     await Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => ShopSession(selectedMenusL),
+      builder: (context) => ShopSession(selectedRepasL),
     ));
     setState(() {
-      selectedMenus.clear();
+      selectedRepas.clear();
     });
   }
 }
 
-class _MenuCard extends StatefulWidget {
-  final MenuExt menu;
+class _RepasCard extends StatefulWidget {
+  final RepasExt repas;
   final bool isSelected;
 
   final void Function() onTap;
   final void Function() onLongPress;
-  final void Function(Menu menu) onEdit;
+  final void Function(Repas repas) onEdit;
 
-  const _MenuCard(
-      this.menu, this.isSelected, this.onTap, this.onLongPress, this.onEdit,
+  const _RepasCard(
+      this.repas, this.isSelected, this.onTap, this.onLongPress, this.onEdit,
       {super.key});
 
   @override
-  State<_MenuCard> createState() => _MenuCardState();
+  State<_RepasCard> createState() => _RepasCardState();
 }
 
-class _MenuCardState extends State<_MenuCard> {
+class _RepasCardState extends State<_RepasCard> {
   bool isEditingNbPersonnes = false;
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: widget.isSelected ? Colors.yellow.shade100 : null,
+      color: widget.isSelected ? Colors.yellow.shade100 : Colors.white,
       child: InkWell(
         borderRadius: const BorderRadius.all(Radius.circular(4)),
         onTap: widget.onTap,
@@ -185,7 +208,7 @@ class _MenuCardState extends State<_MenuCard> {
               padding: const EdgeInsets.all(8.0),
               child: Row(children: [
                 Text(
-                  "${widget.menu.menu.formatJour()} - ${widget.menu.menu.formatHeure()}",
+                  "${widget.repas.repas.formatJour()} - ${widget.repas.repas.formatHeure()}",
                   style: const TextStyle(fontSize: 16),
                 ),
                 const Spacer(),
@@ -214,10 +237,10 @@ class _MenuCardState extends State<_MenuCard> {
                             visualDensity: const VisualDensity(vertical: -3)),
                         onPressed: () =>
                             setState(() => isEditingNbPersonnes = true),
-                        child: Text("Pour ${widget.menu.menu.nbPersonnes}")),
+                        child: Text("Pour ${widget.repas.repas.nbPersonnes}")),
               ]),
             ),
-            widget.menu.ingredients.isEmpty
+            widget.repas.menu.ingredients.isEmpty
                 ? const Padding(
                     padding: EdgeInsets.all(12.0),
                     child: Text(
@@ -228,8 +251,7 @@ class _MenuCardState extends State<_MenuCard> {
                 : Padding(
                     padding: const EdgeInsets.all(4.0),
                     child: Column(
-                        children: widget.menu
-                            .plats()
+                        children: buildPlats(widget.repas.requiredQuantites())
                             .entries
                             .map((item) => _PlatCard(item.key, item.value))
                             .toList()),
@@ -241,7 +263,7 @@ class _MenuCardState extends State<_MenuCard> {
   }
 
   void _onEditDone(String value) {
-    widget.onEdit(widget.menu.menu.copyWith(nbPersonnes: int.parse(value)));
+    widget.onEdit(widget.repas.repas.copyWith(nbPersonnes: int.parse(value)));
     setState(() {
       isEditingNbPersonnes = false;
     });

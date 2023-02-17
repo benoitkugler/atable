@@ -1,5 +1,6 @@
 import 'package:atable/components/import_dialog.dart';
 import 'package:atable/components/ingredient_editor.dart';
+import 'package:atable/components/shared.dart';
 import 'package:atable/logic/ingredientsDB.dart';
 import 'package:atable/logic/models.dart';
 import 'package:atable/logic/sql.dart';
@@ -11,13 +12,13 @@ extension CategoriePlatColor on CategoriePlat {
   Color get color {
     switch (this) {
       case CategoriePlat.entree:
-        return Colors.green.shade300;
+        return Colors.green.shade200;
       case CategoriePlat.platPrincipal:
         return Colors.deepOrange.shade200;
       case CategoriePlat.dessert:
-        return Colors.pink.shade300;
+        return Colors.pink.shade200;
       case CategoriePlat.divers:
-        return Colors.grey.shade400;
+        return Colors.grey.shade300;
     }
   }
 }
@@ -26,30 +27,39 @@ extension CategoriePlatColor on CategoriePlat {
 class DetailsMenu extends StatefulWidget {
   final DBApi db;
 
-  final MenuExt menu;
+  final MenuExt initialValue;
 
-  const DetailsMenu(this.db, this.menu, {super.key});
+  const DetailsMenu(this.db, this.initialValue, {super.key});
 
   @override
   State<DetailsMenu> createState() => _DetailsMenuState();
 }
 
 class _DetailsMenuState extends State<DetailsMenu> {
+  late MenuExt menu;
   List<Ingredient> allIngredients = [];
 
   @override
   void initState() {
+    menu = widget.initialValue;
     _loadIngredients();
+
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    final plats = widget.menu.plats();
+    final isAnonyme = menu.menu.label.isEmpty;
+    final plats = buildPlats(menu.ingredients);
     return Scaffold(
       appBar: AppBar(
-        title: Text("Ingrédients pour ${widget.menu.menu.nbPersonnes}"),
+        title: Text(isAnonyme ? "Menu" : menu.menu.label),
         actions: [
+          IconButton(
+              onPressed: _showRenameDialog,
+              icon: isAnonyme
+                  ? const Icon(Icons.favorite)
+                  : const Icon(Icons.edit)),
           IconButton(
               onPressed: _showImportDialog, icon: const Icon(Icons.upload))
         ],
@@ -59,11 +69,49 @@ class _DetailsMenuState extends State<DetailsMenu> {
         onPressed: () => _showEditDialog(),
         child: const Icon(Icons.add),
       ),
-      body: ListView(
-        children: CategoriePlat.values
-            .map((e) => _PlatCard(e, plats[e] ?? [], _removeIngredient,
-                _swapCategorie, _updateLink))
-            .toList(),
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 4),
+          Card(
+            child: Column(
+              children: [
+                Padding(
+                  padding:
+                      const EdgeInsets.only(top: 12.0, right: 12, left: 12),
+                  child: Row(
+                    children: [
+                      Text(
+                        "Liste des ingrédients pour ${menu.menu.nbPersonnes} personnes",
+                        style: const TextStyle(fontSize: 16),
+                      )
+                    ],
+                  ),
+                ),
+                Slider(
+                    label: "${menu.menu.nbPersonnes}",
+                    value: menu.menu.nbPersonnes.toDouble(),
+                    min: 1,
+                    max: 40,
+                    divisions: 40 - 1,
+                    onChangeEnd: (v) =>
+                        _updateMenu(menu.menu.copyWith(nbPersonnes: v.toInt())),
+                    onChanged: (v) => setState(() {
+                          menu = menu.copyWith(
+                              menu: menu.menu.copyWith(nbPersonnes: v.toInt()));
+                        }))
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView(
+              children: CategoriePlat.values
+                  .map((e) => _PlatCard(e, plats[e] ?? [], _removeIngredient,
+                      _swapCategorie, _updateLink))
+                  .toList(),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -73,7 +121,7 @@ class _DetailsMenuState extends State<DetailsMenu> {
         context: context,
         builder: (context) => Dialog(
               child: IngredientEditor(
-                _candidates(),
+                allIngredients,
                 (ing, isNew) {
                   Navigator.of(context).pop();
                   _addIngredient(ing, isNew);
@@ -94,7 +142,7 @@ class _DetailsMenuState extends State<DetailsMenu> {
     final newIngredients = await showDialog<List<MenuIngredientExt>>(
         context: context,
         builder: (context) => Dialog(
-              child: ImportDialog(_candidates(), cp.text ?? "",
+              child: ImportDialog(allIngredients, cp.text ?? "",
                   (l) => Navigator.of(context).pop(l)),
             ));
     if (newIngredients == null) return; // import annulé
@@ -106,68 +154,85 @@ class _DetailsMenuState extends State<DetailsMenu> {
         ing = await widget.db.insertIngredient(ing);
       }
       final link =
-          item.link.copyWith(idMenu: widget.menu.menu.id, idIngredient: ing.id);
+          item.link.copyWith(idMenu: menu.menu.id, idIngredient: ing.id);
       await widget.db.insertMenuIngredient(link);
       setState(() {
-        widget.menu.ingredients.add(MenuIngredientExt(ing, link));
+        menu.ingredients.add(MenuIngredientExt(ing, link));
       });
     }
+  }
+
+  void _updateMenu(Menu newMenu) async {
+    setState(() {
+      menu = menu.copyWith(menu: newMenu);
+    });
+    await widget.db.updateMenu(newMenu);
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Menu modifié.'),
+      duration: Duration(seconds: 1),
+      backgroundColor: Colors.green,
+    ));
+  }
+
+  void _showRenameDialog() async {
+    final newLabel = await showDialog<String>(
+        context: context,
+        builder: (context) => Dialog(
+              child:
+                  _RenameDialog(menu.menu, (s) => Navigator.of(context).pop(s)),
+            ));
+    if (newLabel == null) return;
+
+    _updateMenu(menu.menu.copyWith(label: newLabel));
   }
 
   void _loadIngredients() async {
     allIngredients = await widget.db.getIngredients();
   }
 
-  // enlève les ingrédients déjà présent dans le menu
-  List<Ingredient> _candidates() {
-    final existingIngs =
-        widget.menu.ingredients.map((e) => e.ingredient.id).toSet();
-    return allIngredients
-        .where((element) => !existingIngs.contains(element.id))
-        .toList();
-  }
-
   void _addIngredient(Ingredient ing, bool isNew) async {
     if (isNew) {
-      // register first the new ingredient
+      // register first the new ingredient, and record it in the proposition
       ing = await widget.db.insertIngredient(ing);
+      allIngredients.add(ing);
     }
     final link = MenuIngredient(
-        idMenu: widget.menu.menu.id,
+        idMenu: menu.menu.id,
         idIngredient: ing.id,
         quantite: 1,
         unite: Unite.kg,
         categorie: CategoriePlat.entree);
-    await widget.db.insertMenuIngredient(link);
+    final newIngredients = await widget.db.insertMenuIngredient(link);
     setState(() {
-      widget.menu.ingredients.add(MenuIngredientExt(ing, link));
+      menu = menu.copyWith(ingredients: newIngredients);
     });
   }
 
   void _removeIngredient(MenuIngredientExt ing) async {
-    await widget.db
-        .deleteMenuIngredient(widget.menu.menu.id, ing.ingredient.id);
+    await widget.db.deleteMenuIngredient(ing.link);
     setState(() {
-      widget.menu.ingredients
+      menu.ingredients
           .removeWhere((element) => element.ingredient.id == ing.ingredient.id);
     });
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ingrédient ${ing.ingredient.nom} supprimé.')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Ingrédient ${ing.ingredient.nom} supprimé.'),
+      backgroundColor: Colors.green,
+    ));
   }
 
   void _swapCategorie(MenuIngredientExt ing, CategoriePlat newCategorie) async {
     if (ing.link.categorie == newCategorie) return;
 
-    final newLink = ing.link.copyWith(categorie: newCategorie);
-    await widget.db.updateMenuIngredient(newLink);
+    await widget.db.deleteMenuIngredient(ing.link);
 
+    final newLink = ing.link.copyWith(categorie: newCategorie);
+    final newIngredients = await widget.db.insertMenuIngredient(newLink);
     setState(() {
-      final index = widget.menu.ingredients
-          .indexWhere((element) => element.ingredient.id == ing.ingredient.id);
-      widget.menu.ingredients[index] =
-          widget.menu.ingredients[index].copyWith(link: newLink);
+      menu = menu.copyWith(ingredients: newIngredients);
     });
   }
 
@@ -179,10 +244,9 @@ class _DetailsMenuState extends State<DetailsMenu> {
     await widget.db.updateMenuIngredient(newLink);
 
     setState(() {
-      final index = widget.menu.ingredients
+      final index = menu.ingredients
           .indexWhere((element) => element.ingredient.id == ing.ingredient.id);
-      widget.menu.ingredients[index] =
-          widget.menu.ingredients[index].copyWith(link: newLink);
+      menu.ingredients[index] = menu.ingredients[index].copyWith(link: newLink);
     });
   }
 }
@@ -209,7 +273,6 @@ class _PlatCard extends StatelessWidget {
         color: plat.color,
         elevation: candidateData.isEmpty ? null : 10,
         child: Column(
-          // crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -227,15 +290,9 @@ class _PlatCard extends StatelessWidget {
                 ),
                 child: Column(
                     children: ingredients
-                        .map((e) => Dismissible(
-                              key: Key("${e.ingredient.id}"),
-                              background: Container(
-                                margin: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                    color: Colors.red,
-                                    borderRadius: BorderRadius.circular(5)),
-                              ),
-                              onDismissed: (_) => removeIngredient(e),
+                        .map((e) => DismissibleDelete(
+                              itemKey: e.ingredient.id,
+                              onDissmissed: () => removeIngredient(e),
                               child: _IngredientRow(
                                   e,
                                   (q) => updateLink(e, q, e.link.unite),
@@ -350,6 +407,73 @@ class _UniteEditor extends StatelessWidget {
         formatUnite(value).padRight(2),
         style: TextStyle(
             fontWeight: FontWeight.w500, color: Theme.of(context).primaryColor),
+      ),
+    );
+  }
+}
+
+class _RenameDialog extends StatefulWidget {
+  final Menu menu;
+  final void Function(String) onDone;
+
+  const _RenameDialog(this.menu, this.onDone, {super.key});
+
+  @override
+  State<_RenameDialog> createState() => __RenameDialogState();
+}
+
+class __RenameDialogState extends State<_RenameDialog> {
+  final TextEditingController controller = TextEditingController();
+
+  @override
+  void initState() {
+    controller.text = widget.menu.label;
+    controller.addListener(() => setState(() {}));
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  bool get isInputValid => controller.text.isNotEmpty;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              widget.menu.label.isEmpty
+                  ? "Ajouter en favori"
+                  : "Renommer le menu",
+              style: const TextStyle(fontSize: 18),
+            ),
+          ),
+          TextField(
+            autofocus: true,
+            controller: controller,
+            inputFormatters: [
+              TextInputFormatter.withFunction((oldValue, newValue) =>
+                  newValue.copyWith(text: capitalize(newValue.text)))
+            ],
+            decoration: const InputDecoration(labelText: "Nom du menu"),
+          ),
+          const SizedBox(height: 20),
+          TextButton(
+            onPressed:
+                isInputValid ? () => widget.onDone(controller.text) : null,
+            style: TextButton.styleFrom(
+                backgroundColor: Colors.green, foregroundColor: Colors.white),
+            child: const Text("Renommer"),
+          )
+        ],
       ),
     );
   }

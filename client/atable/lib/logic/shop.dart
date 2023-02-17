@@ -54,12 +54,12 @@ class ShopList {
   final List<IngredientQuantite> _list;
   ShopList(this._list);
 
-  /// [fromMenus] regroupe les ingrédients des [menus], regroupés par catégories
-  factory ShopList.fromMenus(List<MenuExt> menus) {
+  /// [fromRepass] regroupe les ingrédients des [repass], regroupés par catégories
+  factory ShopList.fromRepass(List<RepasExt> repass) {
     final tmp = <int, Quantites>{}; // par ID
     final ingregients = <int, Ingredient>{}; // par ID
-    for (var menu in menus) {
-      for (var ing in menu.ingredients) {
+    for (var repas in repass) {
+      for (var ing in repas.requiredQuantites()) {
         ingregients[ing.ingredient.id] = ing.ingredient;
 
         final qus = tmp.putIfAbsent(ing.ingredient.id, () => {});
