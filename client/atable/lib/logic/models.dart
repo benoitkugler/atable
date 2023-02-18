@@ -71,6 +71,108 @@ List<Ingredient> searchIngredients(List<Ingredient> candidates, String nom) {
   return out;
 }
 
+/// [Recette] regroupe plusieurs ingrédients
+class Recette {
+  final int id;
+  final int nbPersonnes;
+  final String label;
+  final CategoriePlat categorie;
+
+  const Recette({
+    required this.id,
+    required this.nbPersonnes,
+    required this.label,
+    required this.categorie,
+  });
+
+  @override
+  String toString() {
+    return "Recette(id: $id, nbPersonnes: $nbPersonnes, label: $label, categorie: $categorie)";
+  }
+
+  Map<String, dynamic> toSQLMap(bool ignoreID) {
+    final out = {
+      "nbPersonnes": nbPersonnes,
+      "label": label,
+      "categorie": categorie.index,
+    };
+    if (!ignoreID) {
+      out["id"] = id;
+    }
+    return out;
+  }
+
+  factory Recette.fromSQLMap(Map<String, dynamic> map) {
+    return Recette(
+        id: map["id"],
+        nbPersonnes: map["nbPersonnes"],
+        label: map["label"],
+        categorie: CategoriePlat.values[map["categorie"]]);
+  }
+
+  Recette copyWith({
+    int? id,
+    int? nbPersonnes,
+    String? label,
+    CategoriePlat? categorie,
+  }) {
+    return Recette(
+      id: id ?? this.id,
+      nbPersonnes: nbPersonnes ?? this.nbPersonnes,
+      label: label ?? this.label,
+      categorie: categorie ?? this.categorie,
+    );
+  }
+}
+
+/// [RecetteIngredient] détermine les quantités d'une recette
+class RecetteIngredient {
+  final int idRecette;
+  final int idIngredient;
+  final double quantite;
+  final Unite unite;
+
+  const RecetteIngredient({
+    required this.idRecette,
+    required this.idIngredient,
+    required this.quantite,
+    required this.unite,
+  });
+
+  RecetteIngredient copyWith({
+    int? idRecette,
+    int? idIngredient,
+    double? quantite,
+    Unite? unite,
+  }) {
+    return RecetteIngredient(
+      idRecette: idRecette ?? this.idRecette,
+      idIngredient: idIngredient ?? this.idIngredient,
+      quantite: quantite ?? this.quantite,
+      unite: unite ?? this.unite,
+    );
+  }
+
+  Map<String, dynamic> toSQLMap() {
+    final out = {
+      "idRecette": idRecette,
+      "idIngredient": idIngredient,
+      "quantite": quantite,
+      "unite": unite.index,
+    };
+    return out;
+  }
+
+  factory RecetteIngredient.fromSQLMap(Map<String, dynamic> map) {
+    return RecetteIngredient(
+      idRecette: map["idRecette"],
+      idIngredient: map["idIngredient"],
+      quantite: map["quantite"],
+      unite: Unite.values[map["unite"]],
+    );
+  }
+}
+
 /// [Menu] est un ensemble d'ingrédients et quantités (relatives)
 /// Les différents plats d'un même repas sont spécifiés
 /// pour chaque ingrédients.
@@ -82,7 +184,7 @@ class Menu {
   /// sont exprimés les quantités des ingrédients
   final int nbPersonnes;
 
-  /// [label] est un identifiant unique, optionnel
+  /// [label] est un RecetteIngredient unique, optionnel
   final String label;
 
   const Menu({
@@ -123,6 +225,66 @@ class Menu {
       id: map["id"],
       nbPersonnes: map["nbPersonnes"],
       label: map["label"],
+    );
+  }
+}
+
+class MenuIngredient {
+  final int idMenu;
+  final int idIngredient;
+
+  /// [quantite] est la quantité requise pour le nombre de personnes
+  /// défini dans le menu associé,
+  /// exprimée dans l'unité [unite]
+  final double quantite;
+  final Unite unite;
+  final CategoriePlat categorie;
+
+  const MenuIngredient({
+    required this.idMenu,
+    required this.idIngredient,
+    required this.quantite,
+    required this.unite,
+    required this.categorie,
+  });
+
+  MenuIngredient copyWith({
+    int? idMenu,
+    int? idIngredient,
+    double? quantite,
+    Unite? unite,
+    CategoriePlat? categorie,
+  }) {
+    return MenuIngredient(
+        idMenu: idMenu ?? this.idMenu,
+        idIngredient: idIngredient ?? this.idIngredient,
+        quantite: quantite ?? this.quantite,
+        unite: unite ?? this.unite,
+        categorie: categorie ?? this.categorie);
+  }
+
+  @override
+  String toString() {
+    return "MenuIngredient(idMenu: $idMenu, idIngredient: $idIngredient, quantite: $quantite, unite: $unite, categorie: $categorie)";
+  }
+
+  Map<String, dynamic> toSQLMap() {
+    return {
+      "idMenu": idMenu,
+      "idIngredient": idIngredient,
+      "quantite": quantite,
+      "unite": unite.index,
+      "categorie": categorie.index,
+    };
+  }
+
+  factory MenuIngredient.fromSQLMap(Map<String, dynamic> map) {
+    return MenuIngredient(
+      idMenu: map["idMenu"],
+      idIngredient: map["idIngredient"],
+      quantite: map["quantite"],
+      unite: Unite.values[map["unite"]],
+      categorie: CategoriePlat.values[map["categorie"]],
     );
   }
 }
@@ -197,66 +359,6 @@ class Repas {
   }
 }
 
-class MenuIngredient {
-  final int idMenu;
-  final int idIngredient;
-
-  /// [quantite] est la quantité requise pour le nombre de personnes
-  /// défini dans le menu associé,
-  /// exprimée dans l'unité [unite]
-  final double quantite;
-  final Unite unite;
-  final CategoriePlat categorie;
-
-  const MenuIngredient({
-    required this.idMenu,
-    required this.idIngredient,
-    required this.quantite,
-    required this.unite,
-    required this.categorie,
-  });
-
-  MenuIngredient copyWith({
-    int? idMenu,
-    int? idIngredient,
-    double? quantite,
-    Unite? unite,
-    CategoriePlat? categorie,
-  }) {
-    return MenuIngredient(
-        idMenu: idMenu ?? this.idMenu,
-        idIngredient: idIngredient ?? this.idIngredient,
-        quantite: quantite ?? this.quantite,
-        unite: unite ?? this.unite,
-        categorie: categorie ?? this.categorie);
-  }
-
-  @override
-  String toString() {
-    return "MenuIngredient(idMenu: $idMenu, idIngredient: $idIngredient, quantite: $quantite, unite: $unite, categorie: $categorie)";
-  }
-
-  Map<String, dynamic> toSQLMap() {
-    return {
-      "idMenu": idMenu,
-      "idIngredient": idIngredient,
-      "quantite": quantite,
-      "unite": unite.index,
-      "categorie": categorie.index,
-    };
-  }
-
-  factory MenuIngredient.fromSQLMap(Map<String, dynamic> map) {
-    return MenuIngredient(
-      idMenu: map["idMenu"],
-      idIngredient: map["idIngredient"],
-      quantite: map["quantite"],
-      unite: Unite.values[map["unite"]],
-      categorie: CategoriePlat.values[map["categorie"]],
-    );
-  }
-}
-
 /// Unite décrit comment est mesuré un ingrédient
 enum Unite { kg, L, piece }
 
@@ -317,8 +419,36 @@ String formatCategoriePlat(CategoriePlat cat) {
   }
 }
 
+class IngQuant {
+  final Ingredient ingredient;
+  final double quantite;
+  final Unite unite;
+  const IngQuant(this.ingredient, this.quantite, this.unite);
+}
+
+abstract class IngQuantI {
+  IngQuant iq();
+}
+
+/// [RecetteIngredientExt] regroupe un [Ingredient] et un [RecetteIngredient].
+class RecetteIngredientExt implements IngQuantI {
+  final Ingredient ingredient;
+  final RecetteIngredient link;
+
+  const RecetteIngredientExt(this.ingredient, this.link);
+
+  RecetteIngredientExt copyWith(
+      {Ingredient? ingredient, RecetteIngredient? link}) {
+    return RecetteIngredientExt(
+        ingredient ?? this.ingredient, link ?? this.link);
+  }
+
+  @override
+  IngQuant iq() => IngQuant(ingredient, link.quantite, link.unite);
+}
+
 /// [MenuIngredientExt] regroupe un [Ingredient] et un [MenuIngredient].
-class MenuIngredientExt {
+class MenuIngredientExt implements IngQuantI {
   final Ingredient ingredient;
   final MenuIngredient link;
 
@@ -327,6 +457,9 @@ class MenuIngredientExt {
   MenuIngredientExt copyWith({Ingredient? ingredient, MenuIngredient? link}) {
     return MenuIngredientExt(ingredient ?? this.ingredient, link ?? this.link);
   }
+
+  @override
+  IngQuant iq() => IngQuant(ingredient, link.quantite, link.unite);
 }
 
 typedef Plats = Map<CategoriePlat, List<MenuIngredientExt>>;
@@ -340,6 +473,18 @@ Plats buildPlats(List<MenuIngredientExt> ingredients) {
     l.add(ing);
   }
   return crible;
+}
+
+/// [RecetteExt] est un [Recette] associé à tous ses ingrédients.
+class RecetteExt {
+  final Recette recette;
+  final List<RecetteIngredientExt> ingredients;
+  const RecetteExt(this.recette, this.ingredients);
+
+  RecetteExt copyWith(
+      {Recette? recette, List<RecetteIngredientExt>? ingredients}) {
+    return RecetteExt(recette ?? this.recette, ingredients ?? this.ingredients);
+  }
 }
 
 /// [MenuExt] est un [Menu] associé à tous ses ingrédients.

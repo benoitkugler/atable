@@ -73,4 +73,53 @@ Future main() async {
 
     await db.db.close();
   });
+
+  test('SQL API - Recettes', () async {
+    final db = await DBApi.open(dbPath: inMemoryDatabasePath);
+    final ing1 = await db.insertIngredient(const Ingredient(
+        id: 0, nom: "INg1", categorie: CategorieIngredient.epicerie));
+    final ing2 = await db.insertIngredient(const Ingredient(
+        id: 0, nom: "INg1", categorie: CategorieIngredient.laitages));
+
+    final recette1 = await db.createRecette(const Recette(
+        id: -1, nbPersonnes: 8, label: "", categorie: CategoriePlat.entree));
+
+    final recettes1 = await db.getRecettes();
+    expect(recettes1.length, 1);
+
+    await db.insertRecetteIngredient(RecetteIngredient(
+      idRecette: recette1.id,
+      idIngredient: ing1.id,
+      quantite: 0.1245,
+      unite: Unite.L,
+    ));
+
+    await db.insertRecetteIngredient(RecetteIngredient(
+      idRecette: recette1.id,
+      idIngredient: ing2.id,
+      quantite: 0.1245,
+      unite: Unite.kg,
+    ));
+
+    await db.insertRecetteIngredient(RecetteIngredient(
+      idRecette: recette1.id,
+      idIngredient: ing2.id,
+      quantite: 0.1245,
+      unite: Unite.kg,
+    ));
+
+    await db.deleteRecetteIngredient(RecetteIngredient(
+      idRecette: recette1.id,
+      idIngredient: ing2.id,
+      quantite: 0,
+      unite: Unite.piece,
+    ));
+
+    await db.deleteRecette(recette1.id);
+
+    final recettes2 = await db.getRecettes();
+    expect(recettes2.length, 0);
+
+    await db.db.close();
+  });
 }

@@ -2,6 +2,8 @@ import 'package:atable/logic/models.dart';
 
 /// Tous les champs [id] valent -1.
 const ingredientsSuggestions = [
+  Ingredient(
+      id: -1, nom: 'Pommes de terre', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Sorgho', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Brocoli', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Malt', categorie: CategorieIngredient.legumes),
@@ -35,7 +37,7 @@ const ingredientsSuggestions = [
   Ingredient(id: -1, nom: 'Naranjilla', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Orange', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Papaye', categorie: CategorieIngredient.legumes),
-  Ingredient(id: -1, nom: 'Pawpaw', categorie: CategorieIngredient.legumes),
+  Ingredient(id: -1, nom: 'Pastèque', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Pêches', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Nectarines', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Poire', categorie: CategorieIngredient.legumes),
@@ -207,6 +209,7 @@ const ingredientsSuggestions = [
   Ingredient(id: -1, nom: 'Sandre', categorie: CategorieIngredient.viandes),
   Ingredient(id: -1, nom: 'Méduse', categorie: CategorieIngredient.viandes),
   Ingredient(id: -1, nom: 'Lard', categorie: CategorieIngredient.viandes),
+  Ingredient(id: -1, nom: 'Lardons', categorie: CategorieIngredient.viandes),
   Ingredient(id: -1, nom: 'Sukiyaki', categorie: CategorieIngredient.viandes),
   Ingredient(id: -1, nom: 'Dinde', categorie: CategorieIngredient.viandes),
   Ingredient(

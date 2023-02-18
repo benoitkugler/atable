@@ -33,6 +33,13 @@ class _IngredientEditorState extends State<IngredientEditor> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text(
+              "Ajouter un ingrédient",
+              style: TextStyle(fontSize: 16),
+            ),
+          ),
           // name editor/selector
           Autocomplete<Ingredient>(
             initialValue: TextEditingValue(text: edited.nom),
@@ -110,16 +117,13 @@ class _CategorieIngredientEditor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: DropdownButton<CategorieIngredient>(
-          hint: const Text("Catégorie"),
-          value: value,
-          items: CategorieIngredient.values
-              .map((e) => DropdownMenuItem<CategorieIngredient>(
-                  value: e, child: Text(formatCategorieIngredient(e))))
-              .toList(),
-          onChanged: (u) => u == null ? {} : onChange(u)),
-    );
+    return DropdownButtonFormField<CategorieIngredient>(
+        decoration: const InputDecoration(labelText: "Catégorie"),
+        value: value,
+        items: CategorieIngredient.values
+            .map((e) => DropdownMenuItem<CategorieIngredient>(
+                value: e, child: Text(formatCategorieIngredient(e))))
+            .toList(),
+        onChanged: (u) => u == null ? {} : onChange(u));
   }
 }

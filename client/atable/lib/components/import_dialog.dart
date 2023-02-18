@@ -3,32 +3,41 @@ import 'package:atable/logic/import.dart';
 import 'package:atable/logic/models.dart';
 import 'package:atable/logic/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-class ImportDialog extends StatefulWidget {
-  final List<Ingredient> candidates;
-  final String clipboard;
-
-  // idMenu est ignoré
-  final void Function(List<MenuIngredientExt>) onDone;
-
-  const ImportDialog(this.candidates, this.clipboard, this.onDone, {super.key});
-
-  @override
-  State<ImportDialog> createState() => _ImportDialogState();
+Future<List<IngQuant>?> showImportDialog(
+    List<Ingredient> allIngredients, BuildContext context) async {
+  final newIngredients = await showDialog<List<IngQuant>>(
+      context: context,
+      builder: (context) => Dialog(
+            child: _ImportDialog(
+                allIngredients, (l) => Navigator.of(context).pop(l)),
+          ));
+  return newIngredients;
 }
 
-class _ImportDialogState extends State<ImportDialog> {
-  late final List<MenuImport> ingredients;
+class _ImportDialog extends StatefulWidget {
+  final List<Ingredient> candidates;
 
-  late final List<Ingredient> matches;
+  final void Function(List<IngQuant>) onDone;
+
+  const _ImportDialog(this.candidates, this.onDone, {super.key});
+
+  @override
+  State<_ImportDialog> createState() => _ImportDialogState();
+}
+
+class _ImportDialogState extends State<_ImportDialog> {
+  List<RecetteImport> ingredients = [];
+  List<Ingredient> matches = [];
 
   PageController controller = PageController();
 
   @override
   void initState() {
-    ingredients = parseIngredients(widget.clipboard);
-    // commence avec la recherche automatique
-    matches = bestMatch(widget.candidates, ingredients);
+    ingredients = [];
+    matches = [];
+    _processClipboard();
     super.initState();
   }
 
@@ -38,45 +47,77 @@ class _ImportDialogState extends State<ImportDialog> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Padding(
-          padding: EdgeInsets.all(8.0),
-          child: Text(
-            "Importer un ingrédient",
-            style: TextStyle(fontSize: 18),
-          ),
-        ),
-        const SizedBox(height: 40),
-        SizedBox(
-          height: 260,
-          child: PageView(
-            controller: controller,
-            children: List<_IngredientMapper>.generate(
-              ingredients.length,
-              (index) => _IngredientMapper(ingredients[index], matches[index],
-                  widget.candidates, (ing) => _onValidMatch(index, ing)),
-            ),
-          ),
-        ),
-      ],
-    );
+  void _processClipboard() async {
+    final cp = await Clipboard.getData(Clipboard.kTextPlain);
+    if (cp == null) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Le presse-papier est vide !")));
+      Navigator.of(context).pop();
+      return;
+    }
+
+    final ings = parseIngredients(cp.text ?? "");
+    // commence avec la recherche automatique
+    final m = bestMatch(widget.candidates, ings);
+    setState(() {
+      matches = m;
+      ingredients = ings;
+    });
   }
 
-  List<MenuIngredientExt> items() {
-    return List<MenuIngredientExt>.generate(
+  @override
+  Widget build(BuildContext context) {
+    final currentPage =
+        (controller.hasClients ? controller.page ?? 0 : 0).toInt() + 1;
+    return ingredients.isEmpty
+        ? Row(
+            children: const [
+              Padding(
+                padding: EdgeInsets.all(8.0),
+                child: CircularProgressIndicator(),
+              ),
+              Text("Import en cours...")
+            ],
+          )
+        : Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Text(
+                  "Importer des ingrédients ($currentPage/${ingredients.length})",
+                  style: const TextStyle(fontSize: 18),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                height: 320,
+                child: PageView(
+                  controller: controller,
+                  children: List<_IngredientMapper>.generate(
+                    ingredients.length,
+                    (index) => _IngredientMapper(
+                        ingredients[index],
+                        matches[index],
+                        widget.candidates,
+                        (ing) => _onValidMatch(index, ing)),
+                  ),
+                ),
+              ),
+            ],
+          );
+  }
+
+  List<IngQuant> items() {
+    return List<IngQuant>.generate(
         ingredients.length,
-        (index) => MenuIngredientExt(
-            matches[index],
-            MenuIngredient(
-                idMenu: -1,
-                idIngredient: -1,
-                quantite: ingredients[index].quantite,
-                unite: ingredients[index].unite,
-                categorie: CategoriePlat.platPrincipal)));
+        (index) => IngQuant(
+              matches[index],
+              ingredients[index].quantite,
+              ingredients[index].unite,
+            ));
   }
 
   _onValidMatch(int index, Ingredient match) {
@@ -102,7 +143,7 @@ class _ImportDialogState extends State<ImportDialog> {
 }
 
 class _IngredientMapper extends StatelessWidget {
-  final MenuImport ingredient;
+  final RecetteImport ingredient;
   final Ingredient initialMatch;
 
   final List<Ingredient> allIngredients;
@@ -119,25 +160,23 @@ class _IngredientMapper extends StatelessWidget {
       padding: const EdgeInsets.all(4.0),
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8.0),
-            decoration: BoxDecoration(
-                color: Colors.yellow.shade100,
-                borderRadius: const BorderRadius.all(Radius.circular(6))),
-            child: Row(
-              children: [
-                Text(ingredient.nom),
-                const Spacer(),
-                Text(
-                    "${formatQuantite(ingredient.quantite)} ${formatUnite(ingredient.unite)}")
-              ],
+          Card(
+            color: Colors.yellow.shade100,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  Text(ingredient.nom),
+                  const Spacer(),
+                  Text(
+                      "${formatQuantite(ingredient.quantite)} ${formatUnite(ingredient.unite)}")
+                ],
+              ),
             ),
           ),
           const Icon(Icons.arrow_downward),
-          Container(
-            decoration: BoxDecoration(
-                color: Colors.lightGreen.shade100,
-                borderRadius: const BorderRadius.all(Radius.circular(6))),
+          Card(
+            color: Colors.lightGreen.shade100,
             child: IngredientEditor(
               allIngredients,
               (ing, isNew) => onDone(ing),

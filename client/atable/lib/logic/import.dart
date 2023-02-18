@@ -4,17 +4,17 @@ import 'package:atable/logic/ingredientsDB.dart';
 import 'package:atable/logic/models.dart';
 import 'package:atable/logic/utils.dart';
 
-/// [MenuImport] correspond à un ingrédient avec quantité
-class MenuImport {
+/// [RecetteImport] correspond à un ingrédient avec quantité
+class RecetteImport {
   final String nom;
   final double quantite;
   final Unite unite;
 
-  const MenuImport(this.nom, this.quantite, this.unite);
+  const RecetteImport(this.nom, this.quantite, this.unite);
 
   @override
   bool operator ==(Object other) {
-    return (other is MenuImport) &&
+    return (other is RecetteImport) &&
         other.nom == nom &&
         other.quantite == quantite &&
         other.unite == unite;
@@ -68,12 +68,12 @@ _UniteQuantite _parseUnite(String word, double quantite) {
 
 /// [parseIngredients] attend un texte composé de lignes,
 /// une ligne décrivant un ingrédient associé à une quantité
-List<MenuImport> parseIngredients(String text) {
+List<RecetteImport> parseIngredients(String text) {
   // suivant le format, des quotes peuvent entourer text
   if (text.startsWith('"')) text = text.substring(1);
   if (text.endsWith('"')) text = text.substring(0, text.length - 1);
 
-  final out = <MenuImport>[];
+  final out = <RecetteImport>[];
   final lines = text.split('\n');
   for (var line in lines) {
     if (line.trim().isEmpty) continue;
@@ -96,14 +96,15 @@ List<MenuImport> parseIngredients(String text) {
     final uq = _parseUnite(words.first, quantite);
     final name = capitalize(
         uq.unite == Unite.piece ? words.join(" ") : words.sublist(1).join(" "));
-    out.add(MenuImport(name, uq.quantite, uq.unite));
+    out.add(RecetteImport(name, uq.quantite, uq.unite));
   }
   return out;
 }
 
 /// [bestMatch] renvoie l'ingrédient le plus proche (en terme de nom)
 /// parmi [candidates] et les suggestions [ingredientsSuggestions]
-List<Ingredient> bestMatch(List<Ingredient> candidates, List<MenuImport> ings) {
+List<Ingredient> bestMatch(
+    List<Ingredient> candidates, List<RecetteImport> ings) {
   candidates = [...candidates, ...ingredientsSuggestions];
 
   return List<Ingredient>.generate(ings.length, (index) {

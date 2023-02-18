@@ -1,4 +1,5 @@
 import 'package:atable/components/menus_list.dart';
+import 'package:atable/components/recettes_list.dart';
 import 'package:atable/components/repas_list.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:flutter/material.dart';
@@ -33,7 +34,7 @@ class _Home extends StatefulWidget {
   State<_Home> createState() => __HomeState();
 }
 
-enum _View { repas, menus }
+enum _View { repas, menus, recettes }
 
 class __HomeState extends State<_Home> {
   PageController controller = PageController();
@@ -46,6 +47,8 @@ class __HomeState extends State<_Home> {
         return RepasList(widget.db, scrollToRepas);
       case _View.menus:
         return MenusList(widget.db);
+      case _View.recettes:
+        return RecettesList(widget.db);
     }
   }
 
@@ -78,6 +81,8 @@ class __HomeState extends State<_Home> {
               icon: Icon(Icons.calendar_view_day_rounded), label: "Repas"),
           BottomNavigationBarItem(
               icon: Icon(Icons.fastfood), label: "Menus favoris"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.fastfood), label: "Recettes"),
         ],
         onTap: (value) => setState(() {
           controller.jumpToPage(value);

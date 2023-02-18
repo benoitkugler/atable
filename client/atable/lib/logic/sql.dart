@@ -15,23 +15,33 @@ const _createSQLStatements = [
     categorie INTEGER NOT NULL,
     UNIQUE(nom, categorie)
   );
- """,
+  """,
+  """
+  CREATE TABLE recettes(
+    id INTEGER PRIMARY KEY, 
+    nbPersonnes INTEGER NOT NULL,
+    label TEXT NOT NULL,
+    categorie INTEGER NOT NULL
+  );
+  """,
+  """
+  CREATE TABLE recette_ingredients(
+    idRecette INTEGER NOT NULL,
+    idIngredient INTEGER NOT NULL,
+    quantite REAL NOT NULL,
+    unite INTEGER NOT NULL,
+    FOREIGN KEY(idRecette) REFERENCES recettes(id) ON DELETE CASCADE,
+    FOREIGN KEY(idIngredient) REFERENCES ingredients(id),
+    UNIQUE(idRecette, idIngredient)
+  );
+  """,
   """
   CREATE TABLE menus(
     id INTEGER PRIMARY KEY, 
     nbPersonnes INTEGER NOT NULL,
     label TEXT NOT NULL
   );
- """,
-  """
-  CREATE TABLE repas(
-    id INTEGER PRIMARY KEY, 
-    idMenu INTEGER NOT NULL,
-    date TEXT NOT NULL,
-    nbPersonnes INTEGER NOT NULL,
-    FOREIGN KEY(idMenu) REFERENCES menus(id)
-  );
- """,
+  """,
   """
   CREATE TABLE menu_ingredients(
     idMenu INTEGER NOT NULL,
@@ -43,7 +53,16 @@ const _createSQLStatements = [
     FOREIGN KEY(idIngredient) REFERENCES ingredients(id),
     UNIQUE(idMenu, idIngredient, categorie)
   );
+  """,
   """
+  CREATE TABLE repas(
+    id INTEGER PRIMARY KEY, 
+    idMenu INTEGER NOT NULL,
+    date TEXT NOT NULL,
+    nbPersonnes INTEGER NOT NULL,
+    FOREIGN KEY(idMenu) REFERENCES menus(id)
+  );
+ """,
 ];
 
 /// DBApi stocke une connection à la base de données
@@ -97,22 +116,114 @@ class DBApi {
     return Ingredient(id: id, nom: ing.nom, categorie: ing.categorie);
   }
 
-  Future<List<MenuIngredientExt>> _loadMenuIngredients(int idMenu) async {
+  Future<RecetteExt> getRecette(int id) async {
+    // load the recette
+    final recette = Recette.fromSQLMap(
+        (await db.query("recettes", where: "id = ?", whereArgs: [id])).first);
+
     // load the link objects
-    final menuIngredients = (await db.query("menu_ingredients",
-            where: "idMenu = ?", whereArgs: [idMenu]))
-        .map(MenuIngredient.fromSQLMap);
+    final recetteIngredients = await _loadRecetteIngredients(id);
+
+    return RecetteExt(recette, recetteIngredients);
+  }
+
+  /// [getRecettes] renvoie la liste des recettes.
+  Future<List<RecetteExt>> getRecettes() async {
+    // load the required recettes
+    final recettes = (await db.query("recettes")).map(Recette.fromSQLMap);
+
+    // load the links
+    final links = (await db.query("recette_ingredients"))
+        .map(RecetteIngredient.fromSQLMap);
+
+    final ingredients =
+        await _loadIngredients(links.map((e) => e.idIngredient));
+
+    final ingredientsByRecette = <int, List<RecetteIngredientExt>>{};
+    for (var recetteIngredient in links) {
+      final l = ingredientsByRecette.putIfAbsent(
+          recetteIngredient.idRecette, () => []);
+      l.add(RecetteIngredientExt(
+          ingredients[recetteIngredient.idIngredient]!, recetteIngredient));
+    }
+
+    return recettes
+        .map((rec) => RecetteExt(rec, ingredientsByRecette[rec.id] ?? []))
+        .toList();
+  }
+
+  /// [createRecette] ajoute [recette] et met à jour le champ `id`
+  Future<Recette> createRecette(Recette recette) async {
+    final id = await db.insert("recettes", recette.toSQLMap(true));
+    return recette.copyWith(id: id);
+  }
+
+  /// [updateRecette] modifie la recette donnée.
+  Future<void> updateRecette(Recette recette) async {
+    await db.update("recettes", recette.toSQLMap(true),
+        where: "id = ?", whereArgs: [recette.id]);
+  }
+
+  /// [deleteRecette] supprime la recette donnée.
+  /// Les ingrédients sont conservés.
+  Future<void> deleteRecette(int id) async {
+    // Les liens RecetteIngredients sont supprimés par cascade
+    await db.delete("recettes", where: "id = ?", whereArgs: [id]);
+  }
+
+  /// [insertRecetteIngredient] ajoute l'ingrédient donné à la recette donnée.
+  /// Si l'ingrédient est déjà présent, les quantités sont fusionnées
+  /// Renvoie les ingrédients mis à jour
+  Future<List<RecetteIngredientExt>> insertRecetteIngredient(
+      RecetteIngredient ingredient) async {
+    final recetteIngredients = (await db.query("recette_ingredients",
+            where: "idRecette = ?", whereArgs: [ingredient.idRecette]))
+        .map(RecetteIngredient.fromSQLMap)
+        .toList();
+
+    final alreadyPresent = recetteIngredients.indexWhere(
+        (element) => element.idIngredient == ingredient.idIngredient);
+    if (alreadyPresent != -1) {
+      final link = recetteIngredients[alreadyPresent];
+      final newLink =
+          link.copyWith(quantite: link.quantite + ingredient.quantite);
+      await updateRecetteIngredient(newLink);
+    } else {
+      await db.insert("recette_ingredients", ingredient.toSQLMap());
+    }
+
+    return await _loadRecetteIngredients(ingredient.idRecette);
+  }
+
+  Future<List<RecetteIngredientExt>> _loadRecetteIngredients(
+      int idRecette) async {
+    // load the link objects
+    final recetteIngredients = (await db.query("recette_ingredients",
+            where: "idRecette = ?", whereArgs: [idRecette]))
+        .map(RecetteIngredient.fromSQLMap);
 
     // load the ingredients
-    final ingredients = Map.fromEntries((await db.query("ingredients",
-            where: "id IN ${_arrayPlaceholders(menuIngredients)}",
-            whereArgs: menuIngredients.map((e) => e.idIngredient).toList()))
-        .map(Ingredient.fromSQLMap)
-        .map((ing) => MapEntry(ing.id, ing)));
+    final ingredients =
+        await _loadIngredients(recetteIngredients.map((e) => e.idIngredient));
 
-    return menuIngredients
-        .map((link) => MenuIngredientExt(ingredients[link.idIngredient]!, link))
+    return recetteIngredients
+        .map((link) =>
+            RecetteIngredientExt(ingredients[link.idIngredient]!, link))
         .toList();
+  }
+
+  /// [deleteRecetteIngredient] retire l'ingrédient donné du menu donné.
+  Future<void> deleteRecetteIngredient(RecetteIngredient link) async {
+    await db.delete("recette_ingredients",
+        where: "idRecette = ? AND idIngredient = ?",
+        whereArgs: [link.idRecette, link.idIngredient]);
+  }
+
+  /// [updateRecetteIngredient] modifie le lien donné
+  Future<void> updateRecetteIngredient(RecetteIngredient ing) async {
+    await db.update("recette_ingredients", ing.toSQLMap(),
+        where: "idRecette = ? AND idIngredient = ?",
+        whereArgs: [ing.idRecette, ing.idIngredient]);
   }
 
   Future<MenuExt> getMenu(int id) async {
@@ -136,7 +247,84 @@ class DBApi {
     ))
         .map(Menu.fromSQLMap);
 
-    return _loadIngredients(menus);
+    return _loadMenusIngredients(menus);
+  }
+
+  // load the ingredients
+  Future<Map<int, Ingredient>> _loadIngredients(Iterable<int> ids) async {
+    return Map.fromEntries((await db.query("ingredients",
+            where: "id IN ${_arrayPlaceholders(ids)}", whereArgs: ids.toList()))
+        .map(Ingredient.fromSQLMap)
+        .map((ing) => MapEntry(ing.id, ing)));
+  }
+
+  Future<List<MenuExt>> _loadMenusIngredients(Iterable<Menu> menus) async {
+    // load the link objects
+    final menuIngredients = (await db.query("menu_ingredients",
+            where: "idMenu IN ${_arrayPlaceholders(menus)}",
+            whereArgs: menus.map((e) => e.id).toList()))
+        .map(MenuIngredient.fromSQLMap);
+
+    // load the ingredients
+    final ingredients =
+        await _loadIngredients(menuIngredients.map((e) => e.idIngredient));
+
+    final ingredientsByMenu = <int, List<MenuIngredientExt>>{};
+    for (var menuIngredient in menuIngredients) {
+      final l = ingredientsByMenu.putIfAbsent(menuIngredient.idMenu, () => []);
+      l.add(MenuIngredientExt(
+          ingredients[menuIngredient.idIngredient]!, menuIngredient));
+    }
+
+    // final build the complete menu
+    final out =
+        menus.map((m) => MenuExt(m, ingredientsByMenu[m.id] ?? [])).toList();
+    return out;
+  }
+
+  Future<List<MenuIngredientExt>> _loadMenuIngredients(int idMenu) async {
+    // load the link objects
+    final menuIngredients = (await db.query("menu_ingredients",
+            where: "idMenu = ?", whereArgs: [idMenu]))
+        .map(MenuIngredient.fromSQLMap);
+
+    // load the ingredients
+    final ingredients =
+        await _loadIngredients(menuIngredients.map((e) => e.idIngredient));
+
+    return menuIngredients
+        .map((link) => MenuIngredientExt(ingredients[link.idIngredient]!, link))
+        .toList();
+  }
+
+  /// [getRepasFromMenu] renvoie la liste des repas dans lesquels [menu]
+  /// est utilisé (éventuellement vide).
+  Future<List<Repas>> getRepasFromMenu(Menu menu) async {
+    final repas =
+        (await db.query("repas", where: "idMenu = ?", whereArgs: [menu.id]))
+            .map(Repas.fromSQLMap)
+            .toList();
+    repas.sort((a, b) => a.date.compareTo(b.date));
+    return repas;
+  }
+
+  /// [createMenu] ajoute [menu] et met à jour le champ `id`
+  Future<Menu> createMenu(Menu menu) async {
+    final id = await db.insert("menus", menu.toSQLMap(true));
+    return menu.copyWith(id: id);
+  }
+
+  /// [updateMenu] modifie le menu donné.
+  Future<void> updateMenu(Menu menu) async {
+    await db.update("menus", menu.toSQLMap(true),
+        where: "id = ?", whereArgs: [menu.id]);
+  }
+
+  /// [deleteMenu] supprime le menu donné.
+  /// Les ingrédients sont conservés.
+  Future<void> deleteMenu(int id) async {
+    // Les liens MenuIngredients sont supprimés par cascade
+    await db.delete("menus", where: "id = ?", whereArgs: [id]);
   }
 
   /// [getRepas] renvoie la liste de tous les repas,
@@ -153,7 +341,7 @@ class DBApi {
             whereArgs: idMenus.toList()))
         .map(Menu.fromSQLMap);
 
-    final menusExt = await _loadIngredients(menus);
+    final menusExt = await _loadMenusIngredients(menus);
     final menusDict =
         Map.fromEntries(menusExt.map((e) => MapEntry(e.menu.id, e)));
 
@@ -161,43 +349,6 @@ class DBApi {
     final out = repas.map((r) => RepasExt(r, menusDict[r.idMenu]!)).toList();
     out.sort((a, b) => a.repas.date.compareTo(b.repas.date));
     return out;
-  }
-
-  Future<List<MenuExt>> _loadIngredients(Iterable<Menu> menus) async {
-    // load the link objects
-    final menuIngredients = (await db.query("menu_ingredients",
-            where: "idMenu IN ${_arrayPlaceholders(menus)}",
-            whereArgs: menus.map((e) => e.id).toList()))
-        .map(MenuIngredient.fromSQLMap);
-
-    // load the ingredients
-    final ingredients = Map.fromEntries((await db.query("ingredients",
-            where: "id IN ${_arrayPlaceholders(menuIngredients)}",
-            whereArgs: menuIngredients.map((e) => e.idIngredient).toList()))
-        .map(Ingredient.fromSQLMap)
-        .map((ing) => MapEntry(ing.id, ing)));
-
-    final ingredientsByMenu = <int, List<MenuIngredientExt>>{};
-    for (var menuIngredient in menuIngredients) {
-      final l = ingredientsByMenu.putIfAbsent(menuIngredient.idMenu, () => []);
-      l.add(MenuIngredientExt(
-          ingredients[menuIngredient.idIngredient]!, menuIngredient));
-    }
-    // final build the complete menu
-    final out =
-        menus.map((m) => MenuExt(m, ingredientsByMenu[m.id] ?? [])).toList();
-    return out;
-  }
-
-  /// [getRepasFromMenu] renvoie la liste des repas dans lesquels [menu]
-  /// est utilisé (éventuellement vide).
-  Future<List<Repas>> getRepasFromMenu(Menu menu) async {
-    final repas =
-        (await db.query("repas", where: "idMenu = ?", whereArgs: [menu.id]))
-            .map(Repas.fromSQLMap)
-            .toList();
-    repas.sort((a, b) => a.date.compareTo(b.date));
-    return repas;
   }
 
   /// Utilise la date courante si aucun repas n'existe encore
@@ -221,25 +372,6 @@ class DBApi {
   Future<void> updateRepas(Repas repas) async {
     await db.update("repas", repas.toSQLMap(true),
         where: "id = ?", whereArgs: [repas.id]);
-  }
-
-  /// [createMenu] ajoute [menu] et met à jour le champ `id`
-  Future<Menu> createMenu(Menu menu) async {
-    final id = await db.insert("menus", menu.toSQLMap(true));
-    return menu.copyWith(id: id);
-  }
-
-  /// [updateMenu] modifie le menu donné.
-  Future<void> updateMenu(Menu menu) async {
-    await db.update("menus", menu.toSQLMap(true),
-        where: "id = ?", whereArgs: [menu.id]);
-  }
-
-  /// [deleteMenu] supprime le menu donné.
-  /// Les ingrédients sont conservés.
-  Future<void> deleteMenu(int id) async {
-    // Les liens MenuIngredients sont supprimés par cascade
-    await db.delete("menus", where: "id = ?", whereArgs: [id]);
   }
 
   /// [deleteRepas] supprime le repas donné.
