@@ -3,6 +3,7 @@ import 'package:atable/components/recettes_list.dart';
 import 'package:atable/components/repas_list.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   final db = await DBApi.open();
@@ -20,6 +21,14 @@ class App extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('fr'),
+      ],
       home: _Home(db),
     );
   }
@@ -38,6 +47,7 @@ enum _View { repas, menus, recettes }
 
 class __HomeState extends State<_Home> {
   PageController controller = PageController();
+  int _pageIndex = 0;
 
   var scrollToRepas = ValueNotifier<int>(-1);
 
@@ -67,6 +77,9 @@ class __HomeState extends State<_Home> {
           controller: controller,
           itemCount: _View.values.length,
           itemBuilder: (context, index) => body(index),
+          onPageChanged: (index) => setState(() {
+            _pageIndex = index;
+          }),
         ),
         onNotification: (notification) {
           _showRepas(notification);
@@ -74,8 +87,7 @@ class __HomeState extends State<_Home> {
         },
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex:
-            (controller.hasClients ? controller.page ?? 0 : 0.0).toInt(),
+        currentIndex: _pageIndex,
         items: const [
           BottomNavigationBarItem(
               icon: Icon(Icons.calendar_view_day_rounded), label: "Repas"),

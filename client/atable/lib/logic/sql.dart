@@ -55,6 +55,15 @@ const _createSQLStatements = [
   );
   """,
   """
+  CREATE TABLE menu_recettes(
+    idMenu INTEGER NOT NULL,
+    idRecette INTEGER NOT NULL,
+    FOREIGN KEY(idMenu) REFERENCES menus(id) ON DELETE CASCADE,
+    FOREIGN KEY(idRecette) REFERENCES recette(id),
+    UNIQUE(idMenu, idRecette)
+  );
+  """,
+  """
   CREATE TABLE repas(
     id INTEGER PRIMARY KEY, 
     idMenu INTEGER NOT NULL,
@@ -354,7 +363,8 @@ class DBApi {
   /// Utilise la date courante si aucun repas n'existe encore
   /// Sinon utilise le dernier repas et passe au prochain créneau horaire
   Future<Repas> guessRepasProperties() async {
-    final repass = (await db.query("repas")).map(Repas.fromSQLMap);
+    final repass = (await db.query("repas")).map(Repas.fromSQLMap).toList();
+    repass.sort((a, b) => a.date.compareTo(b.date));
     final date = repass.isEmpty
         ? DateTime.now()
         : MomentRepasE.nextRepas(repass.last.date);

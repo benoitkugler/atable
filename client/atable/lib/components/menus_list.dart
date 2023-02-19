@@ -166,7 +166,7 @@ class _MenuCard extends StatelessWidget {
       title: Text(menu.menu.label),
       trailing: IconButton(
         onPressed: onCreateRepas,
-        icon: const Icon(Icons.playlist_add),
+        icon: const Icon(Icons.assignment_add),
         color: Colors.green,
       ),
       onTap: onTap,

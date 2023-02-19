@@ -47,7 +47,6 @@ class _RecettesListState extends State<RecettesList> {
                   child: _RecetteCard(
                     recettes[index],
                     () => _showRecetteDetails(index),
-                    () => _createRepas(recettes[index].recette),
                   ),
                 ),
               ),
@@ -137,40 +136,21 @@ class _RecettesListState extends State<RecettesList> {
       recettes[recetteIndex] = recette;
     });
   }
-
-  void _createRepas(Recette recette) async {
-    // TODO:
-    // final repasProps = await widget.db.guessRepasProperties();
-    // final repas =
-    //     await widget.db.createRepas(repasProps.copyWith(idRecette: recette.id));
-    // if (!mounted) return;
-    // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-    //   content: Text('Repas ajouté.'),
-    //   duration: Duration(seconds: 1),
-    //   backgroundColor: Colors.green,
-    // ));
-    // GoToRepasNotification(repas).dispatch(context);
-  }
 }
 
 class _RecetteCard extends StatelessWidget {
   final RecetteExt recette;
 
   final void Function() onTap;
-  final void Function() onCreateRepas;
 
-  const _RecetteCard(this.recette, this.onTap, this.onCreateRepas, {super.key});
+  const _RecetteCard(this.recette, this.onTap, {super.key});
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
       selectedColor: Colors.yellow.shade100,
       title: Text(recette.recette.label),
-      trailing: IconButton(
-        onPressed: onCreateRepas,
-        icon: const Icon(Icons.assignment_add),
-        color: Colors.green,
-      ),
+      subtitle: Text(formatCategoriePlat(recette.recette.categorie)),
       onTap: onTap,
     );
   }

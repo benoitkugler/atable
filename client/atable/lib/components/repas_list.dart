@@ -126,6 +126,7 @@ class _RepasListState extends State<RepasList> {
 
     setState(() {
       repass[oldRepasIndex] = repass[oldRepasIndex].copyWith(repas: newRepas);
+      repass.sort((a, b) => a.repas.date.compareTo(b.repas.date));
     });
 
     if (!mounted) return;
@@ -195,6 +196,7 @@ class _RepasCardState extends State<_RepasCard> {
 
   @override
   Widget build(BuildContext context) {
+    final repas = widget.repas.repas;
     return Card(
       color: widget.isSelected ? Colors.yellow.shade100 : Colors.white,
       child: InkWell(
@@ -207,9 +209,29 @@ class _RepasCardState extends State<_RepasCard> {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Row(children: [
-                Text(
-                  "${widget.repas.repas.formatJour()} - ${widget.repas.repas.formatHeure()}",
-                  style: const TextStyle(fontSize: 16),
+                TextButton(
+                  onPressed: _showDateEditor,
+                  child: Text(
+                    widget.repas.repas.formatJour(),
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
+                const Text(" -  "),
+                PopupMenuButton<MomentRepas>(
+                  itemBuilder: (context) => MomentRepas.values
+                      .map((e) => PopupMenuItem(value: e, child: Text(e.label)))
+                      .toList(),
+                  initialValue: MomentRepasE.fromDateTime(repas.date),
+                  onSelected: (m) => widget
+                      .onEdit(repas.copyWith(date: m.toDateTime(repas.date))),
+                  child: Text(
+                    widget.repas.repas.formatHeure(),
+                    style: TextStyle(
+                      color: Theme.of(context).primaryColor,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
                 const Spacer(),
                 isEditingNbPersonnes
@@ -230,7 +252,7 @@ class _RepasCardState extends State<_RepasCard> {
                                   ))),
                           keyboardType: const TextInputType.numberWithOptions(
                               signed: false, decimal: false),
-                          onSubmitted: _onEditDone,
+                          onSubmitted: _onEditNbDone,
                         ))
                     : TextButton(
                         style: TextButton.styleFrom(
@@ -262,11 +284,25 @@ class _RepasCardState extends State<_RepasCard> {
     );
   }
 
-  void _onEditDone(String value) {
+  void _onEditNbDone(String value) {
     widget.onEdit(widget.repas.repas.copyWith(nbPersonnes: int.parse(value)));
     setState(() {
       isEditingNbPersonnes = false;
     });
+  }
+
+  void _showDateEditor() async {
+    final date = widget.repas.repas.date;
+    final lastDate = DateTime.now().add(const Duration(days: 365));
+    final newDate = await showDatePicker(
+        context: context,
+        initialDate: date,
+        firstDate: date.subtract(const Duration(days: 365)),
+        lastDate: lastDate);
+
+    if (newDate == null) return;
+    widget.onEdit(widget.repas.repas.copyWith(
+        date: newDate.add(Duration(minutes: date.minute, hours: date.hour))));
   }
 }
 

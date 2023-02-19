@@ -355,7 +355,7 @@ class Repas {
     if (moment != null) {
       return moment.label;
     }
-    return "${date.hour}h${date.minute}";
+    return "${date.hour}h${date.minute.toString().padLeft(2, '0')}";
   }
 }
 
