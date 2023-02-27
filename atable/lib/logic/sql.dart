@@ -74,6 +74,12 @@ const _createSQLStatements = [
  """,
 ];
 
+class MenuOrRepas {
+  final Repas? repas;
+  final Menu menu;
+  MenuOrRepas(this.repas, this.menu);
+}
+
 /// DBApi stocke une connection à la base de données
 /// et fournit les méthodes requises pour y lire et écrire.
 class DBApi {
@@ -93,11 +99,11 @@ class DBApi {
       dbPath = join(await getDatabasesPath(), dbName);
     }
 
-    // DEV MODE only : reset DB at start
-    final fi = File(dbPath);
-    if (await fi.exists()) {
-      await fi.delete();
-    }
+    // // DEV MODE only : reset DB at start
+    // final fi = File(dbPath);
+    // if (await fi.exists()) {
+    //   await fi.delete();
+    // }
 
     // open/create the database
     final database =
@@ -136,11 +142,23 @@ class DBApi {
     return RecetteExt(recette, recetteIngredients);
   }
 
+  /// [getRecettesMetas] renvoie la liste des recettes (sans les ingrédients)
+  Future<List<Recette>> getRecettesMetas() async {
+    // load the required recettes
+    final recettes = (await db.query("recettes")).map(Recette.fromSQLMap);
+
+    return recettes.toList();
+  }
+
   /// [getRecettes] renvoie la liste des recettes.
   Future<List<RecetteExt>> getRecettes() async {
     // load the required recettes
     final recettes = (await db.query("recettes")).map(Recette.fromSQLMap);
 
+    return await _loadRecettesIngs(recettes);
+  }
+
+  Future<List<RecetteExt>> _loadRecettesIngs(Iterable<Recette> recettes) async {
     // load the links
     final links = (await db.query("recette_ingredients"))
         .map(RecetteIngredient.fromSQLMap);
@@ -243,7 +261,9 @@ class DBApi {
     // load the link objects
     final menuIngredients = await _loadMenuIngredients(id);
 
-    return MenuExt(menu, menuIngredients);
+    final menuRecettes = await _loadMenuRecettes(id);
+
+    return MenuExt(menu, menuIngredients, menuRecettes);
   }
 
   /// [getMenusFavoris] renvoie la liste des menus ajoutés en favori.
@@ -256,7 +276,30 @@ class DBApi {
     ))
         .map(Menu.fromSQLMap);
 
-    return _loadMenusIngredients(menus);
+    return _loadMenusContent(menus);
+  }
+
+  /// [getMenusFromRecette] renvoie la liste des menus dans lesquels [recette]
+  /// est utilisée (éventuellement vide).
+  Future<List<MenuOrRepas>> getMenusFromRecette(Recette recette) async {
+    final links = (await db.query("menu_recettes",
+            where: "idRecette = ?", whereArgs: [recette.id]))
+        .map(MenuRecette.fromSQLMap);
+
+    final idsMenu = links.map((e) => e.idMenu).toList();
+    final menus = (await db.query("menus",
+            where: "id IN ${_arrayPlaceholders(idsMenu)}", whereArgs: idsMenu))
+        .map(Menu.fromSQLMap);
+
+    // si le menu est présent dans un repas, renvoie le repas
+    final repas = (await db.query("repas",
+            where: "idMenu IN ${_arrayPlaceholders(idsMenu)}",
+            whereArgs: idsMenu))
+        .map(Repas.fromSQLMap);
+    final menuToRepas = Map.fromEntries(repas
+        .map((e) => MapEntry(e.idMenu, e))); // conserve uniquement un repas
+
+    return menus.map((e) => MenuOrRepas(menuToRepas[e.id], e)).toList();
   }
 
   // load the ingredients
@@ -267,7 +310,7 @@ class DBApi {
         .map((ing) => MapEntry(ing.id, ing)));
   }
 
-  Future<List<MenuExt>> _loadMenusIngredients(Iterable<Menu> menus) async {
+  Future<List<MenuExt>> _loadMenusContent(Iterable<Menu> menus) async {
     // load the link objects
     final menuIngredients = (await db.query("menu_ingredients",
             where: "idMenu IN ${_arrayPlaceholders(menus)}",
@@ -285,9 +328,35 @@ class DBApi {
           ingredients[menuIngredient.idIngredient]!, menuIngredient));
     }
 
+    // load the link objects
+    final menuRecettes = (await db.query("menu_recettes",
+            where: "idMenu IN ${_arrayPlaceholders(menus)}",
+            whereArgs: menus.map((e) => e.id).toList()))
+        .map(MenuRecette.fromSQLMap);
+
+    // load the recettes
+    final recettesTmp = (await db.query("recettes",
+            where: "id IN ${_arrayPlaceholders(menuRecettes)}",
+            whereArgs: menuRecettes.map((e) => e.idRecette).toList()))
+        .map(Recette.fromSQLMap);
+
+    final recettes = await _loadRecettesIngs(recettesTmp);
+    final recettesDict =
+        Map.fromEntries(recettes.map((e) => MapEntry(e.recette.id, e)));
+    final recettesByMenu = <int, List<RecetteExt>>{};
+    for (var menuRecette in menuRecettes) {
+      final l = recettesByMenu.putIfAbsent(menuRecette.idMenu, () => []);
+      l.add(recettesDict[menuRecette.idRecette]!);
+    }
+
     // final build the complete menu
-    final out =
-        menus.map((m) => MenuExt(m, ingredientsByMenu[m.id] ?? [])).toList();
+    final out = menus
+        .map((m) => MenuExt(
+              m,
+              ingredientsByMenu[m.id] ?? [],
+              recettesByMenu[m.id] ?? [],
+            ))
+        .toList();
     return out;
   }
 
@@ -304,6 +373,21 @@ class DBApi {
     return menuIngredients
         .map((link) => MenuIngredientExt(ingredients[link.idIngredient]!, link))
         .toList();
+  }
+
+  Future<List<RecetteExt>> _loadMenuRecettes(int idMenu) async {
+    // load the link objects
+    final menuRecettes = (await db
+            .query("menu_recettes", where: "idMenu = ?", whereArgs: [idMenu]))
+        .map(MenuRecette.fromSQLMap);
+
+    // load the recettes
+    final recettes = (await db.query("recettes",
+            where: "id IN ${_arrayPlaceholders(menuRecettes)}",
+            whereArgs: menuRecettes.map((e) => e.idRecette).toList()))
+        .map(Recette.fromSQLMap);
+
+    return await _loadRecettesIngs(recettes);
   }
 
   /// [getRepasFromMenu] renvoie la liste des repas dans lesquels [menu]
@@ -350,7 +434,7 @@ class DBApi {
             whereArgs: idMenus.toList()))
         .map(Menu.fromSQLMap);
 
-    final menusExt = await _loadMenusIngredients(menus);
+    final menusExt = await _loadMenusContent(menus);
     final menusDict =
         Map.fromEntries(menusExt.map((e) => MapEntry(e.menu.id, e)));
 
@@ -436,6 +520,20 @@ class DBApi {
     await db.update("menu_ingredients", ing.toSQLMap(),
         where: "idMenu = ? AND idIngredient = ?",
         whereArgs: [ing.idMenu, ing.idIngredient]);
+  }
+
+  Future<RecetteExt> insertMenuRecette(int idMenu, int idRecette) async {
+    final link = MenuRecette(idMenu: idMenu, idRecette: idRecette);
+    await db.insert("menu_recettes", link.toSQLMap());
+
+    return await getRecette(idRecette);
+  }
+
+  /// [deleteMenuRecette] retire la recette donnée du menu donné.
+  Future<void> deleteMenuRecette(MenuRecette link) async {
+    await db.delete("menu_recettes",
+        where: "idMenu = ? AND idRecette = ?",
+        whereArgs: [link.idMenu, link.idRecette]);
   }
 }
 

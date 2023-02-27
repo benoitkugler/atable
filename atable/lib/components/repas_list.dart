@@ -114,7 +114,8 @@ class _RepasListState extends State<RepasList> {
         await widget.db.createRepas(repasProps.copyWith(idMenu: newMenu.id));
 
     setState(() {
-      repass.add(RepasExt(newRepas, MenuExt(newMenu, []))); // préserve l'ordre
+      repass.add(
+          RepasExt(newRepas, MenuExt(newMenu, [], []))); // préserve l'ordre
     });
 
     _scrollToEnd();
@@ -167,7 +168,7 @@ class _RepasListState extends State<RepasList> {
   void _showShop() async {
     final selectedRepasL = selectedRepas.map((e) => repass[e]).toList();
     await Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => ShopSession(selectedRepasL),
+      builder: (context) => ShopSessionMaster(selectedRepasL),
     ));
     setState(() {
       selectedRepas.clear();
@@ -273,7 +274,8 @@ class _RepasCardState extends State<_RepasCard> {
                 : Padding(
                     padding: const EdgeInsets.all(4.0),
                     child: Column(
-                        children: buildPlats(widget.repas.requiredQuantites())
+                        children: widget.repas
+                            .requiredQuantites()
                             .entries
                             .map((item) => _PlatCard(item.key, item.value))
                             .toList()),
@@ -308,7 +310,7 @@ class _RepasCardState extends State<_RepasCard> {
 
 class _PlatCard extends StatelessWidget {
   final CategoriePlat plat;
-  final List<MenuIngredientExt> ingredients;
+  final List<IngQuant> ingredients;
   const _PlatCard(this.plat, this.ingredients, {super.key});
 
   @override
@@ -319,16 +321,16 @@ class _PlatCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(4.0),
         child: Column(
-          children: ingredients.map((e) => _MenuIngredientRow(e)).toList(),
+          children: ingredients.map((e) => _IngQuantRow(e)).toList(),
         ),
       ),
     );
   }
 }
 
-class _MenuIngredientRow extends StatelessWidget {
-  final MenuIngredientExt ing;
-  const _MenuIngredientRow(this.ing, {super.key});
+class _IngQuantRow extends StatelessWidget {
+  final IngQuant ing;
+  const _IngQuantRow(this.ing, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -336,8 +338,7 @@ class _MenuIngredientRow extends StatelessWidget {
       children: [
         Text(ing.ingredient.nom),
         const Spacer(),
-        Text(
-            "${formatQuantite(ing.link.quantite)} ${formatUnite(ing.link.unite)}"),
+        Text("${formatQuantite(ing.quantite)} ${formatUnite(ing.unite)}"),
       ],
     );
   }

@@ -1,41 +1,28 @@
+import 'dart:async';
+
 import 'package:atable/logic/models.dart';
 import 'package:atable/logic/shop.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-class ShopSession extends StatefulWidget {
+/// ShopSessionMaster est utilisé pour une séance de course
+/// par l'application maitre (mobile)
+class ShopSessionMaster extends StatefulWidget {
   final List<RepasExt> repass;
 
-  const ShopSession(this.repass, {super.key});
+  const ShopSessionMaster(this.repass, {super.key});
 
   @override
-  State<ShopSession> createState() => _ShopSessionState();
+  State<ShopSessionMaster> createState() => _ShopSessionMasterState();
 }
 
-class _ShopSessionState extends State<ShopSession> {
+class _ShopSessionMasterState extends State<ShopSessionMaster> {
   late ShopController shopController;
-
-  ShopList list = ShopList([]);
 
   @override
   void initState() {
     shopController = ShopControllerLocal(ShopList.fromRepass(widget.repass));
-    _refreshList();
     super.initState();
-  }
-
-  void _refreshList() async {
-    final l = await shopController.fetchList();
-    setState(() {
-      list = l;
-    });
-  }
-
-  void _updateChecked(int id, bool checked) async {
-    final l = await shopController.updateShop(id, checked);
-    setState(() {
-      list = l;
-    });
   }
 
   @override
@@ -47,20 +34,17 @@ class _ShopSessionState extends State<ShopSession> {
             onPressed: _startSharing,
           )
         ]),
-        body: ListView(
-            children: list
-                .bySections()
-                .map((e) => _ShopSection(e, _updateChecked))
-                .toList()));
+        body: _ShopListImpl(shopController));
   }
 
   _startSharing() async {
     if (shopController is ShopControllerShared) {
       // si la session est déjà partagée, on ré-utilise le même code
     } else {
+      final ctL = shopController as ShopControllerLocal;
       // demande au serveur de créer une nouvelle session partagée
       try {
-        final ct = await ShopControllerShared.create(list);
+        final ct = await ShopControllerShared.createSession(ctL.list);
         setState(() {
           shopController = ct;
         });
@@ -154,6 +138,72 @@ class _ShareQRCode extends StatelessWidget {
           // size: 200.0,
         ),
       ),
+    );
+  }
+}
+
+class _ShopListImpl extends StatefulWidget {
+  final ShopController controller;
+
+  const _ShopListImpl(this.controller, {super.key});
+
+  @override
+  State<_ShopListImpl> createState() => _ShopListImplState();
+}
+
+class _ShopListImplState extends State<_ShopListImpl> {
+  late final Timer timer;
+
+  ShopList list = ShopList([]);
+
+  @override
+  void initState() {
+    timer = Timer.periodic(const Duration(seconds: 2), (t) => _refreshList());
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    timer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+        children: list
+            .bySections()
+            .map((e) => _ShopSection(e, _updateChecked))
+            .toList());
+  }
+
+  void _updateChecked(int id, bool checked) async {
+    final l = await widget.controller.updateShop(id, checked);
+    setState(() {
+      list = l;
+    });
+  }
+
+  void _refreshList() async {
+    final l = await widget.controller.fetchList();
+    setState(() {
+      list = l;
+    });
+  }
+}
+
+/// ShopSessionGuest est utilisé pour une session de course
+/// par les applications invitées (web)
+class ShopSessionGuest extends StatelessWidget {
+  final String sessionID;
+
+  const ShopSessionGuest(this.sessionID, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Liste de courses partagées")),
+      body: _ShopListImpl(ShopControllerShared(sessionID)),
     );
   }
 }

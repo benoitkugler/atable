@@ -50,13 +50,14 @@ class __HomeState extends State<_Home> {
   int _pageIndex = 0;
 
   var scrollToRepas = ValueNotifier<int>(-1);
+  var scrollToMenu = ValueNotifier<int>(-1);
 
   Widget body(int index) {
     switch (_View.values[index]) {
       case _View.repas:
         return RepasList(widget.db, scrollToRepas);
       case _View.menus:
-        return MenusList(widget.db);
+        return MenusList(widget.db, scrollToMenu);
       case _View.recettes:
         return RecettesList(widget.db);
     }
@@ -69,22 +70,35 @@ class __HomeState extends State<_Home> {
     scrollToRepas.value = notif.repas.id;
   }
 
+  void _showMenu(GoToMenuNotification notif) async {
+    await controller.animateToPage(_View.menus.index,
+        duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+    setState(() {});
+    scrollToMenu.value = notif.menu.id;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: NotificationListener<GoToRepasNotification>(
-        child: PageView.builder(
-          controller: controller,
-          itemCount: _View.values.length,
-          itemBuilder: (context, index) => body(index),
-          onPageChanged: (index) => setState(() {
-            _pageIndex = index;
-          }),
-        ),
+      body: NotificationListener<GoToMenuNotification>(
         onNotification: (notification) {
-          _showRepas(notification);
+          _showMenu(notification);
           return true;
         },
+        child: NotificationListener<GoToRepasNotification>(
+          onNotification: (notification) {
+            _showRepas(notification);
+            return true;
+          },
+          child: PageView.builder(
+            controller: controller,
+            itemCount: _View.values.length,
+            itemBuilder: (context, index) => body(index),
+            onPageChanged: (index) => setState(() {
+              _pageIndex = index;
+            }),
+          ),
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _pageIndex,

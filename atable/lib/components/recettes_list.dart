@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:atable/components/details_recette.dart';
+import 'package:atable/components/menus_list.dart';
 import 'package:atable/components/shared.dart';
 import 'package:atable/logic/models.dart';
 import 'package:atable/logic/sql.dart';
@@ -33,7 +34,7 @@ class _RecettesListState extends State<RecettesList> {
       ),
       body: recettes.isEmpty
           ? const Center(
-              child: Text("Aucun recette."),
+              child: Text("Aucune recette."),
             )
           : ListView.builder(
               controller: _scrollController,
@@ -89,24 +90,27 @@ class _RecettesListState extends State<RecettesList> {
 
   // verifie si le recette est utilisé dans un repas
   Future<bool> _checkDeleteRecette(RecetteExt recette) async {
-    // TODO:
-    // final repas = await widget.db.getRepasFromRecette(recette.recette);
-    // if (!mounted) return false;
+    final menus = await widget.db.getMenusFromRecette(recette.recette);
+    if (!mounted) return false;
 
-    // if (repas.isNotEmpty) {
-    //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-    //     content: const Text(
-    //       'Ce recette est utilisé dans un repas.',
-    //     ),
-    //     backgroundColor: Colors.orange,
-    //     action: SnackBarAction(
-    //         label: "Voir les repas",
-    //         textColor: Colors.white,
-    //         onPressed: () =>
-    //             GoToRepasNotification(repas.first).dispatch(context)),
-    //   ));
-    //   return false;
-    // }
+    if (menus.isNotEmpty) {
+      final target = menus.first;
+      final notif = target.repas == null
+          ? GoToMenuNotification(target.menu)
+          : GoToRepasNotification(target.repas!);
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: const Text(
+          'Cette recette est utilisé dans un menu.',
+        ),
+        backgroundColor: Colors.orange,
+        action: SnackBarAction(
+            label: "Voir les menus",
+            textColor: Colors.white,
+            onPressed: () => notif.dispatch(context)),
+      ));
+      return false;
+    }
     return true;
   }
 
@@ -152,6 +156,92 @@ class _RecetteCard extends StatelessWidget {
       title: Text(recette.recette.label),
       subtitle: Text(formatCategoriePlat(recette.recette.categorie)),
       onTap: onTap,
+    );
+  }
+}
+
+/// RecetteSelector est une liste de recette
+/// avec un champ de recherche
+class RecetteSelector extends StatefulWidget {
+  final DBApi db;
+  final void Function(Recette) onSelect;
+
+  const RecetteSelector(this.db, this.onSelect, {super.key});
+
+  @override
+  State<RecetteSelector> createState() => _RecetteSelectorState();
+}
+
+class _RecetteSelectorState extends State<RecetteSelector> {
+  List<Recette> allRecettes = [];
+
+  List<Recette> current = [];
+
+  @override
+  void initState() {
+    _loadRecettes();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 8.0, left: 8, right: 8),
+            child: Row(
+              children: [
+                const Icon(Icons.search),
+                const SizedBox(width: 10),
+                Expanded(
+                    child: TextFormField(
+                  autofocus: true,
+                  onChanged: _search,
+                  decoration:
+                      const InputDecoration(labelText: "Rechercher par nom"),
+                )),
+              ],
+            ),
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemBuilder: (context, index) => _RecetteRow(
+                current[index], () => widget.onSelect(current[index])),
+            itemCount: current.length,
+          ),
+        )
+      ],
+    );
+  }
+
+  void _loadRecettes() async {
+    allRecettes = await widget.db.getRecettesMetas();
+    setState(() {
+      current = allRecettes;
+    });
+  }
+
+  void _search(String text) async {
+    setState(() {
+      current = searchRecettes(allRecettes, text);
+    });
+  }
+}
+
+class _RecetteRow extends StatelessWidget {
+  final Recette recette;
+  final void Function() onTap;
+  const _RecetteRow(this.recette, this.onTap, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: onTap,
+      title: Text(recette.label),
+      subtitle: Text(formatCategoriePlat(recette.categorie)),
     );
   }
 }

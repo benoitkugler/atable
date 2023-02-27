@@ -59,12 +59,14 @@ class ShopList {
     final tmp = <int, Quantites>{}; // par ID
     final ingregients = <int, Ingredient>{}; // par ID
     for (var repas in repass) {
-      for (var ing in repas.requiredQuantites()) {
-        ingregients[ing.ingredient.id] = ing.ingredient;
+      for (var plat in repas.requiredQuantites().values) {
+        for (var ing in plat) {
+          ingregients[ing.ingredient.id] = ing.ingredient;
 
-        final qus = tmp.putIfAbsent(ing.ingredient.id, () => {});
-        final u = ing.link.unite;
-        qus[u] = (qus[u] ?? 0) + ing.link.quantite;
+          final qus = tmp.putIfAbsent(ing.ingredient.id, () => {});
+          final u = ing.unite;
+          qus[u] = (qus[u] ?? 0) + ing.quantite;
+        }
       }
     }
     return ShopList(tmp.keys
@@ -125,9 +127,9 @@ class ShopControllerShared implements ShopController {
         queryParameters: {"sessionID": sessionID},
       ).toString();
 
-  /// [create] demande au serveur de créer une nouvelle session,
+  /// [createSession] demande au serveur de créer une nouvelle session,
   /// avec le contenu de [list]
-  static Future<ShopControllerShared> create(ShopList list) async {
+  static Future<ShopControllerShared> createSession(ShopList list) async {
     final resp = await http.put(Uri.parse(_apiEndpoint),
         body: jsonEncode(list._list.map((e) => e.toJson()).toList()),
         headers: {

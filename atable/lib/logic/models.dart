@@ -1,6 +1,7 @@
 import 'package:atable/logic/shop.dart';
 import 'package:atable/logic/utils.dart';
 import 'package:diacritic/diacritic.dart';
+import 'package:flutter/foundation.dart';
 
 /// Ingredient est l'objet fondamental composant
 /// un menu.
@@ -123,6 +124,18 @@ class Recette {
       categorie: categorie ?? this.categorie,
     );
   }
+}
+
+/// [searchRecettes] filtre la liste par nom
+/// Les résultats sont triés par catégorie, puis par nom
+List<Recette> searchRecettes(List<Recette> candidates, String nom) {
+  nom = normalizeNom(nom);
+  final out =
+      candidates.where((rec) => normalizeNom(rec.label).contains(nom)).toList();
+  out.sort((a, b) => a.label.compareTo(b.label));
+  mergeSort<Recette>(out,
+      compare: (a, b) => a.categorie.index - b.categorie.index);
+  return out;
 }
 
 /// [RecetteIngredient] détermine les quantités d'une recette
@@ -285,6 +298,45 @@ class MenuIngredient {
       quantite: map["quantite"],
       unite: Unite.values[map["unite"]],
       categorie: CategoriePlat.values[map["categorie"]],
+    );
+  }
+}
+
+class MenuRecette {
+  final int idMenu;
+  final int idRecette;
+
+  const MenuRecette({
+    required this.idMenu,
+    required this.idRecette,
+  });
+
+  MenuRecette copyWith({
+    int? idMenu,
+    int? idRecette,
+  }) {
+    return MenuRecette(
+      idMenu: idMenu ?? this.idMenu,
+      idRecette: idRecette ?? this.idRecette,
+    );
+  }
+
+  @override
+  String toString() {
+    return "MenuRecette(idMenu: $idMenu, idRecette: $idRecette)";
+  }
+
+  Map<String, dynamic> toSQLMap() {
+    return {
+      "idMenu": idMenu,
+      "idRecette": idRecette,
+    };
+  }
+
+  factory MenuRecette.fromSQLMap(Map<String, dynamic> map) {
+    return MenuRecette(
+      idMenu: map["idMenu"],
+      idRecette: map["idRecette"],
     );
   }
 }
@@ -464,9 +516,9 @@ class MenuIngredientExt implements IngQuantI {
 
 typedef Plats = Map<CategoriePlat, List<MenuIngredientExt>>;
 
-/// [buildPlats] renvoie la liste des ingrédients regroupés par
+/// [ingredientsByPlats] renvoie la liste des ingrédients regroupés par
 /// plat
-Plats buildPlats(List<MenuIngredientExt> ingredients) {
+Plats ingredientsByPlats(List<MenuIngredientExt> ingredients) {
   final Map<CategoriePlat, List<MenuIngredientExt>> crible = {};
   for (var ing in ingredients) {
     final l = crible.putIfAbsent(ing.link.categorie, () => []);
@@ -475,7 +527,19 @@ Plats buildPlats(List<MenuIngredientExt> ingredients) {
   return crible;
 }
 
-/// [RecetteExt] est un [Recette] associé à tous ses ingrédients.
+/// [recettesByPlats] renvoie la liste des recettes regroupées par
+/// plat
+Map<CategoriePlat, List<RecetteExt>> recettesByPlats(
+    List<RecetteExt> recettes) {
+  final Map<CategoriePlat, List<RecetteExt>> crible = {};
+  for (var ing in recettes) {
+    final l = crible.putIfAbsent(ing.recette.categorie, () => []);
+    l.add(ing);
+  }
+  return crible;
+}
+
+/// [RecetteExt] est une [Recette] associé à tous ses ingrédients.
 class RecetteExt {
   final Recette recette;
   final List<RecetteIngredientExt> ingredients;
@@ -491,10 +555,16 @@ class RecetteExt {
 class MenuExt {
   final Menu menu;
   final List<MenuIngredientExt> ingredients;
-  const MenuExt(this.menu, this.ingredients);
+  final List<RecetteExt> recettes;
 
-  MenuExt copyWith({Menu? menu, List<MenuIngredientExt>? ingredients}) {
-    return MenuExt(menu ?? this.menu, ingredients ?? this.ingredients);
+  const MenuExt(this.menu, this.ingredients, this.recettes);
+
+  MenuExt copyWith(
+      {Menu? menu,
+      List<MenuIngredientExt>? ingredients,
+      List<RecetteExt>? recettes}) {
+    return MenuExt(menu ?? this.menu, ingredients ?? this.ingredients,
+        recettes ?? this.recettes);
   }
 }
 
@@ -510,12 +580,30 @@ class RepasExt {
 
   /// [requiredQuantites] renvoie les ingrédients avec les
   /// quantités nécessaires au nombre de personne du repas
-  List<MenuIngredientExt> requiredQuantites() {
-    final factor =
+  Map<CategoriePlat, List<IngQuant>> requiredQuantites() {
+    final out = <CategoriePlat, List<IngQuant>>{};
+    // résoud les ingrédients libres
+    final factorIngredients =
         repas.nbPersonnes.toDouble() / menu.menu.nbPersonnes.toDouble();
-    return menu.ingredients
-        .map((e) => e.copyWith(
-            link: e.link.copyWith(quantite: e.link.quantite * factor)))
-        .toList();
+    for (var ing in menu.ingredients) {
+      final quantite = ing.link.quantite * factorIngredients;
+      final ingQuant =
+          ing.copyWith(link: ing.link.copyWith(quantite: quantite)).iq();
+      final l = out.putIfAbsent(ing.link.categorie, () => []);
+      l.add(ingQuant);
+    }
+    // résoud les recettes
+    for (var recette in menu.recettes) {
+      final factorIngredients =
+          repas.nbPersonnes.toDouble() / recette.recette.nbPersonnes.toDouble();
+      for (var ing in recette.ingredients) {
+        final quantite = ing.link.quantite * factorIngredients;
+        final ingQuant =
+            ing.copyWith(link: ing.link.copyWith(quantite: quantite)).iq();
+        final l = out.putIfAbsent(recette.recette.categorie, () => []);
+        l.add(ingQuant);
+      }
+    }
+    return out;
   }
 }

@@ -1,7 +1,8 @@
+import 'package:atable/components/details_recette.dart';
 import 'package:atable/components/import_dialog.dart';
 import 'package:atable/components/ingredient_editor.dart';
+import 'package:atable/components/recettes_list.dart';
 import 'package:atable/components/shared.dart';
-import 'package:atable/logic/ingredientsDB.dart';
 import 'package:atable/logic/models.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:atable/logic/utils.dart';
@@ -35,7 +36,10 @@ class _DetailsMenuState extends State<DetailsMenu> {
   @override
   Widget build(BuildContext context) {
     final isAnonyme = menu.menu.label.isEmpty;
-    final plats = buildPlats(menu.ingredients);
+    final hasIngredients = menu.ingredients
+        .isNotEmpty; // true si le menu a au mois un ingrédient 'libre'
+    final platIngs = ingredientsByPlats(menu.ingredients);
+    final platRecettes = recettesByPlats(menu.recettes);
     return Scaffold(
       appBar: AppBar(
         title: Text(isAnonyme ? "Menu" : menu.menu.label),
@@ -50,21 +54,44 @@ class _DetailsMenuState extends State<DetailsMenu> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        mini: false,
-        onPressed: () => _showEditDialog(),
-        child: const Icon(Icons.add),
+        onPressed: () {},
+        child: PopupMenuButton<int>(
+          onSelected: (value) =>
+              value == 0 ? _showAddRecette() : _showAddIngredient(),
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+                value: 0, child: Text("Ajouter une recette...")),
+            const PopupMenuItem(
+                value: 1, child: Text("Ajouter un ingrédient...")),
+          ],
+          child: const Icon(Icons.add),
+        ),
       ),
       body: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(height: 4),
-          NombrePersonneEditor(menu.menu.nbPersonnes,
-              (v) => _updateMenu(menu.menu.copyWith(nbPersonnes: v.toInt()))),
+          AnimatedCrossFade(
+            duration: const Duration(milliseconds: 400),
+            crossFadeState: hasIngredients
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            firstChild: const SizedBox(),
+            secondChild: NombrePersonneEditor(menu.menu.nbPersonnes,
+                (v) => _updateMenu(menu.menu.copyWith(nbPersonnes: v.toInt()))),
+          ),
           Expanded(
             child: ListView(
               children: CategoriePlat.values
-                  .map((e) => _PlatCard(e, plats[e] ?? [], _removeIngredient,
-                      _swapCategorie, _updateLink))
+                  .map((e) => _PlatCard(
+                      e,
+                      platIngs[e] ?? [],
+                      platRecettes[e] ?? [],
+                      _removeIngredient,
+                      _swapCategorie,
+                      _updateLink,
+                      _removeRecette,
+                      _goToRecette))
                   .toList(),
             ),
           ),
@@ -73,7 +100,7 @@ class _DetailsMenuState extends State<DetailsMenu> {
     );
   }
 
-  void _showEditDialog() async {
+  void _showAddIngredient() async {
     await showDialog(
         context: context,
         builder: (context) => Dialog(
@@ -85,6 +112,25 @@ class _DetailsMenuState extends State<DetailsMenu> {
                 },
               ),
             ));
+  }
+
+  void _showAddRecette() async {
+    final selectedRecette =
+        await Navigator.of(context).push(MaterialPageRoute<Recette>(
+      builder: (context) => Scaffold(
+        appBar: AppBar(
+          title: const Text("Choisir une recette"),
+        ),
+        body: RecetteSelector(
+            widget.db, (selected) => Navigator.of(context).pop(selected)),
+      ),
+    ));
+    if (selectedRecette == null) return; // import annulé
+    final recette =
+        await widget.db.insertMenuRecette(menu.menu.id, selectedRecette.id);
+    setState(() {
+      menu.recettes.add(recette);
+    });
   }
 
   void _showImportDialog() async {
@@ -199,11 +245,40 @@ class _DetailsMenuState extends State<DetailsMenu> {
       menu.ingredients[index] = menu.ingredients[index].copyWith(link: newLink);
     });
   }
+
+  void _removeRecette(RecetteExt recette) async {
+    await widget.db.deleteMenuRecette(
+        MenuRecette(idMenu: menu.menu.id, idRecette: recette.recette.id));
+    setState(() {
+      menu.recettes
+          .removeWhere((element) => element.recette.id == recette.recette.id);
+    });
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Recette ${recette.recette.label} supprimée.'),
+      backgroundColor: Colors.green,
+    ));
+  }
+
+  void _goToRecette(RecetteExt recette) async {
+    await Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => DetailsRecette(widget.db, recette),
+    ));
+    // met à jour les données
+    recette = await widget.db.getRecette(recette.recette.id);
+    setState(() {
+      final index = menu.recettes
+          .indexWhere((element) => element.recette.id == recette.recette.id);
+      menu.recettes[index] = recette;
+    });
+  }
 }
 
 class _PlatCard extends StatelessWidget {
   final CategoriePlat plat;
   final List<MenuIngredientExt> ingredients;
+  final List<RecetteExt> recettes;
 
   final void Function(MenuIngredientExt) removeIngredient;
   final void Function(MenuIngredientExt ing, CategoriePlat newCategorie)
@@ -211,8 +286,18 @@ class _PlatCard extends StatelessWidget {
   final void Function(MenuIngredientExt ing, double newQuantite, Unite newUnite)
       updateLink;
 
-  const _PlatCard(this.plat, this.ingredients, this.removeIngredient,
-      this.swapCategorie, this.updateLink,
+  final void Function(RecetteExt) removeRecette;
+  final void Function(RecetteExt) goToRecette;
+
+  const _PlatCard(
+      this.plat,
+      this.ingredients,
+      this.recettes,
+      this.removeIngredient,
+      this.swapCategorie,
+      this.updateLink,
+      this.removeRecette,
+      this.goToRecette,
       {super.key});
 
   @override
@@ -233,27 +318,57 @@ class _PlatCard extends StatelessWidget {
             ),
             Padding(
               padding: const EdgeInsets.all(4.0),
-              child: Container(
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(6)),
-                  color: Colors.white,
-                ),
-                child: Column(
-                    children: ingredients
-                        .map((e) => DismissibleDelete(
+              child: ingredients.isEmpty && recettes.isEmpty
+                  ? const Padding(
+                      padding: EdgeInsets.all(4.0),
+                      child: Text(
+                        "Aucun ingrédient ou recette.",
+                        style: TextStyle(fontStyle: FontStyle.italic),
+                      ),
+                    )
+                  : Container(
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.all(Radius.circular(6)),
+                        color: Colors.white,
+                      ),
+                      child: Column(children: [
+                        ...ingredients.map((e) => DismissibleDelete(
                               itemKey: e.ingredient.id,
                               onDissmissed: () => removeIngredient(e),
                               child: IngredientRow(
                                   e,
                                   (q) => updateLink(e, q, e.link.unite),
                                   (u) => updateLink(e, e.link.quantite, u)),
-                            ))
-                        .toList()),
-              ),
+                            )),
+                        ...recettes.map((e) => DismissibleDelete(
+                            itemKey: -e.recette.id,
+                            onDissmissed: () => removeRecette(e),
+                            child: _RecetteRow(e, () => goToRecette(e))))
+                      ]),
+                    ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _RecetteRow extends StatelessWidget {
+  final RecetteExt recette;
+  final void Function() onGoTo;
+
+  const _RecetteRow(this.recette, this.onGoTo, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: onGoTo,
+      visualDensity: const VisualDensity(vertical: -3),
+      dense: true,
+      title: Text(recette.recette.label),
+      subtitle: const Text("Recette"),
+      trailing: const Icon(Icons.navigate_next),
     );
   }
 }

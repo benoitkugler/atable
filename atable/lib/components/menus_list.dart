@@ -5,16 +5,23 @@ import 'package:atable/components/shared.dart';
 import 'package:atable/logic/models.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:flutter/material.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 class GoToRepasNotification extends Notification {
   final Repas repas;
   const GoToRepasNotification(this.repas);
 }
 
+class GoToMenuNotification extends Notification {
+  final Menu menu;
+  const GoToMenuNotification(this.menu);
+}
+
 class MenusList extends StatefulWidget {
   final DBApi db;
+  final ValueNotifier<int> scrollTo;
 
-  const MenusList(this.db, {super.key});
+  const MenusList(this.db, this.scrollTo, {super.key});
 
   @override
   State<MenusList> createState() => _MenusListState();
@@ -22,12 +29,19 @@ class MenusList extends StatefulWidget {
 
 class _MenusListState extends State<MenusList> {
   List<MenuExt> menus = [];
-  final _scrollController = ScrollController();
+  final _scrollController = ItemScrollController();
 
   @override
   void initState() {
     _loadMenus();
+    widget.scrollTo.addListener(_scrollToMenu);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    widget.scrollTo.removeListener(_scrollToMenu);
+    super.dispose();
   }
 
   @override
@@ -40,8 +54,8 @@ class _MenusListState extends State<MenusList> {
           ? const Center(
               child: Text("Aucun menu dans les favoris."),
             )
-          : ListView.builder(
-              controller: _scrollController,
+          : ScrollablePositionedList.builder(
+              itemScrollController: _scrollController,
               itemCount: menus.length,
               itemBuilder: (context, index) => Padding(
                 padding: const EdgeInsets.all(2.0),
@@ -78,15 +92,12 @@ class _MenusListState extends State<MenusList> {
     final newMenu = await widget.db.createMenu(
         Menu(id: 0, nbPersonnes: nbPersonnes, label: "Menu $serial"));
     setState(() {
-      menus.add(MenuExt(newMenu, [])); // préserve l'ordre
+      menus.add(MenuExt(newMenu, [], [])); // préserve l'ordre
     });
     Future.delayed(
-        const Duration(milliseconds: 100),
-        () => _scrollController.animateTo(
-              _scrollController.position.maxScrollExtent + 100,
-              curve: Curves.fastOutSlowIn,
-              duration: const Duration(milliseconds: 500),
-            ));
+      const Duration(milliseconds: 100),
+      () => _scrollToIndex(menus.length - 1),
+    );
   }
 
   // verifie si le menu est utilisé dans un repas
@@ -148,6 +159,24 @@ class _MenusListState extends State<MenusList> {
       backgroundColor: Colors.green,
     ));
     GoToRepasNotification(repas).dispatch(context);
+  }
+
+  void _scrollToMenu() async {
+    final id = widget.scrollTo.value;
+    final index = menus.indexWhere((element) => element.menu.id == id);
+    await _scrollToIndex(index);
+  }
+
+  Future<void> _scrollToIndex(int index) async {
+    if (!_scrollController.isAttached) return; // widget not build yet
+    // scroll à la fin de la liste
+    await Future.delayed(
+        const Duration(milliseconds: 50),
+        () async => await _scrollController.scrollTo(
+              index: index,
+              curve: Curves.fastOutSlowIn,
+              duration: const Duration(milliseconds: 500),
+            ));
   }
 }
 
