@@ -158,6 +158,7 @@ class _ShopListImplState extends State<_ShopListImpl> {
 
   @override
   void initState() {
+    _refreshList();
     timer = Timer.periodic(const Duration(seconds: 2), (t) => _refreshList());
     super.initState();
   }
