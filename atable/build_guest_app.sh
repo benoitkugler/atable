@@ -5,8 +5,6 @@ echo "Moving build to server/static/shop..." &&
 rm -r ../server/static/shop/ && 
 mkdir ../server/static/shop && 
 cp -r build/web/* ../server/static/shop &&
-echo "Removing unused music..." && 
-rm ../server/static/shop/assets/assets/music/* &&
-echo "Fixing bug https://github.com/flutter/flutter/issues/53745..." && 
-sed -i -e 's/return cache.addAll/cache.addAll/g' ../server/static/shop/flutter_service_worker.js &&
+# echo "Fixing bug https://github.com/flutter/flutter/issues/53745..." && 
+# sed -i -e 's/return cache.addAll/cache.addAll/g' ../server/static/shop/flutter_service_worker.js &&
 echo "Done."

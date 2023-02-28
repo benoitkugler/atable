@@ -263,7 +263,8 @@ class _RepasCardState extends State<_RepasCard> {
                         child: Text("Pour ${widget.repas.repas.nbPersonnes}")),
               ]),
             ),
-            widget.repas.menu.ingredients.isEmpty
+            widget.repas.menu.ingredients.isEmpty &&
+                    widget.repas.menu.recettes.isEmpty
                 ? const Padding(
                     padding: EdgeInsets.all(12.0),
                     child: Text(

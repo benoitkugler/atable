@@ -8,7 +8,7 @@ void main() async {
   // note that the MaterialApp routing erase these parameters,
   // so that we need to fetch it early
   final uri = Uri.parse(js.context['location']['href'] as String);
-  final sessionID = uri.queryParameters["sessionID"]!;
+  final sessionID = uri.queryParameters["sessionID"] ?? "";
   runApp(ShopListGuestApp(sessionID));
 }
 

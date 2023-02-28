@@ -146,6 +146,12 @@ class ShopControllerShared implements ShopController {
     final apiURL = Uri.parse(_apiEndpoint)
         .replace(queryParameters: {"sessionID": sessionID});
     final resp = await http.get(apiURL);
+    final json = jsonDecode(resp.body);
+    if (json is Map) {
+      throw json["message"];
+    } else if (json is! List) {
+      throw "Réponse du serveur invalide.";
+    }
     final l = jsonDecode(resp.body) as List;
     return ShopList(l
         .map((e) => IngredientQuantite.fromJson(e as Map<String, dynamic>))

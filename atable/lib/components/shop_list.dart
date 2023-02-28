@@ -185,10 +185,17 @@ class _ShopListImplState extends State<_ShopListImpl> {
   }
 
   void _refreshList() async {
-    final l = await widget.controller.fetchList();
-    setState(() {
-      list = l;
-    });
+    try {
+      final l = await widget.controller.fetchList();
+      setState(() {
+        list = l;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Erreur :\n$e"),
+        backgroundColor: Colors.red,
+      ));
+    }
   }
 }
 
@@ -203,7 +210,9 @@ class ShopSessionGuest extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Liste de courses partagées")),
-      body: _ShopListImpl(ShopControllerShared(sessionID)),
+      body: sessionID.isEmpty
+          ? const Center(child: Text("Aucun code de session."))
+          : _ShopListImpl(ShopControllerShared(sessionID)),
     );
   }
 }
