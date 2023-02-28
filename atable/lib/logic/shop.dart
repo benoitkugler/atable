@@ -4,6 +4,9 @@ import 'package:atable/logic/models.dart';
 import 'package:atable/logic/utils.dart';
 import 'package:http/http.dart' as http;
 
+const _serverHost = "https://intendance.alwaysdata.net"; // prod
+// const _serverHost = "http://localhost:1323" // dev
+
 typedef Quantites = Map<Unite, double>;
 
 String formatQuantites(Quantites quantite) {
@@ -117,9 +120,9 @@ class ShopControllerShared implements ShopController {
   // PUT : crée une session
   // GET (sessionID) : récupère la session demandée
   // POST (sessionID) : modifie la session demandée
-  static const _apiEndpoint = "http://localhost:1323/api/session";
+  static const _apiEndpoint = "$_serverHost/api/session";
 
-  static const _guestEndpoint = "http://localhost:1323/shop";
+  static const _guestEndpoint = "$_serverHost/shop";
 
   /// [guestURL] renvoie l'url de la page d'accueil destinée
   /// à un nouvel invité

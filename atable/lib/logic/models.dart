@@ -1,4 +1,3 @@
-import 'package:atable/logic/shop.dart';
 import 'package:atable/logic/utils.dart';
 import 'package:diacritic/diacritic.dart';
 import 'package:flutter/foundation.dart';
@@ -78,17 +77,19 @@ class Recette {
   final int nbPersonnes;
   final String label;
   final CategoriePlat categorie;
+  final String description;
 
   const Recette({
     required this.id,
     required this.nbPersonnes,
     required this.label,
     required this.categorie,
+    required this.description,
   });
 
   @override
   String toString() {
-    return "Recette(id: $id, nbPersonnes: $nbPersonnes, label: $label, categorie: $categorie)";
+    return "Recette(id: $id, nbPersonnes: $nbPersonnes, label: $label, categorie: $categorie, description: $description)";
   }
 
   Map<String, dynamic> toSQLMap(bool ignoreID) {
@@ -96,6 +97,7 @@ class Recette {
       "nbPersonnes": nbPersonnes,
       "label": label,
       "categorie": categorie.index,
+      "description": description,
     };
     if (!ignoreID) {
       out["id"] = id;
@@ -105,10 +107,12 @@ class Recette {
 
   factory Recette.fromSQLMap(Map<String, dynamic> map) {
     return Recette(
-        id: map["id"],
-        nbPersonnes: map["nbPersonnes"],
-        label: map["label"],
-        categorie: CategoriePlat.values[map["categorie"]]);
+      id: map["id"],
+      nbPersonnes: map["nbPersonnes"],
+      label: map["label"],
+      categorie: CategoriePlat.values[map["categorie"]],
+      description: map["description"],
+    );
   }
 
   Recette copyWith({
@@ -116,12 +120,14 @@ class Recette {
     int? nbPersonnes,
     String? label,
     CategoriePlat? categorie,
+    String? description,
   }) {
     return Recette(
       id: id ?? this.id,
       nbPersonnes: nbPersonnes ?? this.nbPersonnes,
       label: label ?? this.label,
       categorie: categorie ?? this.categorie,
+      description: description ?? this.description,
     );
   }
 }

@@ -263,7 +263,7 @@ class _DetailsMenuState extends State<DetailsMenu> {
 
   void _goToRecette(RecetteExt recette) async {
     await Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => DetailsRecette(widget.db, recette),
+      builder: (context) => DetailsRecette(widget.db, recette, false),
     ));
     // met à jour les données
     recette = await widget.db.getRecette(recette.recette.id);

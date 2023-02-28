@@ -1,7 +1,6 @@
 import 'package:atable/components/import_dialog.dart';
 import 'package:atable/components/ingredient_editor.dart';
 import 'package:atable/components/shared.dart';
-import 'package:atable/logic/ingredientsDB.dart';
 import 'package:atable/logic/models.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:atable/logic/utils.dart';
@@ -14,7 +13,10 @@ class DetailsRecette extends StatefulWidget {
 
   final RecetteExt initialValue;
 
-  const DetailsRecette(this.db, this.initialValue, {super.key});
+  final bool openDetails;
+
+  const DetailsRecette(this.db, this.initialValue, this.openDetails,
+      {super.key});
 
   @override
   State<DetailsRecette> createState() => _DetailsRecetteState();
@@ -30,6 +32,10 @@ class _DetailsRecetteState extends State<DetailsRecette> {
     _loadIngredients();
 
     super.initState();
+
+    if (widget.openDetails) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _showEditDialog());
+    }
   }
 
   @override
@@ -59,16 +65,20 @@ class _DetailsRecetteState extends State<DetailsRecette> {
                   recette.recette.copyWith(nbPersonnes: v.toInt()))),
           Expanded(
             child: ListView(
-              children: recette.ingredients
-                  .map((e) => DismissibleDelete(
-                        itemKey: e.ingredient.id,
-                        onDissmissed: () => _removeIngredient(e),
-                        child: IngredientRow(
-                            e,
-                            (q) => _updateLink(e, q, e.link.unite),
-                            (u) => _updateLink(e, e.link.quantite, u)),
-                      ))
-                  .toList(),
+              children: [
+                ...recette.ingredients.map((e) => DismissibleDelete(
+                      itemKey: e.ingredient.id,
+                      onDissmissed: () => _removeIngredient(e),
+                      child: IngredientRow(
+                          e,
+                          (q) => _updateLink(e, q, e.link.unite),
+                          (u) => _updateLink(e, e.link.quantite, u)),
+                    )),
+                _Description(
+                    recette.recette.description,
+                    (p0) => _updateRecette(
+                        recette.recette.copyWith(description: p0)))
+              ],
             ),
           ),
         ],
@@ -208,6 +218,8 @@ class _EditDialogState extends State<_EditDialog> {
   @override
   void initState() {
     controller.text = widget.initialValue.label;
+    controller.selection = TextSelection(
+        baseOffset: 0, extentOffset: widget.initialValue.label.length);
     controller.addListener(() => setState(() {}));
     categoriePlat = widget.initialValue.categorie;
     super.initState();
@@ -272,5 +284,80 @@ class _EditDialogState extends State<_EditDialog> {
         ],
       ),
     );
+  }
+}
+
+class _Description extends StatefulWidget {
+  final String initialValue;
+  final void Function(String) onEdit;
+
+  const _Description(this.initialValue, this.onEdit, {super.key});
+
+  @override
+  State<_Description> createState() => __DescriptionState();
+}
+
+class __DescriptionState extends State<_Description> {
+  TextEditingController? ct;
+
+  bool get isEditing => ct != null;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.all(4),
+      child: Padding(
+        padding: const EdgeInsets.only(left: 8.0, right: 8, bottom: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Text("Description", style: TextStyle(fontSize: 16)),
+                const Spacer(),
+                isEditing
+                    ? IconButton(
+                        onPressed: _endEdit,
+                        icon: const Icon(
+                          Icons.done,
+                          color: Colors.green,
+                        ))
+                    : IconButton(
+                        onPressed: _startEdit,
+                        icon: widget.initialValue.isEmpty
+                            ? const Icon(
+                                Icons.add,
+                                color: Colors.green,
+                              )
+                            : const Icon(Icons.edit))
+              ],
+            ),
+            isEditing
+                ? TextField(
+                    maxLines: null,
+                    controller: ct,
+                    autofocus: true,
+                  )
+                : widget.initialValue.isNotEmpty
+                    ? Text(widget.initialValue)
+                    : const SizedBox(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _startEdit() {
+    setState(() {
+      ct = TextEditingController(text: widget.initialValue);
+    });
+  }
+
+  void _endEdit() {
+    if (ct == null) return;
+    widget.onEdit(ct!.text);
+    setState(() {
+      ct = null;
+    });
   }
 }

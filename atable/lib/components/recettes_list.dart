@@ -72,20 +72,22 @@ class _RecettesListState extends State<RecettesList> {
         recettes.isEmpty ? 8 : recettes.last.recette.nbPersonnes;
 
     final newRecette = await widget.db.createRecette(Recette(
-        id: 0,
-        nbPersonnes: nbPersonnes,
-        label: "Recette $serial",
-        categorie: CategoriePlat.platPrincipal));
+      id: 0,
+      nbPersonnes: nbPersonnes,
+      label: "Recette $serial",
+      categorie: CategoriePlat.platPrincipal,
+      description: "",
+    ));
     setState(() {
       recettes.add(RecetteExt(newRecette, [])); // préserve l'ordre
     });
-    Future.delayed(
+    await Future.delayed(
         const Duration(milliseconds: 100),
-        () => _scrollController.animateTo(
+        () => _scrollController.jumpTo(
               _scrollController.position.maxScrollExtent + 100,
-              curve: Curves.fastOutSlowIn,
-              duration: const Duration(milliseconds: 500),
             ));
+    // commence à éditer la recette
+    _showRecetteDetails(recettes.length - 1, openDetails: true);
   }
 
   // verifie si le recette est utilisé dans un repas
@@ -129,10 +131,10 @@ class _RecettesListState extends State<RecettesList> {
     ));
   }
 
-  void _showRecetteDetails(int recetteIndex) async {
+  void _showRecetteDetails(int recetteIndex, {bool openDetails = false}) async {
     var recette = recettes[recetteIndex];
     await Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => DetailsRecette(widget.db, recette),
+      builder: (context) => DetailsRecette(widget.db, recette, openDetails),
     ));
     // met à jour les données
     recette = await widget.db.getRecette(recette.recette.id);
