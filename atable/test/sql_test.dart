@@ -82,7 +82,11 @@ Future main() async {
         id: 0, nom: "INg1", categorie: CategorieIngredient.laitages));
 
     final recette1 = await db.createRecette(const Recette(
-        id: -1, nbPersonnes: 8, label: "", categorie: CategoriePlat.entree));
+        id: -1,
+        nbPersonnes: 8,
+        label: "",
+        categorie: CategoriePlat.entree,
+        description: "Cuisson : 20min"));
 
     final recettes1 = await db.getRecettes();
     expect(recettes1.length, 1);
