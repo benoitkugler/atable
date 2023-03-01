@@ -100,11 +100,11 @@ class DBApi {
       dbPath = join(await getDatabasesPath(), dbName);
     }
 
-    // DEV MODE only : reset DB at start
-    final fi = File(dbPath);
-    if (await fi.exists()) {
-      await fi.delete();
-    }
+    // // DEV MODE only : reset DB at start
+    // final fi = File(dbPath);
+    // if (await fi.exists()) {
+    //   await fi.delete();
+    // }
 
     // open/create the database
     final database =
