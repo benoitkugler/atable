@@ -1,4 +1,4 @@
-flutter build web -t lib/main_shop_guest.dart --base-href=/shop/ && 
+flutter build web -t lib/main_shop_guest.dart --web-renderer html --base-href=/shop/ && 
 # uncomment to build in "debug" mode
 # flutter build web --profile --dart-define=Dart2jsOptimization=O0 -t lib/main_prof_loopback.dart --base-href=/shop/ && 
 echo "Moving build to server/static/shop..." && 
