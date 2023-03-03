@@ -75,6 +75,12 @@ const _createSQLStatements = [
  """,
 ];
 
+class UtilisationsIngredient {
+  final int recettes;
+  final int menus;
+  const UtilisationsIngredient(this.recettes, this.menus);
+}
+
 class MenuOrRepas {
   final Repas? repas;
   final Menu menu;
@@ -130,6 +136,27 @@ class DBApi {
   Future<Ingredient> insertIngredient(Ingredient ing) async {
     final id = await db.insert("ingredients", ing.toSQLMap(true));
     return Ingredient(id: id, nom: ing.nom, categorie: ing.categorie);
+  }
+
+  Future<void> updateIngredient(Ingredient ing) async {
+    await db.update("ingredients", ing.toSQLMap(true),
+        where: "id = ?", whereArgs: [ing.id]);
+  }
+
+  Future<UtilisationsIngredient> getIngredientUtilisations(int id) async {
+    final recettes = (await db.query("recette_ingredients",
+            where: "idIngredient = ?", whereArgs: [id]))
+        .map(RecetteIngredient.fromSQLMap)
+        .map((e) => e.idRecette)
+        .toSet()
+        .length;
+    final menus = (await db.query("menu_ingredients",
+            where: "idIngredient = ?", whereArgs: [id]))
+        .map(MenuIngredient.fromSQLMap)
+        .map((e) => e.idMenu)
+        .toSet()
+        .length;
+    return UtilisationsIngredient(recettes, menus);
   }
 
   Future<RecetteExt> getRecette(int id) async {
@@ -234,10 +261,12 @@ class DBApi {
     final ingredients =
         await _loadIngredients(recetteIngredients.map((e) => e.idIngredient));
 
-    return recetteIngredients
+    final out = recetteIngredients
         .map((link) =>
             RecetteIngredientExt(ingredients[link.idIngredient]!, link))
         .toList();
+    out.sort((a, b) => a.ingredient.nom.compareTo(b.ingredient.nom));
+    return out;
   }
 
   /// [deleteRecetteIngredient] retire l'ingrédient donné du menu donné.

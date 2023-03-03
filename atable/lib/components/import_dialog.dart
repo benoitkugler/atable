@@ -28,8 +28,9 @@ class _ImportDialog extends StatefulWidget {
 }
 
 class _ImportDialogState extends State<_ImportDialog> {
-  List<RecetteImport> ingredients = [];
-  List<Ingredient> matches = [];
+  List<RecetteImport> ingredients =
+      []; // ingrédients à relier à la base de données
+  List<Ingredient> matches = []; // un pour chaque élément de [ingredients]
 
   PageController controller = PageController();
 
@@ -93,16 +94,18 @@ class _ImportDialogState extends State<_ImportDialog> {
               ),
               const SizedBox(height: 10),
               SizedBox(
-                height: 320,
+                height: 360,
                 child: PageView(
                   controller: controller,
+                  onPageChanged: (p) => setState(() {}),
                   children: List<_IngredientMapper>.generate(
                     ingredients.length,
                     (index) => _IngredientMapper(
                         ingredients[index],
                         matches[index],
                         widget.candidates,
-                        (ing) => _onValidMatch(index, ing)),
+                        (ing) => _onValidMatch(index, ing),
+                        () => _removeDetected(index)),
                   ),
                 ),
               ),
@@ -140,18 +143,29 @@ class _ImportDialogState extends State<_ImportDialog> {
       });
     }
   }
+
+  _removeDetected(int index) {
+    setState(() {
+      ingredients.removeAt(index);
+      matches.removeAt(index);
+    });
+    if (ingredients.isEmpty) {
+      Navigator.of(context).pop();
+    }
+  }
 }
 
 class _IngredientMapper extends StatelessWidget {
-  final RecetteImport ingredient;
+  final RecetteImport detected;
   final Ingredient initialMatch;
 
   final List<Ingredient> allIngredients;
 
   final void Function(Ingredient) onDone;
+  final void Function() onAbort;
 
-  const _IngredientMapper(
-      this.ingredient, this.initialMatch, this.allIngredients, this.onDone,
+  const _IngredientMapper(this.detected, this.initialMatch, this.allIngredients,
+      this.onDone, this.onAbort,
       {super.key});
 
   @override
@@ -164,12 +178,19 @@ class _IngredientMapper extends StatelessWidget {
             color: Colors.yellow.shade100,
             child: Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Row(
+              child: Column(
                 children: [
-                  Text(ingredient.nom),
-                  const Spacer(),
-                  Text(
-                      "${formatQuantite(ingredient.quantite)} ${formatUnite(ingredient.unite)}")
+                  const Text("Ingrédient détecté",
+                      style: TextStyle(fontSize: 16)),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Text(detected.nom),
+                      const Spacer(),
+                      Text(
+                          "${formatQuantite(detected.quantite)} ${formatUnite(detected.unite)}")
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -181,6 +202,8 @@ class _IngredientMapper extends StatelessWidget {
               allIngredients,
               (ing, isNew) => onDone(ing),
               initialValue: initialMatch,
+              title: "Importer en",
+              onAbort: onAbort,
             ),
           )
         ],

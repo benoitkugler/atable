@@ -23,7 +23,6 @@ class Ingredient {
   Ingredient copyWith({
     int? id,
     String? nom,
-    Unite? unite,
     CategorieIngredient? categorie,
   }) {
     return Ingredient(
@@ -437,6 +436,7 @@ enum CategorieIngredient {
   inconnue,
 
   legumes,
+  feculents,
   viandes,
   epicerie,
   laitages,
@@ -449,6 +449,8 @@ String formatCategorieIngredient(CategorieIngredient cat) {
       return "Autre";
     case CategorieIngredient.legumes:
       return "Fruits et légumes";
+    case CategorieIngredient.feculents:
+      return "Féculents";
     case CategorieIngredient.viandes:
       return "Viandes et poissons";
     case CategorieIngredient.epicerie:

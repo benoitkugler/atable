@@ -101,5 +101,6 @@ String capitalize(String text) {
 
 String formatQuantite(double quantite) {
   if (quantite.floorToDouble() == quantite) return quantite.toInt().toString();
+  if (quantite < 1) return quantite.toStringAsFixed(3);
   return quantite.toStringAsFixed(2);
 }

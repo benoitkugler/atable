@@ -1,3 +1,4 @@
+import 'package:atable/components/details_ingredient.dart';
 import 'package:atable/components/details_recette.dart';
 import 'package:atable/components/import_dialog.dart';
 import 'package:atable/components/ingredient_editor.dart';
@@ -91,7 +92,8 @@ class _DetailsMenuState extends State<DetailsMenu> {
                       _swapCategorie,
                       _updateLink,
                       _removeRecette,
-                      _goToRecette))
+                      _goToRecette,
+                      _showIngredient))
                   .toList(),
             ),
           ),
@@ -273,6 +275,16 @@ class _DetailsMenuState extends State<DetailsMenu> {
       menu.recettes[index] = recette;
     });
   }
+
+  _showIngredient(Ingredient e) async {
+    await Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => DetailsIngredient(widget.db, e),
+    ));
+    final updatedMenu = await widget.db.getMenu(menu.menu.id);
+    setState(() {
+      menu = updatedMenu;
+    });
+  }
 }
 
 class _PlatCard extends StatelessWidget {
@@ -288,6 +300,7 @@ class _PlatCard extends StatelessWidget {
 
   final void Function(RecetteExt) removeRecette;
   final void Function(RecetteExt) goToRecette;
+  final void Function(Ingredient) showIngredient;
 
   const _PlatCard(
       this.plat,
@@ -298,6 +311,7 @@ class _PlatCard extends StatelessWidget {
       this.updateLink,
       this.removeRecette,
       this.goToRecette,
+      this.showIngredient,
       {super.key});
 
   @override
@@ -336,9 +350,11 @@ class _PlatCard extends StatelessWidget {
                               itemKey: e.ingredient.id,
                               onDissmissed: () => removeIngredient(e),
                               child: IngredientRow(
-                                  e,
-                                  (q) => updateLink(e, q, e.link.unite),
-                                  (u) => updateLink(e, e.link.quantite, u)),
+                                e,
+                                (q) => updateLink(e, q, e.link.unite),
+                                (u) => updateLink(e, e.link.quantite, u),
+                                () => showIngredient(e.ingredient),
+                              ),
                             )),
                         ...recettes.map((e) => DismissibleDelete(
                             itemKey: -e.recette.id,

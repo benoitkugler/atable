@@ -129,8 +129,10 @@ class IngredientRow<T extends IngQuantI> extends StatefulWidget {
 
   final void Function(double quantite) onEditQuantite;
   final void Function(Unite unite) onEditUnite;
+  final void Function() onTap;
 
-  const IngredientRow(this.ingredient, this.onEditQuantite, this.onEditUnite,
+  const IngredientRow(
+      this.ingredient, this.onEditQuantite, this.onEditUnite, this.onTap,
       {super.key});
 
   @override
@@ -164,6 +166,7 @@ class _IngredientRowState<T extends IngQuantI> extends State<IngredientRow<T>> {
           ),
         )),
         child: ListTile(
+            onTap: widget.onTap,
             visualDensity: const VisualDensity(vertical: -3),
             dense: true,
             title: Text(ing.ingredient.nom),

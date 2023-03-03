@@ -1,3 +1,4 @@
+import 'package:atable/components/details_ingredient.dart';
 import 'package:atable/components/import_dialog.dart';
 import 'package:atable/components/ingredient_editor.dart';
 import 'package:atable/components/shared.dart';
@@ -70,9 +71,11 @@ class _DetailsRecetteState extends State<DetailsRecette> {
                       itemKey: e.ingredient.id,
                       onDissmissed: () => _removeIngredient(e),
                       child: IngredientRow(
-                          e,
-                          (q) => _updateLink(e, q, e.link.unite),
-                          (u) => _updateLink(e, e.link.quantite, u)),
+                        e,
+                        (q) => _updateLink(e, q, e.link.unite),
+                        (u) => _updateLink(e, e.link.quantite, u),
+                        () => _showIngredient(e.ingredient),
+                      ),
                     )),
                 _Description(
                     recette.recette.description,
@@ -196,6 +199,16 @@ class _DetailsRecetteState extends State<DetailsRecette> {
           .indexWhere((element) => element.ingredient.id == ing.ingredient.id);
       recette.ingredients[index] =
           recette.ingredients[index].copyWith(link: newLink);
+    });
+  }
+
+  _showIngredient(Ingredient e) async {
+    await Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => DetailsIngredient(widget.db, e),
+    ));
+    final updatedRecette = await widget.db.getRecette(recette.recette.id);
+    setState(() {
+      recette = updatedRecette;
     });
   }
 }
