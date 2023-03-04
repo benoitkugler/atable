@@ -7,14 +7,14 @@ import 'package:atable/logic/sql.dart';
 import 'package:flutter/material.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
-class GoToRepasNotification extends Notification {
+class GoToRepasNotification extends MainNotification {
   final Repas repas;
-  const GoToRepasNotification(this.repas);
+  GoToRepasNotification(this.repas);
 }
 
-class GoToMenuNotification extends Notification {
+class GoToMenuNotification extends MainNotification {
   final Menu menu;
-  const GoToMenuNotification(this.menu);
+  GoToMenuNotification(this.menu);
 }
 
 class MenusList extends StatefulWidget {

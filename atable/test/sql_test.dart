@@ -71,7 +71,7 @@ Future main() async {
     final favoris = await db.getMenusFavoris();
     expect(favoris.length, 1);
 
-    await db.db.close();
+    await db.close();
   });
 
   test('SQL API - Recettes', () async {
@@ -124,6 +124,6 @@ Future main() async {
     final recettes2 = await db.getRecettes();
     expect(recettes2.length, 0);
 
-    await db.db.close();
+    await db.close();
   });
 }

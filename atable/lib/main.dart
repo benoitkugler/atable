@@ -1,18 +1,20 @@
+import 'dart:io';
+
 import 'package:atable/components/menus_list.dart';
 import 'package:atable/components/recettes_list.dart';
 import 'package:atable/components/repas_list.dart';
+import 'package:atable/components/shared.dart';
 import 'package:atable/logic/sql.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
-  final db = await DBApi.open();
-  runApp(App(db));
+  runApp(const App());
 }
 
 class App extends StatelessWidget {
-  final DBApi db;
-  const App(this.db, {Key? key}) : super(key: key);
+  const App({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -29,15 +31,13 @@ class App extends StatelessWidget {
       supportedLocales: const [
         Locale('fr'),
       ],
-      home: _Home(db),
+      home: const _Home(),
     );
   }
 }
 
 class _Home extends StatefulWidget {
-  final DBApi db;
-
-  const _Home(this.db, {super.key});
+  const _Home({super.key});
 
   @override
   State<_Home> createState() => __HomeState();
@@ -46,20 +46,47 @@ class _Home extends StatefulWidget {
 enum _View { repas, menus, recettes }
 
 class __HomeState extends State<_Home> {
+  DBApi? db;
+
   PageController controller = PageController();
   int _pageIndex = 0;
 
   var scrollToRepas = ValueNotifier<int>(-1);
   var scrollToMenu = ValueNotifier<int>(-1);
 
+  @override
+  void initState() {
+    _openDB();
+    super.initState();
+  }
+
+  _openDB() async {
+    final db = await DBApi.open();
+    setState(() {
+      this.db = db;
+    });
+  }
+
   Widget body(int index) {
+    final db = this.db;
+    if (db == null) {
+      return Center(
+          child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: const [
+          CircularProgressIndicator(),
+          SizedBox(width: 10),
+          Text("Chargement des données...")
+        ],
+      ));
+    }
     switch (_View.values[index]) {
       case _View.repas:
-        return RepasList(widget.db, scrollToRepas);
+        return RepasList(db, scrollToRepas);
       case _View.menus:
-        return MenusList(widget.db, scrollToMenu);
+        return MenusList(db, scrollToMenu);
       case _View.recettes:
-        return RecettesList(widget.db);
+        return RecettesList(db);
     }
   }
 
@@ -80,24 +107,26 @@ class __HomeState extends State<_Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: NotificationListener<GoToMenuNotification>(
+      body: NotificationListener<MainNotification>(
         onNotification: (notification) {
-          _showMenu(notification);
+          if (notification is GoToMenuNotification) {
+            _showMenu(notification);
+          } else if (notification is GoToRepasNotification) {
+            _showRepas(notification);
+          } else if (notification is ImportDBNotification) {
+            _import();
+          } else if (notification is ExportDBNotification) {
+            _export();
+          }
           return true;
         },
-        child: NotificationListener<GoToRepasNotification>(
-          onNotification: (notification) {
-            _showRepas(notification);
-            return true;
-          },
-          child: PageView.builder(
-            controller: controller,
-            itemCount: _View.values.length,
-            itemBuilder: (context, index) => body(index),
-            onPageChanged: (index) => setState(() {
-              _pageIndex = index;
-            }),
-          ),
+        child: PageView.builder(
+          controller: controller,
+          itemCount: _View.values.length,
+          itemBuilder: (context, index) => body(index),
+          onPageChanged: (index) => setState(() {
+            _pageIndex = index;
+          }),
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -115,5 +144,74 @@ class __HomeState extends State<_Home> {
         }),
       ),
     );
+  }
+
+  _export() async {
+    final String outFile;
+    try {
+      outFile = await DBApi.exportDB();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("$e"),
+        backgroundColor: Colors.red,
+      ));
+      return;
+    }
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text("Base exportée dans $outFile."),
+      backgroundColor: Colors.green,
+    ));
+  }
+
+  _import() async {
+    final dir = await downloadDir();
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      initialDirectory: dir.path,
+      type: FileType.custom,
+      allowedExtensions: ['tar'],
+    );
+
+    final path = result?.files.single.path;
+    if (path == null) {
+      // User canceled the picker
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Import annulé."),
+          backgroundColor: Colors.orange,
+        ));
+      }
+      return;
+    }
+    final dbFile = File(path);
+
+    try {
+      await DBApi.checkValidDB(dbFile);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Fichier invalide :\n$e"),
+          backgroundColor: Colors.red,
+        ));
+      }
+      return;
+    }
+
+    await db?.close();
+    setState(() {
+      db = null;
+    });
+    final newDB = await DBApi.importDB(dbFile);
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text("Import terminé."),
+      backgroundColor: Colors.green,
+    ));
+
+    setState(() {
+      db = newDB;
+    });
   }
 }

@@ -7,6 +7,10 @@ import 'package:atable/logic/models.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:flutter/material.dart';
 
+class ExportDBNotification extends MainNotification {}
+
+class ImportDBNotification extends MainNotification {}
+
 class RecettesList extends StatefulWidget {
   final DBApi db;
 
@@ -27,10 +31,24 @@ class _RecettesListState extends State<RecettesList> {
   }
 
   @override
+  void didUpdateWidget(covariant RecettesList oldWidget) {
+    _loadRecettes();
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Recettes"),
+        actions: [
+          IconButton(
+              onPressed: () => ExportDBNotification().dispatch(context),
+              icon: const Icon(Icons.download)),
+          IconButton(
+              onPressed: () => ImportDBNotification().dispatch(context),
+              icon: const Icon(Icons.upload))
+        ],
       ),
       body: recettes.isEmpty
           ? const Center(

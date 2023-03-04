@@ -17,6 +17,9 @@ extension CategoriePlatColor on CategoriePlat {
   }
 }
 
+/// [MainNotification] permet de communiquer entre onglets.
+abstract class MainNotification extends Notification {}
+
 class DismissibleDelete extends StatelessWidget {
   final int itemKey;
   final void Function() onDissmissed;
