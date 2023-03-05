@@ -19,4 +19,7 @@ Un serveur contrôle la fonction d'édition partagée d'une liste de courses.
 
 ## Structure de la base de données
 
-L'objet fondamental est l'**ingredient**, caractérisé par un nom et une unité (Kg, L, Pièce). Ces ingrédients sont regroupés en **menu**s, un menu étant défini par une liste d'ingrédient et de quantités (relatives), ainsi qu'un jour et un nombre de personnes.
+L'objet fondamental est l'**ingredient**, caractérisé par un nom et une catégorie.
+Les ingrédients sont regroupés avec une quantité (relative) et une unité (Kg, L, Pièce) pour former une recette.
+Un menu regroupe des recettes et des ingrédients additionnels.
+Finalement, un repas est défini par un menu, un jour et un nombre de personnes.
