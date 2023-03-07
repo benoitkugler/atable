@@ -24,12 +24,10 @@ class DetailsMenu extends StatefulWidget {
 
 class _DetailsMenuState extends State<DetailsMenu> {
   late MenuExt menu;
-  List<Ingredient> allIngredients = [];
 
   @override
   void initState() {
     menu = widget.initialValue;
-    _loadIngredients();
 
     super.initState();
   }
@@ -103,6 +101,9 @@ class _DetailsMenuState extends State<DetailsMenu> {
   }
 
   void _showAddIngredient() async {
+    final allIngredients = await widget.db.getIngredients();
+    if (!mounted) return;
+
     await showDialog(
         context: context,
         builder: (context) => Dialog(
@@ -136,6 +137,9 @@ class _DetailsMenuState extends State<DetailsMenu> {
   }
 
   void _showImportDialog() async {
+    final allIngredients = await widget.db.getIngredients();
+    if (!mounted) return;
+
     final newIngredients = await showImportDialog(allIngredients, context);
     if (newIngredients == null) return; // import annulé
 
@@ -188,15 +192,10 @@ class _DetailsMenuState extends State<DetailsMenu> {
     _updateMenu(menu.menu.copyWith(label: newLabel));
   }
 
-  void _loadIngredients() async {
-    allIngredients = await widget.db.getIngredients();
-  }
-
   void _addIngredient(Ingredient ing) async {
     if (ing.id < 0) {
       // register first the new ingredient, and record it in the proposition
       ing = await widget.db.insertIngredient(ing);
-      allIngredients.add(ing);
     }
     final link = MenuIngredient(
         idMenu: menu.menu.id,
