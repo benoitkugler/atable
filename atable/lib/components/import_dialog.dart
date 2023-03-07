@@ -200,7 +200,7 @@ class _IngredientMapper extends StatelessWidget {
             color: Colors.lightGreen.shade100,
             child: IngredientEditor(
               allIngredients,
-              (ing, isNew) => onDone(ing),
+              onDone,
               initialValue: initialMatch,
               title: "Importer en",
               onAbort: onAbort,

@@ -108,9 +108,9 @@ class _DetailsMenuState extends State<DetailsMenu> {
         builder: (context) => Dialog(
               child: IngredientEditor(
                 allIngredients,
-                (ing, isNew) {
+                (ing) {
                   Navigator.of(context).pop();
-                  _addIngredient(ing, isNew);
+                  _addIngredient(ing);
                 },
               ),
             ));
@@ -154,10 +154,12 @@ class _DetailsMenuState extends State<DetailsMenu> {
           unite: item.unite,
           categorie: CategoriePlat.entree);
       await widget.db.insertMenuIngredient(link);
-      setState(() {
-        menu.ingredients.add(MenuIngredientExt(ing, link));
-      });
     }
+
+    final updated = await widget.db.getMenu(menu.menu.id);
+    setState(() {
+      menu = updated;
+    });
   }
 
   void _updateMenu(Menu newMenu) async {
@@ -190,8 +192,8 @@ class _DetailsMenuState extends State<DetailsMenu> {
     allIngredients = await widget.db.getIngredients();
   }
 
-  void _addIngredient(Ingredient ing, bool isNew) async {
-    if (isNew) {
+  void _addIngredient(Ingredient ing) async {
+    if (ing.id < 0) {
       // register first the new ingredient, and record it in the proposition
       ing = await widget.db.insertIngredient(ing);
       allIngredients.add(ing);

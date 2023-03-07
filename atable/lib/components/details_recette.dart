@@ -25,12 +25,10 @@ class DetailsRecette extends StatefulWidget {
 
 class _DetailsRecetteState extends State<DetailsRecette> {
   late RecetteExt recette;
-  List<Ingredient> allIngredients = [];
 
   @override
   void initState() {
     recette = widget.initialValue;
-    _loadIngredients();
 
     super.initState();
 
@@ -90,20 +88,25 @@ class _DetailsRecetteState extends State<DetailsRecette> {
   }
 
   void _showIngredientDialog() async {
+    final allIngredients = await widget.db.getIngredients();
+    if (!mounted) return;
     await showDialog(
         context: context,
         builder: (context) => Dialog(
               child: IngredientEditor(
                 allIngredients,
-                (ing, isNew) {
+                (ing) {
                   Navigator.of(context).pop();
-                  _addIngredient(ing, isNew);
+                  _addIngredient(ing);
                 },
               ),
             ));
   }
 
   void _showImportDialog() async {
+    final allIngredients = await widget.db.getIngredients();
+    if (!mounted) return;
+
     final newIngredients = await showImportDialog(allIngredients, context);
     if (newIngredients == null) return; // import annulé
     // ajout des ingrédients
@@ -119,10 +122,12 @@ class _DetailsRecetteState extends State<DetailsRecette> {
           quantite: item.quantite,
           unite: item.unite);
       await widget.db.insertRecetteIngredient(link);
-      setState(() {
-        recette.ingredients.add(RecetteIngredientExt(ing, link));
-      });
     }
+
+    final updated = await widget.db.getRecette(recette.recette.id);
+    setState(() {
+      recette = updated;
+    });
   }
 
   void _updateRecette(Recette newRecette) async {
@@ -151,15 +156,10 @@ class _DetailsRecetteState extends State<DetailsRecette> {
     _updateRecette(newRecette);
   }
 
-  void _loadIngredients() async {
-    allIngredients = await widget.db.getIngredients();
-  }
-
-  void _addIngredient(Ingredient ing, bool isNew) async {
-    if (isNew) {
+  void _addIngredient(Ingredient ing) async {
+    if (ing.id < 0) {
       // register first the new ingredient, and record it in the proposition
       ing = await widget.db.insertIngredient(ing);
-      allIngredients.add(ing);
     }
     final link = RecetteIngredient(
       idRecette: recette.recette.id,

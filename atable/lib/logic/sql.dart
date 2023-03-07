@@ -217,7 +217,7 @@ class DBApi {
         where: "id = ?", whereArgs: [ing.id]);
   }
 
-  Future<UtilisationsIngredient> getIngredientUtilisations(int id) async {
+  Future<UtilisationsIngredient> getIngredientUses(int id) async {
     final recettes = (await _db.query("recette_ingredients",
             where: "idIngredient = ?", whereArgs: [id]))
         .map(RecetteIngredient.fromSQLMap)
@@ -344,10 +344,18 @@ class DBApi {
   }
 
   /// [deleteRecetteIngredient] retire l'ingrédient donné du menu donné.
+  /// S'il n'est plus utilisé, l'ingrédient sous-jacent est supprimé
   Future<void> deleteRecetteIngredient(RecetteIngredient link) async {
     await _db.delete("recette_ingredients",
         where: "idRecette = ? AND idIngredient = ?",
         whereArgs: [link.idRecette, link.idIngredient]);
+    // la contrainte SQL empêche la suppression si l'ingrédient est encore utilisé
+    try {
+      _db.delete("ingredients",
+          where: "id = ?", whereArgs: [link.idIngredient]);
+    } catch (e) {
+      // rien à faire
+    }
   }
 
   /// [updateRecetteIngredient] modifie le lien donné

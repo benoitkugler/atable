@@ -67,7 +67,7 @@ class _DetailsIngredientState extends State<DetailsIngredient> {
   }
 
   _loadUtilisations() async {
-    final u = await widget.db.getIngredientUtilisations(ingredient.id);
+    final u = await widget.db.getIngredientUses(ingredient.id);
     setState(() {
       utilisations = u;
     });
