@@ -74,6 +74,18 @@ Future main() async {
     await db.close();
   });
 
+  test("SQL API - Ingredients", () async {
+    final db = await DBApi.open(dbPath: inMemoryDatabasePath);
+    final ings = await db.insertIngredients(const [
+      Ingredient(id: -1, nom: "A", categorie: CategorieIngredient.boulangerie),
+      Ingredient(id: -1, nom: "B", categorie: CategorieIngredient.boulangerie),
+      Ingredient(id: -1, nom: "C", categorie: CategorieIngredient.boulangerie),
+      Ingredient(id: -1, nom: "D", categorie: CategorieIngredient.boulangerie),
+    ]);
+    expect(ings.length, 4);
+    expect(ings.every((element) => element.id > 0), true);
+  });
+
   test('SQL API - Recettes', () async {
     final db = await DBApi.open(dbPath: inMemoryDatabasePath);
     final ing1 = await db.insertIngredient(const Ingredient(

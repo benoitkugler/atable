@@ -107,7 +107,7 @@ class _DetailsMenuState extends State<DetailsMenu> {
     await showDialog(
         context: context,
         builder: (context) => Dialog(
-              child: IngredientEditor(
+              child: IngredientSelector(
                 allIngredients,
                 (ing) {
                   Navigator.of(context).pop();

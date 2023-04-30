@@ -9,6 +9,33 @@ class TestD {
 }
 
 main() {
+  test("Import CSV", () {
+    const input = """
+      Tiramisu, , 8
+      Oeufs, 6, P 
+      Mascarpone, 500, g
+      Sucre, 0.1, kg 
+      Boudoirs, 60, P 
+      Rhum, 10, cl
+      Lardons, 300, g
+
+      Salade de riz, , 12
+      Riz, 2, kg
+      Tomates, 1, kg
+      Lardon, 0.5, kg
+    """;
+    final got = RecettesImporter.fromCSV(input).recettes;
+    expect(got.length, 2);
+
+    expect(got[0].ingredients.length, 6);
+    expect(got[0].ingredients[0].quantite, 6);
+    expect(got[0].ingredients[0].unite, Unite.piece);
+    expect(got[0].ingredients[4].quantite, 0.1);
+
+    expect(got[1].ingredients.length, 3);
+    expect(got[1].ingredients[2].nom, "Lardons"); // pluriel
+  });
+
   test('Import ingredient', () {
     const texts = [
       TestD("""

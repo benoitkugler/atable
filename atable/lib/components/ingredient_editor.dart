@@ -4,7 +4,7 @@ import 'package:atable/logic/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class IngredientEditor extends StatefulWidget {
+class IngredientSelector extends StatefulWidget {
   final List<Ingredient> candidatesIngredients;
   final void Function(Ingredient ing) onDone;
   final Ingredient? initialValue;
@@ -12,17 +12,17 @@ class IngredientEditor extends StatefulWidget {
   final String title;
   final void Function()? onAbort;
 
-  const IngredientEditor(this.candidatesIngredients, this.onDone,
+  const IngredientSelector(this.candidatesIngredients, this.onDone,
       {super.key,
       this.initialValue,
       this.onAbort,
       this.title = "Ajouter un ingrédient"});
 
   @override
-  State<IngredientEditor> createState() => _IngredientEditorState();
+  State<IngredientSelector> createState() => _IngredientSelectorState();
 }
 
-class _IngredientEditorState extends State<IngredientEditor> {
+class _IngredientSelectorState extends State<IngredientSelector> {
   int id = -1;
   var nom = TextEditingController();
   CategorieIngredient categorie = CategorieIngredient.legumes;
@@ -34,7 +34,7 @@ class _IngredientEditorState extends State<IngredientEditor> {
   }
 
   @override
-  void didUpdateWidget(covariant IngredientEditor oldWidget) {
+  void didUpdateWidget(covariant IngredientSelector oldWidget) {
     _setup();
     super.didUpdateWidget(oldWidget);
   }

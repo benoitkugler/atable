@@ -171,6 +171,11 @@ class RecetteIngredient {
     );
   }
 
+  @override
+  String toString() {
+    return "RecetteIngredient(idRecette: $idRecette, idIngredient: $idIngredient, quantite: $quantite, unite: $unite)";
+  }
+
   Map<String, dynamic> toSQLMap() {
     final out = {
       "idRecette": idRecette,

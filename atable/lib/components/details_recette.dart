@@ -93,7 +93,7 @@ class _DetailsRecetteState extends State<DetailsRecette> {
     await showDialog(
         context: context,
         builder: (context) => Dialog(
-              child: IngredientEditor(
+              child: IngredientSelector(
                 allIngredients,
                 (ing) {
                   Navigator.of(context).pop();

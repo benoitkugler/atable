@@ -216,19 +216,47 @@ class _UniteEditor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PopupMenuButton<Unite>(
+    return PopupTextButton<Unite>(
+      value,
+      Unite.values,
+      (value) => formatUnite(value).padRight(2),
+      onChange,
+    );
+  }
+}
+
+class PopupTextButton<T> extends StatelessWidget {
+  final T value;
+  final List<T> choices;
+  final String Function(T value) formatter;
+
+  final void Function(T) onChange;
+
+  const PopupTextButton(this.value, this.choices, this.formatter, this.onChange,
+      {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<T>(
       initialValue: value,
-      itemBuilder: (context) => Unite.values
-          .map((e) => PopupMenuItem<Unite>(
+      itemBuilder: (context) => choices
+          .map((e) => PopupMenuItem<T>(
                 value: e,
-                child: Text(formatUnite(e)),
+                child: Text(formatter(e)),
               ))
           .toList(),
       onSelected: onChange,
-      child: Text(
-        formatUnite(value).padRight(2),
-        style: TextStyle(
-            fontWeight: FontWeight.w500, color: Theme.of(context).primaryColor),
+      child: Container(
+        decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.all(Radius.circular(4))),
+        padding: const EdgeInsets.all(8),
+        child: Text(
+          formatter(value),
+          style: TextStyle(
+              fontWeight: FontWeight.w500,
+              color: Theme.of(context).primaryColor),
+        ),
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:atable/components/details_recette.dart';
+import 'package:atable/components/import_dialog.dart';
 import 'package:atable/components/menus_list.dart';
 import 'package:atable/components/shared.dart';
 import 'package:atable/logic/models.dart';
@@ -10,6 +11,8 @@ import 'package:flutter/material.dart';
 class ExportDBNotification extends MainNotification {}
 
 class ImportDBNotification extends MainNotification {}
+
+enum _PopupAction { importRecettes, saveDB, loadDB }
 
 class RecettesList extends StatefulWidget {
   final DBApi db;
@@ -42,12 +45,37 @@ class _RecettesListState extends State<RecettesList> {
       appBar: AppBar(
         title: const Text("Recettes"),
         actions: [
-          IconButton(
-              onPressed: () => ExportDBNotification().dispatch(context),
-              icon: const Icon(Icons.download)),
-          IconButton(
-              onPressed: () => ImportDBNotification().dispatch(context),
-              icon: const Icon(Icons.upload))
+          PopupMenuButton<_PopupAction>(
+            onSelected: _onPopupAction,
+            itemBuilder: (context) => const <PopupMenuEntry<_PopupAction>>[
+              PopupMenuItem(
+                  value: _PopupAction.importRecettes,
+                  child: ListTile(
+                    dense: true,
+                    leading: Icon(Icons.format_list_bulleted_add),
+                    title: Text("Ajouter des recettes"),
+                    subtitle: Text("depuis un fichier .CSV"),
+                  )),
+              PopupMenuDivider(),
+              PopupMenuItem(
+                  value: _PopupAction.saveDB,
+                  child: ListTile(
+                    dense: true,
+                    leading: Icon(Icons.download),
+                    title: Text("Enregistrer les données"),
+                    subtitle: Text("sur le disque"),
+                  )),
+              PopupMenuItem(
+                  value: _PopupAction.loadDB,
+                  child: ListTile(
+                    dense: true,
+                    leading: Icon(Icons.upload),
+                    title: Text("Charger les données"),
+                    subtitle: Text("depuis le disque"),
+                  ))
+            ],
+            icon: const Icon(Icons.import_export),
+          )
         ],
       ),
       body: recettes.isEmpty
@@ -75,6 +103,17 @@ class _RecettesListState extends State<RecettesList> {
         child: const Icon(Icons.add),
       ),
     );
+  }
+
+  void _onPopupAction(_PopupAction action) {
+    switch (action) {
+      case _PopupAction.importRecettes:
+        return _showImport();
+      case _PopupAction.saveDB:
+        return ExportDBNotification().dispatch(context);
+      case _PopupAction.loadDB:
+        return ImportDBNotification().dispatch(context);
+    }
   }
 
   void _loadRecettes() async {
@@ -159,6 +198,13 @@ class _RecettesListState extends State<RecettesList> {
     setState(() {
       recettes[recetteIndex] = recette;
     });
+  }
+
+  void _showImport() async {
+    await Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => RecettesImporterW(widget.db),
+    ));
+    _loadRecettes();
   }
 }
 

@@ -212,6 +212,18 @@ class DBApi {
     return Ingredient(id: id, nom: ing.nom, categorie: ing.categorie);
   }
 
+  /// [insertIngredients] crée plusieurs ingrédients et renvoie les objets avec le champ `id`
+  /// mis à jour
+  Future<List<Ingredient>> insertIngredients(List<Ingredient> ings) async {
+    final batch = _db.batch();
+    for (var ing in ings) {
+      batch.insert("ingredients", ing.toSQLMap(true));
+    }
+    final ids = await batch.commit();
+    return List.generate(
+        ings.length, (index) => ings[index].copyWith(id: ids[index] as int));
+  }
+
   Future<void> updateIngredient(Ingredient ing) async {
     await _db.update("ingredients", ing.toSQLMap(true),
         where: "id = ?", whereArgs: [ing.id]);
@@ -296,7 +308,8 @@ class DBApi {
   /// [deleteRecette] supprime la recette donnée.
   /// Les ingrédients sont conservés.
   Future<void> deleteRecette(int id) async {
-    // Les liens RecetteIngredients sont supprimés par cascade
+    await _db
+        .delete("recette_ingredients", where: "idRecette = ?", whereArgs: [id]);
     await _db.delete("recettes", where: "id = ?", whereArgs: [id]);
   }
 
@@ -304,6 +317,52 @@ class DBApi {
   /// Si l'ingrédient est déjà présent, les quantités sont fusionnées
   /// Renvoie les ingrédients mis à jour
   Future<List<RecetteIngredientExt>> insertRecetteIngredient(
+      RecetteIngredient ingredient) async {
+    final recetteIngredients = (await _db.query("recette_ingredients",
+            where: "idRecette = ?", whereArgs: [ingredient.idRecette]))
+        .map(RecetteIngredient.fromSQLMap)
+        .toList();
+
+    final alreadyPresent = recetteIngredients.indexWhere(
+        (element) => element.idIngredient == ingredient.idIngredient);
+    if (alreadyPresent != -1) {
+      final link = recetteIngredients[alreadyPresent];
+      final newLink =
+          link.copyWith(quantite: link.quantite + ingredient.quantite);
+      await updateRecetteIngredient(newLink);
+    } else {
+      await _db.insert("recette_ingredients", ingredient.toSQLMap());
+    }
+
+    return await _loadRecetteIngredients(ingredient.idRecette);
+  }
+
+  /// [insertRecettes] crée plusieurs recettes et renvoie les objets avec le champ `id`
+  /// mis à jour.
+  /// Les liens vers les ingrédients sont aussi ajoutés.
+  Future<void> insertRecettes(List<RecetteExt> recettes) async {
+    var batch = _db.batch();
+    for (var recette in recettes) {
+      batch.insert("recettes", recette.recette.toSQLMap(true));
+    }
+    final idRecettes = await batch.commit();
+
+    batch = _db.batch();
+    for (var i = 0; i < recettes.length; i++) {
+      final recette = recettes[i];
+      final id = idRecettes[i] as int;
+
+      for (var link in recette.ingredients) {
+        final withId = link.link.copyWith(idRecette: id);
+        batch.insert("recette_ingredients", withId.toSQLMap());
+      }
+    }
+    await batch.commit();
+  }
+
+  /// [insertRecetteIngredients] ajoute les liens donnés
+  /// Renvoie les ingrédients mis à jour
+  Future<List<RecetteIngredientExt>> insertRecetteIngredients(
       RecetteIngredient ingredient) async {
     final recetteIngredients = (await _db.query("recette_ingredients",
             where: "idRecette = ?", whereArgs: [ingredient.idRecette]))
