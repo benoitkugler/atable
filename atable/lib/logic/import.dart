@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:atable/logic/ingredients_table.dart';
 import 'package:atable/logic/models.dart';
-import 'package:atable/logic/shop.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:atable/logic/utils.dart';
 import 'package:csv/csv.dart';
@@ -174,9 +173,21 @@ int _levenshtein(String s, String t) {
 class RecetteI {
   final String nom;
   final int nbPersonnes;
+  final CategoriePlat categorie;
+
   final List<RecetteImport> ingredients;
 
-  const RecetteI(this.nom, this.nbPersonnes, this.ingredients);
+  const RecetteI(this.nom, this.nbPersonnes, this.categorie, this.ingredients);
+}
+
+extension Parse on CategoriePlat {
+  static final _texts = CategoriePlat.values.map((e) => e.name).toList();
+  static CategoriePlat parse(String text) {
+    final index = _texts.indexOf(text.trim());
+    return index == -1
+        ? CategoriePlat.platPrincipal
+        : CategoriePlat.values[index];
+  }
 }
 
 class RecettesImporter {
@@ -193,8 +204,10 @@ class RecettesImporter {
     final rows = const CsvToListConverter(eol: "\n").convert(content);
     final recettes = <RecetteI>[];
     RecetteI? currentRecette;
+    var inRecette = false;
     for (var row in rows) {
       if (row.map((e) => "$e").join("").trim().isEmpty) {
+        inRecette = false;
         // ignore les lignes vides
         continue;
       }
@@ -202,12 +215,17 @@ class RecettesImporter {
         throw "Fichier .CSV invalide : 3 colonnes attendues";
       }
 
-      if (row[1].toString().trim().isEmpty) {
+      if (!inRecette) {
         // entête : ajoute la recette courante
         if (currentRecette != null) {
           recettes.add(currentRecette);
         }
-        currentRecette = RecetteI(row[0].toString().trim(), row[2], []);
+        final nomRecette = row[0].toString().trim();
+        final categorie = Parse.parse(row[1].toString());
+        final nbPersonnes = row[2] as int;
+
+        currentRecette = RecetteI(nomRecette, nbPersonnes, categorie, []);
+        inRecette = true;
       } else {
         // ingrédient
         final nom = capitalize(row[0].toString().trim());
