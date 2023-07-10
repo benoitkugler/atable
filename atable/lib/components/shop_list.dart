@@ -132,7 +132,7 @@ class _ShareQRCode extends StatelessWidget {
         title: const Text("Partager la liste"),
       ),
       body: Center(
-        child: QrImage(
+        child: QrImageView(
           data: url,
           version: QrVersions.auto,
           // size: 200.0,

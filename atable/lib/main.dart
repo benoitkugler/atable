@@ -70,10 +70,10 @@ class __HomeState extends State<_Home> {
   Widget body(int index) {
     final db = this.db;
     if (db == null) {
-      return Center(
+      return const Center(
           child: Row(
         mainAxisSize: MainAxisSize.min,
-        children: const [
+        children: [
           CircularProgressIndicator(),
           SizedBox(width: 10),
           Text("Chargement des données...")
