@@ -9,7 +9,7 @@ const ingredientsSuggestions = [
   Ingredient(id: -1, nom: 'Malt', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Avoine', categorie: CategorieIngredient.feculents),
   Ingredient(id: -1, nom: 'Riz', categorie: CategorieIngredient.feculents),
-  Ingredient(id: -1, nom: 'Maïs', categorie: CategorieIngredient.legumes),
+  Ingredient(id: -1, nom: 'Maïs', categorie: CategorieIngredient.epicerie),
   Ingredient(
       id: -1, nom: 'Popcorn', categorie: CategorieIngredient.boulangerie),
   Ingredient(id: -1, nom: 'Pommes', categorie: CategorieIngredient.legumes),
@@ -52,9 +52,12 @@ const ingredientsSuggestions = [
   Ingredient(id: -1, nom: 'Kumquats', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Citrons', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Mandarines', categorie: CategorieIngredient.legumes),
+  Ingredient(id: -1, nom: 'Guacamole', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Vanille', categorie: CategorieIngredient.epicerie),
   Ingredient(
       id: -1, nom: 'Champignons', categorie: CategorieIngredient.legumes),
+  Ingredient(
+      id: -1, nom: 'Haricots rouges', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Haricots', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Pois', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Soja', categorie: CategorieIngredient.legumes),
@@ -62,14 +65,21 @@ const ingredientsSuggestions = [
   Ingredient(id: -1, nom: 'Houblon', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Laurier', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Olives', categorie: CategorieIngredient.legumes),
-  Ingredient(id: -1, nom: 'Thé', categorie: CategorieIngredient.legumes),
+  Ingredient(id: -1, nom: 'Thé', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Cresson', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Miel', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Macaroni', categorie: CategorieIngredient.feculents),
   Ingredient(id: -1, nom: 'Seigle', categorie: CategorieIngredient.legumes),
+  Ingredient(id: -1, nom: 'Vin blanc', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Vinaigre', categorie: CategorieIngredient.epicerie),
   Ingredient(
-      id: -1, nom: 'Ciboulette', categorie: CategorieIngredient.epicerie),
+      id: -1,
+      nom: 'Vinaigre balsamique',
+      categorie: CategorieIngredient.epicerie),
+  Ingredient(
+      id: -1,
+      nom: 'Ciboulette (botte)',
+      categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Endives', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Poireaux', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Oignons', categorie: CategorieIngredient.legumes),
@@ -84,6 +94,7 @@ const ingredientsSuggestions = [
   Ingredient(id: -1, nom: 'Navets', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Chou-raves', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Tomates', categorie: CategorieIngredient.legumes),
+  Ingredient(id: -1, nom: 'Poivrons', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Concombres', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Carottes', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Panais', categorie: CategorieIngredient.legumes),
@@ -93,7 +104,8 @@ const ingredientsSuggestions = [
   Ingredient(id: -1, nom: 'Grenades', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Epinards', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Roquette', categorie: CategorieIngredient.legumes),
-  Ingredient(id: -1, nom: 'Lentilles', categorie: CategorieIngredient.legumes),
+  Ingredient(
+      id: -1, nom: 'Lentilles', categorie: CategorieIngredient.feculents),
   Ingredient(id: -1, nom: 'Millet', categorie: CategorieIngredient.feculents),
   Ingredient(id: -1, nom: 'Blé', categorie: CategorieIngredient.feculents),
   Ingredient(id: -1, nom: 'Cardons', categorie: CategorieIngredient.legumes),
@@ -102,21 +114,36 @@ const ingredientsSuggestions = [
   Ingredient(id: -1, nom: 'Jujubes', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Quinoa', categorie: CategorieIngredient.feculents),
   Ingredient(id: -1, nom: 'Epeautre', categorie: CategorieIngredient.feculents),
-  Ingredient(id: -1, nom: 'Levure', categorie: CategorieIngredient.epicerie),
+  Ingredient(
+      id: -1, nom: 'Levure (sachet)', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Courgettes', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Semoule', categorie: CategorieIngredient.feculents),
   Ingredient(id: -1, nom: 'Boulgour', categorie: CategorieIngredient.feculents),
   Ingredient(
       id: -1, nom: 'Salade verte', categorie: CategorieIngredient.legumes),
-  Ingredient(id: -1, nom: 'Saumon', categorie: CategorieIngredient.viandes),
+  Ingredient(
+      id: -1, nom: 'Saumon (pavés)', categorie: CategorieIngredient.viandes),
+  Ingredient(
+      id: -1,
+      nom: 'Saumon fumé (tranches)',
+      categorie: CategorieIngredient.viandes),
+  Ingredient(id: -1, nom: 'Poisson', categorie: CategorieIngredient.viandes),
   Ingredient(id: -1, nom: 'Maquereau', categorie: CategorieIngredient.viandes),
   Ingredient(id: -1, nom: 'Anchois', categorie: CategorieIngredient.viandes),
   Ingredient(id: -1, nom: 'Merlan', categorie: CategorieIngredient.viandes),
   Ingredient(id: -1, nom: 'Chevreuil', categorie: CategorieIngredient.viandes),
   Ingredient(id: -1, nom: 'Boeuf', categorie: CategorieIngredient.viandes),
   Ingredient(id: -1, nom: 'Poulet', categorie: CategorieIngredient.viandes),
-  Ingredient(id: -1, nom: 'Jambon', categorie: CategorieIngredient.viandes),
+  Ingredient(
+      id: -1, nom: 'Jambon (tranches)', categorie: CategorieIngredient.viandes),
+  Ingredient(
+      id: -1, nom: 'Jambon (dés)', categorie: CategorieIngredient.viandes),
   Ingredient(id: -1, nom: 'Agneau', categorie: CategorieIngredient.viandes),
+  Ingredient(
+      id: -1, nom: 'Steaks hachés', categorie: CategorieIngredient.viandes),
+  Ingredient(
+      id: -1, nom: 'Viande hachée', categorie: CategorieIngredient.viandes),
+  Ingredient(id: -1, nom: 'Saucisses', categorie: CategorieIngredient.viandes),
   Ingredient(id: -1, nom: 'Mouton', categorie: CategorieIngredient.viandes),
   Ingredient(id: -1, nom: 'Porc', categorie: CategorieIngredient.viandes),
   Ingredient(id: -1, nom: 'Lard', categorie: CategorieIngredient.viandes),
@@ -156,12 +183,14 @@ const ingredientsSuggestions = [
   Ingredient(id: -1, nom: 'Câpres', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Curcuma', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Safran', categorie: CategorieIngredient.epicerie),
+  Ingredient(id: -1, nom: 'Curry', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Poivre', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Persil', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Origan', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Gingembre', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Cumin', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Farine', categorie: CategorieIngredient.epicerie),
+  Ingredient(id: -1, nom: 'Sucre', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Céleris', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Cardamome', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Carvi', categorie: CategorieIngredient.epicerie),
@@ -170,6 +199,22 @@ const ingredientsSuggestions = [
   Ingredient(id: -1, nom: 'Noisettes', categorie: CategorieIngredient.epicerie),
   Ingredient(
       id: -1, nom: 'Cacahuètes', categorie: CategorieIngredient.epicerie),
+  Ingredient(
+      id: -1, nom: 'Cornichons', categorie: CategorieIngredient.epicerie),
+  Ingredient(
+      id: -1, nom: 'Jus de citron', categorie: CategorieIngredient.epicerie),
+  Ingredient(id: -1, nom: 'Huile', categorie: CategorieIngredient.epicerie),
+  Ingredient(
+      id: -1, nom: "Huile d'olive", categorie: CategorieIngredient.epicerie),
+  Ingredient(
+      id: -1, nom: 'Pulpe de tomate', categorie: CategorieIngredient.epicerie),
+  Ingredient(
+      id: -1,
+      nom: 'Ratatouille (cuisinée)',
+      categorie: CategorieIngredient.epicerie),
+  Ingredient(id: -1, nom: 'Rillettes', categorie: CategorieIngredient.epicerie),
+  Ingredient(id: -1, nom: 'Rosette', categorie: CategorieIngredient.epicerie),
+  Ingredient(id: -1, nom: 'Chocolat', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Cacao', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Amandes', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Thym', categorie: CategorieIngredient.epicerie),
@@ -179,7 +224,8 @@ const ingredientsSuggestions = [
   Ingredient(id: -1, nom: 'Romarin', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Rhubarbe', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Menthe', categorie: CategorieIngredient.epicerie),
-  Ingredient(id: -1, nom: 'Ail', categorie: CategorieIngredient.legumes),
+  Ingredient(
+      id: -1, nom: 'Ail (gousse)', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Fenouils', categorie: CategorieIngredient.legumes),
   Ingredient(id: -1, nom: 'Aneth', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Sésame', categorie: CategorieIngredient.epicerie),
@@ -187,12 +233,40 @@ const ingredientsSuggestions = [
   Ingredient(id: -1, nom: 'Sarrasin', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Basilic', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Angélique', categorie: CategorieIngredient.epicerie),
+  Ingredient(id: -1, nom: 'Ketchup', categorie: CategorieIngredient.epicerie),
+  Ingredient(
+      id: -1, nom: 'Sauce béchamel', categorie: CategorieIngredient.epicerie),
+  Ingredient(
+      id: -1, nom: 'Sauce burger', categorie: CategorieIngredient.epicerie),
+  Ingredient(
+      id: -1, nom: 'Mayonnaise', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Café', categorie: CategorieIngredient.epicerie),
+  Ingredient(
+      id: -1, nom: 'Jus de fruits', categorie: CategorieIngredient.inconnue),
+  Ingredient(id: -1, nom: 'Céréales', categorie: CategorieIngredient.epicerie),
+  Ingredient(id: -1, nom: 'Confiture', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Coriandre', categorie: CategorieIngredient.epicerie),
   Ingredient(id: -1, nom: 'Kéfir', categorie: CategorieIngredient.laitages),
-  Ingredient(id: -1, nom: 'Crème', categorie: CategorieIngredient.laitages),
+  Ingredient(id: -1, nom: 'Féta', categorie: CategorieIngredient.laitages),
+  Ingredient(
+      id: -1, nom: 'Mozzarella', categorie: CategorieIngredient.laitages),
+  Ingredient(id: -1, nom: 'Kiri', categorie: CategorieIngredient.laitages),
+  Ingredient(
+      id: -1,
+      nom: 'Fromage de chèvre',
+      categorie: CategorieIngredient.laitages),
+  Ingredient(
+      id: -1, nom: 'Fromage burger', categorie: CategorieIngredient.laitages),
+  Ingredient(
+      id: -1, nom: 'Crème fraiche', categorie: CategorieIngredient.laitages),
   Ingredient(id: -1, nom: 'Lait', categorie: CategorieIngredient.laitages),
-  Ingredient(id: -1, nom: 'Fromage', categorie: CategorieIngredient.laitages),
+  Ingredient(
+      id: -1, nom: 'Yaourt nature', categorie: CategorieIngredient.laitages),
+  Ingredient(
+      id: -1, nom: 'Fromage râpé', categorie: CategorieIngredient.laitages),
+  Ingredient(
+      id: -1, nom: 'Parmesan râpé', categorie: CategorieIngredient.laitages),
+  Ingredient(id: -1, nom: 'Comté', categorie: CategorieIngredient.laitages),
   Ingredient(id: -1, nom: 'Beurre', categorie: CategorieIngredient.laitages),
   Ingredient(
       id: -1, nom: 'Caramel', categorie: CategorieIngredient.boulangerie),
@@ -204,6 +278,23 @@ const ingredientsSuggestions = [
       id: -1, nom: 'Guimauve', categorie: CategorieIngredient.boulangerie),
   Ingredient(
       id: -1, nom: 'Biscuits', categorie: CategorieIngredient.boulangerie),
+  Ingredient(id: -1, nom: 'Lasagnes', categorie: CategorieIngredient.feculents),
   Ingredient(id: -1, nom: 'Pâtes', categorie: CategorieIngredient.feculents),
-  Ingredient(id: -1, nom: 'Pain', categorie: CategorieIngredient.boulangerie)
+  Ingredient(
+      id: -1, nom: 'Spaghetis', categorie: CategorieIngredient.feculents),
+  Ingredient(
+      id: -1, nom: 'Tagliatelles', categorie: CategorieIngredient.feculents),
+  Ingredient(
+      id: -1, nom: 'Galettes faritas', categorie: CategorieIngredient.epicerie),
+  Ingredient(id: -1, nom: 'Pain', categorie: CategorieIngredient.boulangerie),
+  Ingredient(
+      id: -1,
+      nom: 'Pain de mie (tranches)',
+      categorie: CategorieIngredient.boulangerie),
+  Ingredient(
+      id: -1, nom: 'Pains burgers', categorie: CategorieIngredient.boulangerie),
+  Ingredient(
+      id: -1, nom: 'Pains ronds', categorie: CategorieIngredient.boulangerie),
+  Ingredient(
+      id: -1, nom: 'Baguettes', categorie: CategorieIngredient.boulangerie)
 ];

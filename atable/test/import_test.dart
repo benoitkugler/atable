@@ -1,4 +1,5 @@
 import 'package:atable/logic/import.dart';
+import 'package:atable/logic/ingredients_table.dart';
 import 'package:atable/logic/models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -131,5 +132,29 @@ pot/sac d'olives
       final got = parseIngredients(te.text);
       expect(got, equals(te.expected));
     }
+  });
+
+  test("words", () {
+    expect(words("Jambon (dés)"), ["jambon", "des"]);
+    expect(words("Dés de jambon"), ["des", "jambon"]);
+  });
+
+  test("Match ingrédient", () {
+    doTest(name, exp) {
+      expect(bestMatchNames(ingredientsSuggestions, [name]).first.nom,
+          equals(exp));
+    }
+
+    doTest("Dés de jambon", "Jambon (dés)");
+    doTest("Tranche de jambon", "Jambon (tranches)");
+    doTest("Fromage rapé", "Fromage râpé");
+    doTest("Fromage", "Fromage de chèvre");
+    doTest("Gousse d'ail", "Ail (gousse)");
+    doTest("Pavés de saumon", "Saumon (pavés)");
+    doTest("Sachet de levure", "Levure (sachet)");
+    doTest("Tranches de pain de mie", "Pain de mie (tranches)");
+    doTest("vinaigre", "Vinaigre");
+    doTest("vinaigre balsamique", "Vinaigre balsamique");
+    doTest("Ratatouille", "Ratatouille (cuisinée)");
   });
 }

@@ -5,6 +5,7 @@ import 'package:atable/logic/models.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:atable/logic/utils.dart';
 import 'package:csv/csv.dart';
+import 'package:flutter/foundation.dart';
 
 /// [RecetteImport] correspond à un ingrédient avec quantité
 class RecetteImport {
@@ -57,6 +58,7 @@ _UniteQuantite _parseUnite(String word, double quantite) {
   switch (word) {
     case "kg":
       return _UniteQuantite(quantite, Unite.kg);
+    case "gr":
     case "g":
       return _UniteQuantite(quantite / 1000, Unite.kg);
     case "l":
@@ -121,21 +123,57 @@ List<Ingredient> bestMatchNames(
   candidates = [...candidates, ...ingredientsSuggestions];
 
   return List<Ingredient>.generate(toMatch.length, (index) {
-    final nom = normalizeNom(toMatch[index]);
-
     Ingredient bestIngredient = candidates[0];
-    int bestCost = _levenshtein(normalizeNom(bestIngredient.nom), nom);
+    List<int> bestScore =
+        []; // empty score is always worse than other non empty score
 
     for (var ing in candidates) {
-      final d = _levenshtein(normalizeNom(ing.nom), nom);
-      if (d < bestCost) {
-        bestCost = d;
+      final newScore = _scores(toMatch[index], ing.nom);
+      if (_isScoreBetter(newScore, bestScore)) {
+        bestScore = newScore;
         bestIngredient = ing;
       }
     }
 
     return bestIngredient;
   });
+}
+
+@visibleForTesting
+List<String> words(String name) {
+  return name
+      .split(" ")
+      .map((e) => normalizeNom(e))
+      .where((e) => e.length >= 3)
+      .toList();
+}
+
+// return the a distance for each "common" word
+List<int> _scores(String n1, String n2) {
+  final w1 = words(n1);
+  final w2 = words(n2);
+  // find the best matching
+  if (w1.length <= w2.length) {
+    return List.generate(w1.length, (index) {
+      // find the best score
+      return w2.map((e) => _levenshtein(w1[index], e)).reduce(min);
+    });
+  } else {
+    // just reverse w1 and w2
+    return List.generate(w2.length, (index) {
+      // find the best score
+      return w1.map((e) => _levenshtein(w2[index], e)).reduce(min);
+    });
+  }
+}
+
+// return true if ref < other (less is best)
+bool _isScoreBetter(List<int> ref, List<int> other) {
+  for (var i = 0; i < min(ref.length, other.length); i++) {
+    if (ref[i] < other[i]) return true;
+    if (ref[i] > other[i]) return false;
+  }
+  return ref.length > other.length;
 }
 
 /// Levenshtein algorithm implementation based on:

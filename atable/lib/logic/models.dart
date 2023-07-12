@@ -51,7 +51,21 @@ class Ingredient {
   }
 }
 
-String normalizeNom(String nom) => removeDiacritics(nom.trim().toLowerCase());
+final a = 'a'.codeUnits.first;
+final z = 'z'.codeUnits.first;
+final A = 'A'.codeUnits.first;
+final Z = 'Z'.codeUnits.first;
+final c0 = '0'.codeUnits.first;
+final c9 = '9'.codeUnits.first;
+
+bool isAlphaNum(int char) {
+  return a <= char && char <= z ||
+      A <= char && char <= Z ||
+      c0 <= char && char <= c9;
+}
+
+String normalizeNom(String nom) => String.fromCharCodes(
+    removeDiacritics(nom.trim().toLowerCase()).codeUnits.where(isAlphaNum));
 
 /// [searchIngredients] filtre la liste par nom
 List<Ingredient> searchIngredients(List<Ingredient> candidates, String nom) {
