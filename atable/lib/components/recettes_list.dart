@@ -6,13 +6,14 @@ import 'package:atable/components/menus_list.dart';
 import 'package:atable/components/shared.dart';
 import 'package:atable/logic/models.dart';
 import 'package:atable/logic/sql.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 class ExportDBNotification extends MainNotification {}
 
 class ImportDBNotification extends MainNotification {}
 
-enum _PopupAction { importRecettes, saveDB, loadDB }
+enum _PopupAction { importRecettesFile, importRecettesMemory, saveDB, loadDB }
 
 class RecettesList extends StatefulWidget {
   final DBApi db;
@@ -49,12 +50,20 @@ class _RecettesListState extends State<RecettesList> {
             onSelected: _onPopupAction,
             itemBuilder: (context) => const <PopupMenuEntry<_PopupAction>>[
               PopupMenuItem(
-                  value: _PopupAction.importRecettes,
+                  value: _PopupAction.importRecettesFile,
                   child: ListTile(
                     dense: true,
                     leading: Icon(Icons.format_list_bulleted_add),
                     title: Text("Ajouter des recettes"),
                     subtitle: Text("depuis un fichier .CSV"),
+                  )),
+              PopupMenuItem(
+                  value: _PopupAction.importRecettesMemory,
+                  child: ListTile(
+                    dense: true,
+                    leading: Icon(Icons.format_list_bulleted_add),
+                    title: Text("Ajouter des recettes"),
+                    subtitle: Text("depuis le presse-papier (format .CSV)"),
                   )),
               PopupMenuDivider(),
               PopupMenuItem(
@@ -105,15 +114,42 @@ class _RecettesListState extends State<RecettesList> {
     );
   }
 
-  void _onPopupAction(_PopupAction action) {
+  void _onPopupAction(_PopupAction action) async {
     switch (action) {
-      case _PopupAction.importRecettes:
-        return _showImport();
+      case _PopupAction.importRecettesMemory:
+        return _showImport(null);
+      case _PopupAction.importRecettesFile:
+        final file = await _pickCSVFile();
+        if (file != null) _showImport(file);
+        return;
       case _PopupAction.saveDB:
         return ExportDBNotification().dispatch(context);
       case _PopupAction.loadDB:
         return ImportDBNotification().dispatch(context);
     }
+  }
+
+  Future<String?> _pickCSVFile() async {
+    final dir = await downloadDir();
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      initialDirectory: dir.path,
+      type: FileType.custom,
+      allowedExtensions: ['csv'],
+    );
+
+    final path = result?.files.single.path;
+    if (path == null) {
+      // User canceled the picker
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Import annulé."),
+          backgroundColor: Colors.orange,
+        ));
+      }
+      return null;
+    }
+
+    return path;
   }
 
   void _loadRecettes() async {
@@ -200,9 +236,10 @@ class _RecettesListState extends State<RecettesList> {
     });
   }
 
-  void _showImport() async {
+// if file is null, use the clipboard
+  void _showImport(String? file) async {
     await Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => RecettesImporterW(widget.db),
+      builder: (context) => RecettesImporterW(widget.db, file),
     ));
     _loadRecettes();
   }

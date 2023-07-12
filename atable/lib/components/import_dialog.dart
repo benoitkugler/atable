@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:atable/components/ingredient_editor.dart';
 import 'package:atable/components/recettes_list.dart';
 import 'package:atable/components/shared.dart';
@@ -218,7 +220,11 @@ class _IngredientMapper extends StatelessWidget {
 class RecettesImporterW extends StatefulWidget {
   final DBApi db;
 
-  const RecettesImporterW(this.db, {super.key});
+  /// [file] is the path of a CSV file to import, or null
+  /// to use the clipboard
+  final String? file;
+
+  const RecettesImporterW(this.db, this.file, {super.key});
 
   @override
   State<RecettesImporterW> createState() => _RecettesImporterWState();
@@ -233,7 +239,7 @@ class _RecettesImporterWState extends State<RecettesImporterW> {
   void initState() {
     super.initState();
     _loadCandidates();
-    _processClipboard();
+    _processInput();
   }
 
   @override
@@ -268,18 +274,35 @@ class _RecettesImporterWState extends State<RecettesImporterW> {
     }
   }
 
-  void _processClipboard() async {
-    final cp = await Clipboard.getData(Clipboard.kTextPlain);
-    if (cp == null) {
-      if (!mounted) return;
+  void _processInput() async {
+    final path = widget.file;
+    final String csvContent;
+    if (path != null) {
+      final file = File(path);
+      try {
+        csvContent = await file.readAsString();
+      } catch (e) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("Fichier invalide ($e)")));
+        Navigator.of(context).pop();
+        return;
+      }
+    } else {
+      // clipboard
+      final cp = await Clipboard.getData(Clipboard.kTextPlain);
+      if (cp == null) {
+        if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Le presse-papier est vide !")));
-      Navigator.of(context).pop();
-      return;
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Le presse-papier est vide !")));
+        Navigator.of(context).pop();
+        return;
+      }
+
+      csvContent = cp.text ?? "";
     }
 
-    _setInput(cp.text ?? "");
+    _setInput(csvContent);
   }
 
   void _showRecettes(Map<String, Ingredient> map) async {
@@ -328,7 +351,7 @@ class _IngredientImportListState extends State<IngredientImportList> {
   final scrollController = ScrollController();
 
   List<String> keys = [];
-  List<Ingredient> matches = [];
+  List<Ingredient> matches = []; // same length as [keys]
 
   bool continueEnabled = false;
 
@@ -355,10 +378,10 @@ class _IngredientImportListState extends State<IngredientImportList> {
   @override
   Widget build(BuildContext context) {
     return keys.isEmpty
-        ? Center(
+        ? const Center(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
+              children: [
                 CircularProgressIndicator(),
                 SizedBox(width: 10),
                 Text("Chargement...")
@@ -372,7 +395,11 @@ class _IngredientImportListState extends State<IngredientImportList> {
                   child: ListView.builder(
                 controller: scrollController,
                 itemBuilder: (context, index) => _MatchRow(
-                    () => _editMatch(index), keys[index], matches[index]),
+                  () => _editMatch(index),
+                  () => _resetMatch(index),
+                  keys[index],
+                  matches[index],
+                ),
                 itemCount: keys.length,
               )),
               ElevatedButton(
@@ -403,6 +430,14 @@ class _IngredientImportListState extends State<IngredientImportList> {
     });
   }
 
+  void _resetMatch(int index) {
+    setState(() {
+      matches[index] = Ingredient(
+          id: -1, nom: keys[index], categorie: CategorieIngredient.inconnue);
+    });
+    _editMatch(index);
+  }
+
   void _editMatch(int index) async {
     final edited = await showDialog<Ingredient>(
       context: context,
@@ -410,6 +445,7 @@ class _IngredientImportListState extends State<IngredientImportList> {
         child: IngredientSelector(
           widget.candidates,
           (edited) => Navigator.of(context).pop(edited),
+          initialValue: matches[index],
           onAbort: () => Navigator.of(context).pop(),
           title: "Identifier l'ingrédient ${keys[index]}",
         ),
@@ -424,10 +460,13 @@ class _IngredientImportListState extends State<IngredientImportList> {
 
 class _MatchRow extends StatelessWidget {
   final void Function() onEdit;
+  final void Function() onResetMatch;
+
   final String toMatch;
   final Ingredient matched;
 
-  const _MatchRow(this.onEdit, this.toMatch, this.matched, {super.key});
+  const _MatchRow(this.onEdit, this.onResetMatch, this.toMatch, this.matched,
+      {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -457,7 +496,9 @@ class _MatchRow extends StatelessWidget {
                       )
                     : null,
               ),
-            )
+            ),
+            IconButton(
+                onPressed: onResetMatch, icon: const Icon(Icons.restart_alt)),
           ],
         ),
       ),

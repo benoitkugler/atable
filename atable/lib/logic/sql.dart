@@ -62,7 +62,7 @@ const _createSQLStatements = [
     idMenu INTEGER NOT NULL,
     idRecette INTEGER NOT NULL,
     FOREIGN KEY(idMenu) REFERENCES menus(id) ON DELETE CASCADE,
-    FOREIGN KEY(idRecette) REFERENCES recette(id),
+    FOREIGN KEY(idRecette) REFERENCES recettes(id),
     UNIQUE(idMenu, idRecette)
   );
   """,
@@ -115,8 +115,9 @@ class DBApi {
 
     // // DEV MODE only : reset DB at start
     // final fi = File(dbPath);
-    // if (await fi.exipathsts()) {
+    // if (await fi.exists()) {
     //   await fi.delete();
+    //   print("DB deleted");
     // }
 
     // open/create the database

@@ -182,6 +182,7 @@ class RecetteI {
 
 extension Parse on CategoriePlat {
   static final _texts = CategoriePlat.values.map((e) => e.name).toList();
+
   static CategoriePlat parse(String text) {
     final index = _texts.indexOf(text.trim());
     return index == -1
@@ -206,7 +207,10 @@ class RecettesImporter {
     RecetteI? currentRecette;
     var inRecette = false;
     for (var row in rows) {
-      if (row.map((e) => "$e").join("").trim().isEmpty) {
+      final isEmpty = row.map((e) => "$e").join("").trim().isEmpty;
+      final isComment = row.isNotEmpty &&
+          row.skip(1).map((e) => "$e").join("").trim().isEmpty;
+      if (isEmpty || isComment) {
         inRecette = false;
         // ignore les lignes vides
         continue;
@@ -222,6 +226,9 @@ class RecettesImporter {
         }
         final nomRecette = row[0].toString().trim();
         final categorie = Parse.parse(row[1].toString());
+        if (row[2] is! int) {
+          throw "Nombre de personnes illisible: ${row[2]}";
+        }
         final nbPersonnes = row[2] as int;
 
         currentRecette = RecetteI(nomRecette, nbPersonnes, categorie, []);
@@ -229,7 +236,14 @@ class RecettesImporter {
       } else {
         // ingrédient
         final nom = capitalize(row[0].toString().trim());
-        final quantiteRaw = (row[1] as num).toDouble();
+        // accept numbers with comma
+        final quantiteField = row[1];
+        final double quantiteRaw;
+        if (quantiteField is String) {
+          quantiteRaw = double.parse(quantiteField.replaceAll(",", "."));
+        } else {
+          quantiteRaw = (quantiteField as num).toDouble();
+        }
         final qu = _parseUnite(row[2], quantiteRaw);
         currentRecette!.ingredients
             .add(RecetteImport(nom, qu.quantite, qu.unite));
@@ -289,7 +303,7 @@ class RecettesImporter {
                   id: 0,
                   nbPersonnes: r.nbPersonnes,
                   label: r.nom,
-                  categorie: CategoriePlat.platPrincipal,
+                  categorie: r.categorie,
                   description: "Importée le ${formatDate(DateTime.now())}"),
               r.ingredients
                   .map((ing) => RecetteIngredientExt(
