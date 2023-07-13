@@ -59,6 +59,7 @@ class _RepasListState extends State<RepasList> {
               itemBuilder: (context, index) => DismissibleDelete(
                     itemKey: repass[index].repas.id,
                     onDissmissed: () => _deleteRepas(repass[index]),
+                    confirmDismiss: () => _confirmeDelete(repass[index]),
                     child: _RepasCard(
                       repass[index],
                       selectedRepas.contains(index),
@@ -135,6 +136,27 @@ class _RepasListState extends State<RepasList> {
       content: Text('Repas mis à jour.'),
       backgroundColor: Colors.green,
     ));
+  }
+
+  Future<bool> _confirmeDelete(RepasExt repas) async {
+    final isMenuEmpty =
+        repas.menu.recettes.isEmpty && repas.menu.ingredients.isEmpty;
+    if (isMenuEmpty) return true;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Confirmer la suppression"),
+        content: const Text("Confirmez-vous la suppression de ce repas ?"),
+        actions: [
+          TextButton(
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text("Supprimer"))
+        ],
+      ),
+    );
+    return confirm ?? false;
   }
 
   void _deleteRepas(RepasExt repas) async {
