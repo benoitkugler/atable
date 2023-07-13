@@ -246,6 +246,9 @@ class _RepasCardState extends State<_RepasCard> {
   @override
   Widget build(BuildContext context) {
     final repas = widget.repas.repas;
+    final plats = widget.repas.requiredQuantites().entries.toList();
+    plats.sort((a, b) => a.key.index - b.key.index);
+
     return Card(
       color: widget.isSelected ? Colors.yellow.shade100 : Colors.white,
       child: InkWell(
@@ -323,9 +326,7 @@ class _RepasCardState extends State<_RepasCard> {
                 : Padding(
                     padding: const EdgeInsets.all(4.0),
                     child: Column(
-                        children: widget.repas
-                            .requiredQuantites()
-                            .entries
+                        children: plats
                             .map((item) => _PlatCard(item.key, item.value))
                             .toList()),
                   )
