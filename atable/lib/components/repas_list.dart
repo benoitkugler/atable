@@ -21,6 +21,7 @@ class _RepasListState extends State<RepasList> {
   List<RepasExt> repass = [];
   final _scrollController = ItemScrollController();
 
+  // indices into [repass]
   Set<int> selectedRepas = {};
 
   @override
@@ -64,11 +65,7 @@ class _RepasListState extends State<RepasList> {
                       repass[index],
                       selectedRepas.contains(index),
                       () => _showMenuDetails(index),
-                      () => setState(() {
-                        selectedRepas.contains(index)
-                            ? selectedRepas.remove(index)
-                            : selectedRepas.add(index);
-                      }),
+                      () => _onSelectRepas(index),
                       (m) => _editRepas(index, m),
                     ),
                   )),
@@ -77,6 +74,29 @@ class _RepasListState extends State<RepasList> {
         child: const Icon(Icons.add),
       ),
     );
+  }
+
+  void _onSelectRepas(int index) {
+    // if the repas is currently selected, just unselect
+    final isSelected = selectedRepas.contains(index);
+    if (isSelected) {
+      setState(() => selectedRepas.remove(index));
+    } else {
+      // select the range between the previous selected, if any
+      final l = selectedRepas.where((element) => element < index).toList();
+      l.sort();
+      if (l.isEmpty) {
+        // no selected element before index
+        setState(() => selectedRepas.add(index));
+      } else {
+        final start = l.last;
+        setState(() {
+          for (var i = start; i <= index; i++) {
+            selectedRepas.add(i);
+          }
+        });
+      }
+    }
   }
 
   void _scrollToRepas() async {
@@ -103,7 +123,12 @@ class _RepasListState extends State<RepasList> {
 
   void _loadRepas() async {
     final l = await widget.db.getRepas();
-    if (mounted) setState(() => repass = l);
+    if (mounted) {
+      setState(() {
+        repass = l;
+        selectedRepas = {};
+      });
+    }
   }
 
   void _addRepas() async {
@@ -162,6 +187,7 @@ class _RepasListState extends State<RepasList> {
   void _deleteRepas(RepasExt repas) async {
     setState(() {
       repass.removeWhere((element) => element.repas.id == repas.repas.id);
+      selectedRepas = {}; // the indices have changed
     });
     await widget.db.deleteRepas(repas.repas);
 
