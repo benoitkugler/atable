@@ -171,11 +171,12 @@ class _ShopListImplState extends State<_ShopListImpl> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-        children: list
-            .bySections()
-            .map((e) => _ShopSection(e, _updateChecked))
-            .toList());
+    final sections = list.bySections();
+    return ListView.builder(
+      itemBuilder: (context, index) =>
+          _ShopSection(sections[index], _updateChecked),
+      itemCount: sections.length,
+    );
   }
 
   void _updateChecked(int id, bool checked) async {
