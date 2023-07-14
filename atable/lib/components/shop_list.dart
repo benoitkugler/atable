@@ -110,6 +110,7 @@ class _IngredientRow extends StatelessWidget {
       dense: true,
       leading: Text(ingredient.quantite),
       title: Text(ingredient.nom),
+      onTap: () => onUpdate(ingredient.id, !ingredient.checked),
       trailing: Checkbox(
         activeColor: Colors.blue.shade100,
         checkColor: Colors.grey,
