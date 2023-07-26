@@ -9,12 +9,12 @@ import (
 	"sort"
 	"time"
 
-	"atable/controllers/users"
-	sej "atable/sql/sejours"
-	us "atable/sql/users"
-	"atable/utils"
+	"github.com/benoitkugler/atable/controllers/users"
+	sej "github.com/benoitkugler/atable/sql/sejours"
+	us "github.com/benoitkugler/atable/sql/users"
+	"github.com/benoitkugler/atable/utils"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 )
 
 var errAccessForbidden = errors.New("resource access forbidden")

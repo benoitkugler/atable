@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"testing"
 
-	"atable/sql/users"
-	tu "atable/utils/testutils"
+	"github.com/benoitkugler/atable/sql/users"
+	tu "github.com/benoitkugler/atable/utils/testutils"
 )
 
 func TestSQL(t *testing.T) {

@@ -7,12 +7,12 @@ import (
 	"net/mail"
 	"strings"
 
-	"atable/mailer"
-	"atable/pass"
-	us "atable/sql/users"
-	"atable/utils"
+	"github.com/benoitkugler/atable/mailer"
+	"github.com/benoitkugler/atable/pass"
+	us "github.com/benoitkugler/atable/sql/users"
+	"github.com/benoitkugler/atable/utils"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 )
 
 type Controller struct {

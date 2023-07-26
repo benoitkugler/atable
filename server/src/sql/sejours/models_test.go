@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"testing"
 
-	"atable/sql/menus"
-	"atable/sql/users"
-	tu "atable/utils/testutils"
+	"github.com/benoitkugler/atable/sql/menus"
+	"github.com/benoitkugler/atable/sql/users"
+	tu "github.com/benoitkugler/atable/utils/testutils"
 )
 
 func setup(t *testing.T, db tu.TestDB) (_ users.User, _, _ menus.Menu) {

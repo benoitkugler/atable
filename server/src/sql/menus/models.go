@@ -1,6 +1,6 @@
 package menus
 
-import "atable/sql/users"
+import "github.com/benoitkugler/atable/sql/users"
 
 type (
 	IdIngredient int64

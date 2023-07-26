@@ -1,8 +1,8 @@
 package sejours
 
 import (
-	"atable/sql/menus"
-	"atable/sql/users"
+	"github.com/benoitkugler/atable/sql/menus"
+	"github.com/benoitkugler/atable/sql/users"
 	"math/rand"
 	"time"
 )

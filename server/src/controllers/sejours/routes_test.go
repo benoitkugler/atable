@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"atable/sql/menus"
-	sej "atable/sql/sejours"
-	"atable/sql/users"
-	tu "atable/utils/testutils"
+	"github.com/benoitkugler/atable/sql/menus"
+	sej "github.com/benoitkugler/atable/sql/sejours"
+	"github.com/benoitkugler/atable/sql/users"
+	tu "github.com/benoitkugler/atable/utils/testutils"
 )
 
 func setup(t *testing.T) (db tu.TestDB, _ users.User) {

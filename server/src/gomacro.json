@@ -36,5 +36,11 @@
             "Mode": "go/randdata",
             "Output": "sql/sejours/gen_randdata_test.go"
         }
+    ],
+    "routes.go": [
+        {
+            "Mode": "typescript/api",
+            "Output": "../../atable-web/src/logic/api_gen.ts"
+        }
     ]
 }

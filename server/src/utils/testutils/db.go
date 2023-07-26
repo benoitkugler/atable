@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"atable/pass"
+	"github.com/benoitkugler/atable/pass"
 )
 
 func getUserName() string {

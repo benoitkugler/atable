@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"time"
 
-	"atable/sql/users"
-	"atable/utils"
+	"github.com/benoitkugler/atable/sql/users"
+	"github.com/benoitkugler/atable/utils"
 
 	"github.com/golang-jwt/jwt"
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 const (

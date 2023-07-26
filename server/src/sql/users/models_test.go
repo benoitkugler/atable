@@ -3,7 +3,7 @@ package users
 import (
 	"testing"
 
-	tu "atable/utils/testutils"
+	tu "github.com/benoitkugler/atable/utils/testutils"
 )
 
 func TestSQL(t *testing.T) {

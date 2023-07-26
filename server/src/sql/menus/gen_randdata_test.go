@@ -1,7 +1,7 @@
 package menus
 
 import (
-	"atable/sql/users"
+	"github.com/benoitkugler/atable/sql/users"
 	"math/rand"
 )
 

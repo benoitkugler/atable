@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"atable/pass"
+	"github.com/benoitkugler/atable/pass"
 
 	"github.com/jordan-wright/email"
 )
