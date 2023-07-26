@@ -1,0 +1,40 @@
+{
+    "sql/users/models.go": [
+        {
+            "Mode": "sql",
+            "Output": "sql/users/gen_create.sql"
+        },
+        {
+            "Mode": "go/sqlcrud",
+            "Output": "sql/users/gen_scans.go"
+        }
+    ],
+    "sql/menus/models.go": [
+        {
+            "Mode": "sql",
+            "Output": "sql/menus/gen_create.sql"
+        },
+        {
+            "Mode": "go/sqlcrud",
+            "Output": "sql/menus/gen_scans.go"
+        },
+        {
+            "Mode": "go/randdata",
+            "Output": "sql/menus/gen_randdata_test.go"
+        }
+    ],
+    "sql/sejours/models.go": [
+        {
+            "Mode": "sql",
+            "Output": "sql/sejours/gen_create.sql"
+        },
+        {
+            "Mode": "go/sqlcrud",
+            "Output": "sql/sejours/gen_scans.go"
+        },
+        {
+            "Mode": "go/randdata",
+            "Output": "sql/sejours/gen_randdata_test.go"
+        }
+    ]
+}
