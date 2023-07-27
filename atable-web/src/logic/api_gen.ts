@@ -66,10 +66,7 @@ export type IdUser = number;
 		as base class for an app controller.
 	*/
 export abstract class AbstractAPI {
-  constructor(
-    protected baseUrl: string,
-    protected authToken: string,
-  ) {}
+  constructor(protected baseUrl: string, protected authToken: string) {}
 
   abstract handleError(error: any): void;
 
@@ -84,7 +81,7 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<AskInscriptionOut> = await Axios.post(
       fullUrl,
       params,
-      { headers: this.getHeaders() },
+      { headers: this.getHeaders() }
     );
     return rep.data;
   }

@@ -10,6 +10,7 @@
     },
     "dependencies": {
         "@mdi/font": "7.0.96",
+        "axios": "^1.4.0",
         "core-js": "^3.29.0",
         "roboto-fontface": "*",
         "vue": "^3.2.0",
@@ -25,7 +26,7 @@
         "@vue/eslint-config-typescript": "^11.0.0",
         "eslint": "^8.22.0",
         "eslint-plugin-vue": "^9.3.0",
-        "sass": "^1.60.0",
+        "sass": "^1.64.1",
         "typescript": "^5.0.0",
         "vite": "^4.2.0",
         "vite-plugin-vuetify": "^1.0.0",

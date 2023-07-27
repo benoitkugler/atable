@@ -74,9 +74,9 @@ func (ct *Controller) GetDevToken() (string, error) {
 		return "", err
 	}
 	type meta struct {
-		Token     string
-		IdTeacher users.IdUser
+		Token  string
+		IdUser users.IdUser
 	}
-	out, err := json.Marshal(meta{IdTeacher: t.Id, Token: token})
+	out, err := json.Marshal(meta{IdUser: t.Id, Token: token})
 	return string(out), err
 }

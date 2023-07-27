@@ -15,7 +15,7 @@
         <v-tooltip text="Vue d'ensemble des séjours et des groupes.">
           <template v-slot:activator="{ isActive, props }">
             <v-list-item
-              v-on="isActive"
+              v-on="{ isActive }"
               v-bind="props"
               title="Séjours"
               prepend-icon="mdi-account-group"
@@ -28,7 +28,7 @@
         <v-tooltip text="Organisation du séjour courant.">
           <template v-slot:activator="{ isActive, props }">
             <v-list-item
-              v-on="isActive"
+              v-on="{ isActive }"
               v-bind="props"
               color="secondary"
               title="Agenda"
@@ -49,6 +49,12 @@
 
     <v-main>
       <router-view />
+
+      <success-snackbar
+        :messages="messages.messages"
+        @close="messages.clearMessages()"
+      ></success-snackbar>
+      <error-snackbar :error="error"></error-snackbar>
     </v-main>
   </v-app>
 </template>
@@ -58,13 +64,18 @@ import logo from "@/assets/logo.png";
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 
-import { controller } from "@/logic/controller";
+import { Error, Messages, controller } from "@/logic/controller";
+import SuccessSnackbar from "./components/SuccessSnackbar.vue";
+import ErrorSnackbar from "./components/ErrorSnackbar.vue";
+import { ref } from "vue";
 
 const version = process.env.VERSION;
 
 const navSubtitle = computed(() => `Version ${version || ""}`);
 
 const route = useRoute();
+
+const error = ref<Error>({ Kind: "", HTML: "" });
 
 const title = computed(() => {
   switch (route.name) {
@@ -76,4 +87,10 @@ const title = computed(() => {
       return "";
   }
 });
+
+// setup notifications callbacks
+const messages = ref(new Messages());
+
+controller.onError = (k, m) => (error.value = { Kind: k, HTML: m });
+controller.showMessage = (m) => messages.value.addMessage(m);
 </script>
