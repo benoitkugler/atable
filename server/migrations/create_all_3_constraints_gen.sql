@@ -28,10 +28,10 @@ ALTER TABLE menu_ingredients
 ALTER TABLE menu_ingredients
     ADD FOREIGN KEY (IdIngredient) REFERENCES ingredients;
 
-ALTER TABLE menu_recettes
+ALTER TABLE menu_receipes
     ADD FOREIGN KEY (IdMenu) REFERENCES menus ON DELETE CASCADE;
 
-ALTER TABLE menu_recettes
+ALTER TABLE menu_receipes
     ADD FOREIGN KEY (IdReceipe) REFERENCES receipes;
 
 ALTER TABLE menu_ingredients

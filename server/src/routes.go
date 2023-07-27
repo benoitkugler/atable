@@ -22,4 +22,7 @@ func setupWebAPI(e *echo.Echo, tvc *users.Controller, sej *sejours.Controller) {
 	gr.PUT("/api/sejours/groups", sej.SejoursCreateGroupe)
 	gr.POST("/api/sejours/groups", sej.SejoursUpdateGroupe)
 	gr.DELETE("/api/sejours/groups", sej.SejoursDeleteGroupe)
+
+	gr.GET("/api/meals", sej.MealsGet)
+	gr.PUT("/api/meals/wizzard", sej.MealsWizzard)
 }

@@ -1,5 +1,5 @@
 import { devLogMeta } from "@/env";
-import { AbstractAPI } from "./api_gen";
+import { AbstractAPI, Horaire, HoraireLabels, SejourExt } from "./api_gen";
 import { json } from "stream/consumers";
 
 function arrayBufferToString(buffer: ArrayBuffer) {
@@ -9,7 +9,7 @@ function arrayBufferToString(buffer: ArrayBuffer) {
 }
 
 class Controller extends AbstractAPI {
-  public sejourCourant: string | undefined;
+  public activeSejour: SejourExt | null = null;
 
   /** UI hook which should display an error */
   public onError?: (kind: string, htmlError: string) => void;
@@ -120,4 +120,23 @@ export const controller = new Controller(
 
 export function copy<T>(v: T): T {
   return JSON.parse(JSON.stringify(v));
+}
+
+export function addDays(date: Date, days: number) {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
+export function formatDate(date: Date) {
+  if (isNaN(date.valueOf())) return "";
+  return date.toLocaleDateString("fr-FR", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+}
+
+export function formatHoraire(horaire: Horaire) {
+  return HoraireLabels[horaire];
 }

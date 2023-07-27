@@ -75,6 +75,7 @@
                 <v-select
                   :items="selectItems"
                   v-model="activeSejour"
+                  @update:model-value="notifyActiveSejour"
                   class="my-2"
                   variant="outlined"
                   label="Séjour actif"
@@ -130,15 +131,19 @@ import { computed } from "vue";
 import { onMounted } from "vue";
 import { ref } from "vue";
 
+onMounted(fetchSejours);
+onActivated(fetchSejours);
+
 const sejours = ref<SejourExt[]>([]);
 const selectItems = computed(() =>
   sejours.value.map((s) => ({ title: s.Sejour.Name, value: s }))
 );
 
-const activeSejour = ref<SejourExt | null>(null);
+const activeSejour = ref<SejourExt | null>(controller.activeSejour);
 
-onMounted(fetchSejours);
-onActivated(fetchSejours);
+function notifyActiveSejour() {
+  controller.activeSejour = activeSejour.value;
+}
 
 async function fetchSejours() {
   const res = await controller.SejoursGet();
@@ -156,14 +161,18 @@ async function createSejour() {
   sejours.value.push(res);
 
   activeSejour.value = res;
+  notifyActiveSejour();
   sejourToEdit.value = res;
 }
 
 function ensureSelected() {
   if (activeSejour.value != null) return;
-  if (sejours.value.length != 0) {
-    activeSejour.value = sejours.value[0];
+
+  if (controller.activeSejour == null && sejours.value.length != 0) {
+    controller.activeSejour = sejours.value[0];
   }
+
+  activeSejour.value = controller.activeSejour;
 }
 
 const sejourToDelete = ref<SejourExt | null>(null);
@@ -178,6 +187,7 @@ async function deleteSejour() {
     (s) => s.Sejour.Id != toDelete.Sejour.Id
   );
   activeSejour.value = null;
+  controller.activeSejour = null;
   sejourToDelete.value = null;
 
   ensureSelected();
@@ -211,6 +221,7 @@ async function createGroup() {
   controller.showMessage!("Groupe ajouté avec succès.");
 
   sej.Groups = (sej.Groups || []).concat(res);
+  notifyActiveSejour();
   groupList.value?.startEdit(res);
 }
 
@@ -222,6 +233,7 @@ async function updateGroup(group: Group) {
   const l = activeSejour.value?.Groups || [];
   const index = l.findIndex((g) => g.Id == group.Id);
   l[index] = group;
+  notifyActiveSejour();
 }
 
 async function deleteGroup(group: Group) {
@@ -231,5 +243,6 @@ async function deleteGroup(group: Group) {
 
   const l = activeSejour.value?.Groups || [];
   activeSejour.value!.Groups = l.filter((g) => g.Id != group.Id);
+  notifyActiveSejour();
 }
 </script>

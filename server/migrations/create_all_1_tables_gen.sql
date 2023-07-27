@@ -14,7 +14,8 @@ CREATE TABLE ingredients (
 
 CREATE TABLE menus (
     Id serial PRIMARY KEY,
-    Owner integer NOT NULL
+    Owner integer NOT NULL,
+    IsFavorite boolean NOT NULL
 );
 
 CREATE TABLE menu_ingredients (
@@ -24,7 +25,7 @@ CREATE TABLE menu_ingredients (
     Plat integer CHECK (Plat IN (0, 1, 2, 3)) NOT NULL
 );
 
-CREATE TABLE menu_recettes (
+CREATE TABLE menu_receipes (
     IdMenu integer NOT NULL,
     IdReceipe integer NOT NULL
 );

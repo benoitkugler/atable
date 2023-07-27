@@ -38,7 +38,7 @@ func TestSQL(t *testing.T) {
 		)
 		tu.AssertNoErr(t, err)
 
-		err = InsertManyMenuRecettes(tx, MenuRecette{IdMenu: menu.Id, IdReceipe: rec.Id})
+		err = InsertManyMenuReceipes(tx, MenuReceipe{IdMenu: menu.Id, IdReceipe: rec.Id})
 		tu.AssertNoErr(t, err)
 
 		item1, item2 := randMenuIngredient(), randMenuIngredient()

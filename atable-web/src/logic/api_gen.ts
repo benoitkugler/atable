@@ -10,6 +10,21 @@ class DateTag {
 // AAAA-MM-YY date format
 export type Date_ = string & DateTag;
 
+// github.com/benoitkugler/atable/controllers/sejours.AssistantMealsIn
+export interface AssistantMealsIn {
+  IdSejour: IdSejour;
+  DaysNumber: number;
+  Excursions: { [key: number]: IdGroup[] | null } | null;
+  WithGouter: boolean;
+  GroupsForCinquieme: IdGroup[] | null;
+  DeleteExisting: boolean;
+}
+// github.com/benoitkugler/atable/controllers/sejours.MealHeader
+export interface MealHeader {
+  Meal: Meal;
+  Groups: Group[] | null;
+  IsMenuEmpty: boolean;
+}
 // github.com/benoitkugler/atable/controllers/sejours.SejourExt
 export interface SejourExt {
   Sejour: Sejour;
@@ -38,6 +53,8 @@ export interface LogginOut {
   Pseudo: string;
   IsPasswordError: boolean;
 }
+// github.com/benoitkugler/atable/sql/menus.IdMenu
+export type IdMenu = number;
 // github.com/benoitkugler/atable/sql/sejours.Date
 export type Date = Date_;
 // github.com/benoitkugler/atable/sql/sejours.Group
@@ -48,10 +65,38 @@ export interface Group {
   Color: string;
   Size: number;
 }
+// github.com/benoitkugler/atable/sql/sejours.Horaire
+export enum Horaire {
+  PetitDejeuner = 0,
+  Midi = 1,
+  Gouter = 2,
+  Diner = 3,
+  Cinquieme = 4,
+}
+
+export const HoraireLabels: { [key in Horaire]: string } = {
+  [Horaire.PetitDejeuner]: "Petit déjeuner",
+  [Horaire.Midi]: "Midi",
+  [Horaire.Gouter]: "Goûter",
+  [Horaire.Diner]: "Dîner",
+  [Horaire.Cinquieme]: "Cinquième",
+};
+
 // github.com/benoitkugler/atable/sql/sejours.IdGroup
 export type IdGroup = number;
+// github.com/benoitkugler/atable/sql/sejours.IdMeal
+export type IdMeal = number;
 // github.com/benoitkugler/atable/sql/sejours.IdSejour
 export type IdSejour = number;
+// github.com/benoitkugler/atable/sql/sejours.Meal
+export interface Meal {
+  Id: IdMeal;
+  Sejour: IdSejour;
+  Menu: IdMenu;
+  Jour: number;
+  AdditionalPeople: number;
+  Horaire: Horaire;
+}
 // github.com/benoitkugler/atable/sql/sejours.Sejour
 export interface Sejour {
   Id: IdSejour;
@@ -66,7 +111,10 @@ export type IdUser = number;
 		as base class for an app controller.
 	*/
 export abstract class AbstractAPI {
-  constructor(protected baseUrl: string, protected authToken: string) {}
+  constructor(
+    protected baseUrl: string,
+    protected authToken: string,
+  ) {}
 
   abstract handleError(error: any): void;
 
@@ -81,7 +129,7 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<AskInscriptionOut> = await Axios.post(
       fullUrl,
       params,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -320,4 +368,51 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessSejoursDeleteGroupe(): void {}
+
+  protected async rawMealsGet(params: { "id-sejour": number }) {
+    const fullUrl = this.baseUrl + "/api/meals";
+    const rep: AxiosResponse<MealHeader[] | null> = await Axios.get(fullUrl, {
+      params: { "id-sejour": String(params["id-sejour"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** MealsGet wraps rawMealsGet and handles the error */
+  async MealsGet(params: { "id-sejour": number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawMealsGet(params);
+      this.onSuccessMealsGet(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessMealsGet(data: MealHeader[] | null): void {}
+
+  protected async rawMealsWizzard(params: AssistantMealsIn) {
+    const fullUrl = this.baseUrl + "/api/meals/wizzard";
+    const rep: AxiosResponse<MealHeader[] | null> = await Axios.put(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() },
+    );
+    return rep.data;
+  }
+
+  /** MealsWizzard wraps rawMealsWizzard and handles the error */
+  async MealsWizzard(params: AssistantMealsIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawMealsWizzard(params);
+      this.onSuccessMealsWizzard(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessMealsWizzard(data: MealHeader[] | null): void {}
 }

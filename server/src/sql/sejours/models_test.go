@@ -35,9 +35,9 @@ func setup(t *testing.T, db tu.TestDB) (_ users.User, _, _ menus.Menu) {
 		)
 		tu.AssertNoErr(t, err)
 
-		err = menus.InsertManyMenuRecettes(tx,
-			menus.MenuRecette{IdMenu: menu1.Id, IdReceipe: rec.Id},
-			menus.MenuRecette{IdMenu: menu2.Id, IdReceipe: rec.Id},
+		err = menus.InsertManyMenuReceipes(tx,
+			menus.MenuReceipe{IdMenu: menu1.Id, IdReceipe: rec.Id},
+			menus.MenuReceipe{IdMenu: menu2.Id, IdReceipe: rec.Id},
 		)
 		tu.AssertNoErr(t, err)
 

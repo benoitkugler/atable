@@ -53,6 +53,9 @@ type ReceipeItem struct {
 type Menu struct {
 	Id    IdMenu
 	Owner users.IdUser `gomacro-sql-on-delete:"CASCADE"`
+	// If IsFavorite is true, the menu is not deleted
+	// when no more [sejours.Meal]]s are using it.
+	IsFavorite bool
 }
 
 // MenuIngredient is a link item
@@ -63,8 +66,8 @@ type MenuIngredient struct {
 	Plat         PlatKind
 }
 
-// MenuRecette is a link item
-type MenuRecette struct {
+// MenuReceipe is a link item
+type MenuReceipe struct {
 	IdMenu    IdMenu `gomacro-sql-on-delete:"CASCADE"`
 	IdReceipe IdReceipe
 }

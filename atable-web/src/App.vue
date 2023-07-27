@@ -81,8 +81,11 @@ const title = computed(() => {
   switch (route.name) {
     case "sejours":
       return "Séjours et groupes";
-    case "agenda":
-      return `Organisation du séjour courant: ${controller.sejourCourant}`;
+    case "agenda": {
+      const sejour = controller.activeSejour;
+      if (sejour == null) return "Organisation d'un séjour";
+      return `Organisation du séjour courant : ${sejour.Sejour.Name}`;
+    }
     default:
       return "";
   }
