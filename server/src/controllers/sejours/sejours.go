@@ -214,7 +214,7 @@ func (ct *Controller) createGroup(idSejour sej.IdSejour, uID us.IdUser) (sej.Gro
 		return sej.Group{}, err
 	}
 
-	group, err := sej.Group{Sejour: idSejour, Size: 25}.Insert(ct.db)
+	group, err := sej.Group{Sejour: idSejour, Size: 25, Name: "Groupe"}.Insert(ct.db)
 	if err != nil {
 		return sej.Group{}, utils.SQLError(err)
 	}

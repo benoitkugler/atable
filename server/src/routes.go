@@ -25,4 +25,16 @@ func setupWebAPI(e *echo.Echo, tvc *users.Controller, sej *sejours.Controller) {
 
 	gr.GET("/api/meals", sej.MealsGet)
 	gr.PUT("/api/meals/wizzard", sej.MealsWizzard)
+	gr.GET("/api/meals/search", sej.MealsSearch)
+	gr.GET("/api/meals/details", sej.MealsLoad)
+	gr.GET("/api/meals/details-one", sej.MealsPreview)
+	gr.PUT("/api/meals/details", sej.MealsCreate)
+	gr.POST("/api/meals/details", sej.MealsUpdate)
+	gr.DELETE("/api/meals/details", sej.MealsDelete)
+	gr.POST("/api/meals/groups", sej.MealsMoveGroup)
+	gr.PUT("/api/meals/ingredients", sej.MealsAddIngredient)
+	gr.POST("/api/meals/ingredients", sej.MealsUpdateMenuIngredient)
+	gr.PUT("/api/meals/receipes", sej.MealsAddReceipe)
+	gr.POST("/api/meals/remove", sej.MealsRemoveItem)
+	gr.POST("/api/meals/menus", sej.MealsSetMenu)
 }

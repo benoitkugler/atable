@@ -18,3 +18,25 @@ const (
 	Diner                        // Dîner
 	Cinquieme                    // Cinquième
 )
+
+// RestrictByDay restrict the map to the meals
+// registred for the given offset.
+func (ml Meals) RestrictByDay(day int) {
+	// select the day
+	for id, meal := range ml {
+		if meal.Jour != day {
+			delete(ml, id)
+		}
+	}
+}
+
+// RestrictByHoraire restrict the map to the meals
+// registred for the given horaire
+func (ml Meals) RestrictByHoraire(horaire Horaire) {
+	// select the day
+	for id, meal := range ml {
+		if meal.Horaire != horaire {
+			delete(ml, id)
+		}
+	}
+}

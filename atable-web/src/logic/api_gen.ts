@@ -10,6 +10,16 @@ class DateTag {
 // AAAA-MM-YY date format
 export type Date_ = string & DateTag;
 
+// github.com/benoitkugler/atable/controllers/sejours.AddIngredientIn
+export interface AddIngredientIn {
+  IdMenu: IdMenu;
+  IdIngredient: IdIngredient;
+}
+// github.com/benoitkugler/atable/controllers/sejours.AddReceipeIn
+export interface AddReceipeIn {
+  IdMenu: IdMenu;
+  IdReceipe: IdReceipe;
+}
 // github.com/benoitkugler/atable/controllers/sejours.AssistantMealsIn
 export interface AssistantMealsIn {
   IdSejour: IdSejour;
@@ -19,16 +29,101 @@ export interface AssistantMealsIn {
   GroupsForCinquieme: IdGroup[] | null;
   DeleteExisting: boolean;
 }
+// github.com/benoitkugler/atable/controllers/sejours.IngredientHeader
+export interface IngredientHeader {
+  Title: string;
+  ID: number;
+  IsPersonnal: boolean;
+  Kind: IngredientKind;
+}
+// github.com/benoitkugler/atable/controllers/sejours.MealCreateIn
+export interface MealCreateIn {
+  IdSejour: IdSejour;
+  Day: number;
+  Horaire: Horaire;
+}
+// github.com/benoitkugler/atable/controllers/sejours.MealExt
+export interface MealExt {
+  Meal: Meal;
+  Groups: MealGroups;
+}
 // github.com/benoitkugler/atable/controllers/sejours.MealHeader
 export interface MealHeader {
   Meal: Meal;
   Groups: Group[] | null;
   IsMenuEmpty: boolean;
 }
+// github.com/benoitkugler/atable/controllers/sejours.MealsLoadOut
+export interface MealsLoadOut {
+  Groups: Groups;
+  Menus: { [key: IdMenu]: MenuExt } | null;
+  Meals: MealExt[] | null;
+}
+// github.com/benoitkugler/atable/controllers/sejours.MenuExt
+export interface MenuExt {
+  Ingredients: MenuIngredientExt[] | null;
+  Receipes: ReceipeExt[] | null;
+}
+// github.com/benoitkugler/atable/controllers/sejours.MenuIngredientExt
+export interface MenuIngredientExt {
+  IdMenu: IdMenu;
+  IdIngredient: IdIngredient;
+  Quantity: QuantityR;
+  Plat: PlatKind;
+  Ingredient: Ingredient;
+}
+// github.com/benoitkugler/atable/controllers/sejours.MoveGroupIn
+export interface MoveGroupIn {
+  Group: IdGroup;
+  From: IdMeal;
+  To: IdMeal;
+}
+// github.com/benoitkugler/atable/controllers/sejours.ReceipeExt
+export interface ReceipeExt {
+  Receipe: Receipe;
+  Ingredients: ReceipeIngredientExt[] | null;
+}
+// github.com/benoitkugler/atable/controllers/sejours.ReceipeHeader
+export interface ReceipeHeader {
+  Title: string;
+  ID: number;
+  IsPersonnal: boolean;
+  Plat: PlatKind;
+}
+// github.com/benoitkugler/atable/controllers/sejours.ReceipeIngredientExt
+export interface ReceipeIngredientExt {
+  Id: IdIngredient;
+  Name: string;
+  Kind: IngredientKind;
+  Quantity: QuantityR;
+}
+// github.com/benoitkugler/atable/controllers/sejours.RemoveItemIn
+export interface RemoveItemIn {
+  IdMenu: IdMenu;
+  ID: number;
+  IsReceipe: boolean;
+}
+// github.com/benoitkugler/atable/controllers/sejours.ResourceHeader
+export interface ResourceHeader {
+  Title: string;
+  ID: number;
+  IsPersonnal: boolean;
+}
+// github.com/benoitkugler/atable/controllers/sejours.ResourceSearchOut
+export interface ResourceSearchOut {
+  Menus: ResourceHeader[] | null;
+  Receipes: ReceipeHeader[] | null;
+  Ingredients: IngredientHeader[] | null;
+}
 // github.com/benoitkugler/atable/controllers/sejours.SejourExt
 export interface SejourExt {
   Sejour: Sejour;
   Groups: Group[] | null;
+}
+// github.com/benoitkugler/atable/controllers/sejours.SetMenuIn
+export interface SetMenuIn {
+  IdMeal: IdMeal;
+  IdMenu: IdMenu;
 }
 // github.com/benoitkugler/atable/controllers/users.AskInscriptionIn
 export interface AskInscriptionIn {
@@ -53,8 +148,92 @@ export interface LogginOut {
   Pseudo: string;
   IsPasswordError: boolean;
 }
+// github.com/benoitkugler/atable/sql/menus.IdIngredient
+export type IdIngredient = number;
 // github.com/benoitkugler/atable/sql/menus.IdMenu
 export type IdMenu = number;
+// github.com/benoitkugler/atable/sql/menus.IdReceipe
+export type IdReceipe = number;
+// github.com/benoitkugler/atable/sql/menus.Ingredient
+export interface Ingredient {
+  Id: IdIngredient;
+  Name: string;
+  Kind: IngredientKind;
+}
+// github.com/benoitkugler/atable/sql/menus.IngredientKind
+export enum IngredientKind {
+  I_Empty = 0,
+  I_Legumes = 1,
+  I_Feculents = 2,
+  I_Viandes = 3,
+  I_Epicerie = 4,
+  I_Laitages = 5,
+  I_Boulangerie = 6,
+}
+
+export const IngredientKindLabels: { [key in IngredientKind]: string } = {
+  [IngredientKind.I_Empty]: "Autre",
+  [IngredientKind.I_Legumes]: "Fruits et légumes",
+  [IngredientKind.I_Feculents]: "Féculents",
+  [IngredientKind.I_Viandes]: "Viandes, poissons",
+  [IngredientKind.I_Epicerie]: "Épicerie",
+  [IngredientKind.I_Laitages]: "Laitages",
+  [IngredientKind.I_Boulangerie]: "Boulangerie",
+};
+
+// github.com/benoitkugler/atable/sql/menus.MenuIngredient
+export interface MenuIngredient {
+  IdMenu: IdMenu;
+  IdIngredient: IdIngredient;
+  Quantity: QuantityR;
+  Plat: PlatKind;
+}
+// github.com/benoitkugler/atable/sql/menus.PlatKind
+export enum PlatKind {
+  P_Empty = 0,
+  P_Dessert = 1,
+  P_PlatPrincipal = 2,
+  P_Entree = 3,
+}
+
+export const PlatKindLabels: { [key in PlatKind]: string } = {
+  [PlatKind.P_Empty]: "Autre",
+  [PlatKind.P_Dessert]: "Dessert",
+  [PlatKind.P_PlatPrincipal]: "Plat principal",
+  [PlatKind.P_Entree]: "Entrée",
+};
+
+// github.com/benoitkugler/atable/sql/menus.QuantityR
+export interface QuantityR {
+  Val: number;
+  Unite: Unite;
+  For: number;
+}
+// github.com/benoitkugler/atable/sql/menus.Receipe
+export interface Receipe {
+  Id: IdReceipe;
+  Owner: IdUser;
+  Plat: PlatKind;
+  Name: string;
+  Description: string;
+}
+// github.com/benoitkugler/atable/sql/menus.Unite
+export enum Unite {
+  U_Piece = 0,
+  U_Kg = 1,
+  U_G = 2,
+  U_L = 3,
+  U_CL = 4,
+}
+
+export const UniteLabels: { [key in Unite]: string } = {
+  [Unite.U_Piece]: "pièces",
+  [Unite.U_Kg]: "kg",
+  [Unite.U_G]: "gr",
+  [Unite.U_L]: "L",
+  [Unite.U_CL]: "cL",
+};
+
 // github.com/benoitkugler/atable/sql/sejours.Date
 export type Date = Date_;
 // github.com/benoitkugler/atable/sql/sejours.Group
@@ -65,6 +244,8 @@ export interface Group {
   Color: string;
   Size: number;
 }
+// github.com/benoitkugler/atable/sql/sejours.Groups
+export type Groups = { [key: IdGroup]: Group } | null;
 // github.com/benoitkugler/atable/sql/sejours.Horaire
 export enum Horaire {
   PetitDejeuner = 0,
@@ -97,6 +278,13 @@ export interface Meal {
   AdditionalPeople: number;
   Horaire: Horaire;
 }
+// github.com/benoitkugler/atable/sql/sejours.MealGroup
+export interface MealGroup {
+  IdMeal: IdMeal;
+  IdGroup: IdGroup;
+}
+// github.com/benoitkugler/atable/sql/sejours.MealGroups
+export type MealGroups = MealGroup[] | null;
 // github.com/benoitkugler/atable/sql/sejours.Sejour
 export interface Sejour {
   Id: IdSejour;
@@ -415,4 +603,273 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessMealsWizzard(data: MealHeader[] | null): void {}
+
+  protected async rawMealsSearch(params: { search: string }) {
+    const fullUrl = this.baseUrl + "/api/meals/search";
+    const rep: AxiosResponse<ResourceSearchOut> = await Axios.get(fullUrl, {
+      params: { search: params["search"] },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** MealsSearch wraps rawMealsSearch and handles the error */
+  async MealsSearch(params: { search: string }) {
+    this.startRequest();
+    try {
+      const out = await this.rawMealsSearch(params);
+      this.onSuccessMealsSearch(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessMealsSearch(data: ResourceSearchOut): void {}
+
+  protected async rawMealsLoad(params: { idSejour: number; day: number }) {
+    const fullUrl = this.baseUrl + "/api/meals/details";
+    const rep: AxiosResponse<MealsLoadOut> = await Axios.get(fullUrl, {
+      params: {
+        idSejour: String(params["idSejour"]),
+        day: String(params["day"]),
+      },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** MealsLoad wraps rawMealsLoad and handles the error */
+  async MealsLoad(params: { idSejour: number; day: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawMealsLoad(params);
+      this.onSuccessMealsLoad(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessMealsLoad(data: MealsLoadOut): void {}
+
+  protected async rawMealsPreview(params: { idMeal: number }) {
+    const fullUrl = this.baseUrl + "/api/meals/details-one";
+    const rep: AxiosResponse<MenuExt> = await Axios.get(fullUrl, {
+      params: { idMeal: String(params["idMeal"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** MealsPreview wraps rawMealsPreview and handles the error */
+  async MealsPreview(params: { idMeal: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawMealsPreview(params);
+      this.onSuccessMealsPreview(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessMealsPreview(data: MenuExt): void {}
+
+  protected async rawMealsCreate(params: MealCreateIn) {
+    const fullUrl = this.baseUrl + "/api/meals/details";
+    const rep: AxiosResponse<MealExt> = await Axios.put(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** MealsCreate wraps rawMealsCreate and handles the error */
+  async MealsCreate(params: MealCreateIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawMealsCreate(params);
+      this.onSuccessMealsCreate(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessMealsCreate(data: MealExt): void {}
+
+  protected async rawMealsUpdate(params: Meal) {
+    const fullUrl = this.baseUrl + "/api/meals/details";
+    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+    return true;
+  }
+
+  /** MealsUpdate wraps rawMealsUpdate and handles the error */
+  async MealsUpdate(params: Meal) {
+    this.startRequest();
+    try {
+      const out = await this.rawMealsUpdate(params);
+      this.onSuccessMealsUpdate();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessMealsUpdate(): void {}
+
+  protected async rawMealsDelete(params: { idMeal: number }) {
+    const fullUrl = this.baseUrl + "/api/meals/details";
+    await Axios.delete(fullUrl, {
+      params: { idMeal: String(params["idMeal"]) },
+      headers: this.getHeaders(),
+    });
+    return true;
+  }
+
+  /** MealsDelete wraps rawMealsDelete and handles the error */
+  async MealsDelete(params: { idMeal: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawMealsDelete(params);
+      this.onSuccessMealsDelete();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessMealsDelete(): void {}
+
+  protected async rawMealsMoveGroup(params: MoveGroupIn) {
+    const fullUrl = this.baseUrl + "/api/meals/groups";
+    const rep: AxiosResponse<MealGroups[]> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** MealsMoveGroup wraps rawMealsMoveGroup and handles the error */
+  async MealsMoveGroup(params: MoveGroupIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawMealsMoveGroup(params);
+      this.onSuccessMealsMoveGroup(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessMealsMoveGroup(data: MealGroups[]): void {}
+
+  protected async rawMealsAddIngredient(params: AddIngredientIn) {
+    const fullUrl = this.baseUrl + "/api/meals/ingredients";
+    const rep: AxiosResponse<MenuExt> = await Axios.put(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** MealsAddIngredient wraps rawMealsAddIngredient and handles the error */
+  async MealsAddIngredient(params: AddIngredientIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawMealsAddIngredient(params);
+      this.onSuccessMealsAddIngredient(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessMealsAddIngredient(data: MenuExt): void {}
+
+  protected async rawMealsUpdateMenuIngredient(params: MenuIngredient) {
+    const fullUrl = this.baseUrl + "/api/meals/ingredients";
+    const rep: AxiosResponse<MenuExt> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** MealsUpdateMenuIngredient wraps rawMealsUpdateMenuIngredient and handles the error */
+  async MealsUpdateMenuIngredient(params: MenuIngredient) {
+    this.startRequest();
+    try {
+      const out = await this.rawMealsUpdateMenuIngredient(params);
+      this.onSuccessMealsUpdateMenuIngredient(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessMealsUpdateMenuIngredient(data: MenuExt): void {}
+
+  protected async rawMealsAddReceipe(params: AddReceipeIn) {
+    const fullUrl = this.baseUrl + "/api/meals/receipes";
+    const rep: AxiosResponse<MenuExt> = await Axios.put(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** MealsAddReceipe wraps rawMealsAddReceipe and handles the error */
+  async MealsAddReceipe(params: AddReceipeIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawMealsAddReceipe(params);
+      this.onSuccessMealsAddReceipe(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessMealsAddReceipe(data: MenuExt): void {}
+
+  protected async rawMealsRemoveItem(params: RemoveItemIn) {
+    const fullUrl = this.baseUrl + "/api/meals/remove";
+    const rep: AxiosResponse<MenuExt> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** MealsRemoveItem wraps rawMealsRemoveItem and handles the error */
+  async MealsRemoveItem(params: RemoveItemIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawMealsRemoveItem(params);
+      this.onSuccessMealsRemoveItem(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessMealsRemoveItem(data: MenuExt): void {}
+
+  protected async rawMealsSetMenu(params: SetMenuIn) {
+    const fullUrl = this.baseUrl + "/api/meals/menus";
+    const rep: AxiosResponse<MenuExt> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** MealsSetMenu wraps rawMealsSetMenu and handles the error */
+  async MealsSetMenu(params: SetMenuIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawMealsSetMenu(params);
+      this.onSuccessMealsSetMenu(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessMealsSetMenu(data: MenuExt): void {}
 }

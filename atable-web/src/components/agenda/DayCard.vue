@@ -7,7 +7,7 @@
     </v-row>
     <v-card-text class="pa-0 mb-">
       <v-row no-gutters>
-        <v-col v-if="!meals.length" class="my-2">
+        <v-col v-if="!meals.length" class="my-2 text-center pb-1">
           <i>Aucun repas.</i>
         </v-col>
         <v-col
@@ -28,6 +28,7 @@ import { Group, MealHeader } from "@/logic/api_gen";
 import MealCard from "./MealCard.vue";
 import { copy, formatDate } from "@/logic/controller";
 import { computed } from "vue";
+import MealPreview from "./MealPreview.vue";
 
 const props = defineProps<{
   date: Date;

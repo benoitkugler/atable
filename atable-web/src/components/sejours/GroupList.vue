@@ -1,5 +1,5 @@
 <template>
-  <v-card>
+  <v-card elevation="0">
     <v-dialog
       :model-value="toDelete != null"
       @update:model-value="toDelete = null"
@@ -96,7 +96,7 @@
       <v-alert v-if="!props.sejour.Groups?.length" class="mb-4">
         <i> Aucun groupe n'est défini. </i>
       </v-alert>
-      <v-row justify="center">
+      <v-row>
         <v-col
           cols="6"
           v-for="(group, index) in props.sejour.Groups"

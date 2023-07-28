@@ -42,7 +42,7 @@ ALTER TABLE ingredients
     ADD UNIQUE (Name);
 
 ALTER TABLE receipes
-    ADD UNIQUE (Name);
+    ADD UNIQUE (OWNER, Name);
 
 ALTER TABLE receipes
     ADD FOREIGN KEY (OWNER) REFERENCES users ON DELETE CASCADE;
@@ -58,6 +58,9 @@ ALTER TABLE receipe_items
 
 ALTER TABLE menus
     ADD FOREIGN KEY (OWNER) REFERENCES users ON DELETE CASCADE;
+
+ALTER TABLE menu_ingredients
+    ADD UNIQUE (IdMenu, IdIngredient);
 
 ALTER TABLE menu_ingredients
     ADD FOREIGN KEY (IdMenu) REFERENCES menus ON DELETE CASCADE;

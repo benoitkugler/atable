@@ -454,6 +454,35 @@ func DeleteMenuIngredientsByIdIngredients(tx DB, idIngredients_ ...IdIngredient)
 	return ScanMenuIngredients(rows)
 }
 
+// SelectMenuIngredientsByIdMenuAndIdIngredient selects the items matching the given fields.
+func SelectMenuIngredientsByIdMenuAndIdIngredient(tx DB, idMenu IdMenu, idIngredient IdIngredient) (item []MenuIngredient, err error) {
+	rows, err := tx.Query("SELECT * FROM menu_ingredients WHERE IdMenu = $1 AND IdIngredient = $2", idMenu, idIngredient)
+	if err != nil {
+		return nil, err
+	}
+	return ScanMenuIngredients(rows)
+}
+
+// DeleteMenuIngredientsByIdMenuAndIdIngredient deletes the item matching the given fields, returning
+// the deleted items.
+func DeleteMenuIngredientsByIdMenuAndIdIngredient(tx DB, idMenu IdMenu, idIngredient IdIngredient) (item []MenuIngredient, err error) {
+	rows, err := tx.Query("DELETE FROM menu_ingredients WHERE IdMenu = $1 AND IdIngredient = $2 RETURNING *", idMenu, idIngredient)
+	if err != nil {
+		return nil, err
+	}
+	return ScanMenuIngredients(rows)
+}
+
+// SelectMenuIngredientByIdMenuAndIdIngredient return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectMenuIngredientByIdMenuAndIdIngredient(tx DB, idMenu IdMenu, idIngredient IdIngredient) (item MenuIngredient, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM menu_ingredients WHERE IdMenu = $1 AND IdIngredient = $2", idMenu, idIngredient)
+	item, err = ScanMenuIngredient(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
 func scanOneMenuReceipe(row scanner) (MenuReceipe, error) {
 	var item MenuReceipe
 	err := row.Scan(
@@ -606,6 +635,25 @@ func SelectMenuReceipesByIdReceipes(tx DB, idReceipes_ ...IdReceipe) (MenuReceip
 
 func DeleteMenuReceipesByIdReceipes(tx DB, idReceipes_ ...IdReceipe) (MenuReceipes, error) {
 	rows, err := tx.Query("DELETE FROM menu_receipes WHERE idreceipe = ANY($1) RETURNING *", IdReceipeArrayToPQ(idReceipes_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanMenuReceipes(rows)
+}
+
+// SelectMenuReceipesByIdMenuAndIdReceipe selects the items matching the given fields.
+func SelectMenuReceipesByIdMenuAndIdReceipe(tx DB, idMenu IdMenu, idReceipe IdReceipe) (item []MenuReceipe, err error) {
+	rows, err := tx.Query("SELECT * FROM menu_receipes WHERE IdMenu = $1 AND IdReceipe = $2", idMenu, idReceipe)
+	if err != nil {
+		return nil, err
+	}
+	return ScanMenuReceipes(rows)
+}
+
+// DeleteMenuReceipesByIdMenuAndIdReceipe deletes the item matching the given fields, returning
+// the deleted items.
+func DeleteMenuReceipesByIdMenuAndIdReceipe(tx DB, idMenu IdMenu, idReceipe IdReceipe) (item []MenuReceipe, err error) {
+	rows, err := tx.Query("DELETE FROM menu_receipes WHERE IdMenu = $1 AND IdReceipe = $2 RETURNING *", idMenu, idReceipe)
 	if err != nil {
 		return nil, err
 	}
@@ -933,9 +981,9 @@ func SelectReceipeItemByIdReceipeAndIdIngredient(tx DB, idReceipe IdReceipe, idI
 	return item, true, err
 }
 
-// SelectReceipeByName return zero or one item, thanks to a UNIQUE SQL constraint.
-func SelectReceipeByName(tx DB, name string) (item Receipe, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM receipes WHERE Name = $1", name)
+// SelectReceipeByOwnerAndName return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectReceipeByOwnerAndName(tx DB, owner users.IdUser, name string) (item Receipe, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM receipes WHERE Owner = $1 AND Name = $2", owner, name)
 	item, err = ScanReceipe(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil

@@ -63,7 +63,7 @@ func randMenuReceipe() MenuReceipe {
 }
 
 func randPlatKind() PlatKind {
-	choix := [...]PlatKind{P_Empty, P_Entree, P_PlatPrincipal, P_Dessert}
+	choix := [...]PlatKind{P_Empty, P_Dessert, P_PlatPrincipal, P_Entree}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }

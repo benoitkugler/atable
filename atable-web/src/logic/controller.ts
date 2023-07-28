@@ -1,5 +1,13 @@
 import { devLogMeta } from "@/env";
-import { AbstractAPI, Horaire, HoraireLabels, SejourExt } from "./api_gen";
+import {
+  AbstractAPI,
+  Horaire,
+  HoraireLabels,
+  MenuExt,
+  PlatKind,
+  ResourceHeader,
+  SejourExt,
+} from "./api_gen";
 import { json } from "stream/consumers";
 
 function arrayBufferToString(buffer: ArrayBuffer) {
@@ -12,10 +20,10 @@ class Controller extends AbstractAPI {
   public activeSejour: SejourExt | null = null;
 
   /** UI hook which should display an error */
-  public onError?: (kind: string, htmlError: string) => void;
+  public onError: (kind: string, htmlError: string) => void = () => {};
 
   /** UI hook which should display a snackbar */
-  public showMessage?: (message: string, color?: string) => void;
+  public showMessage: (message: string, color?: string) => void = () => {};
 
   public isLoggedIn = false;
 
@@ -139,4 +147,60 @@ export function formatDate(date: Date) {
 
 export function formatHoraire(horaire: Horaire) {
   return HoraireLabels[horaire];
+}
+
+export const horairesItems = Object.entries(HoraireLabels).map((l) => ({
+  value: Number(l[0]) as Horaire,
+  title: l[1],
+}));
+
+export enum DragKind {
+  ingredient,
+  receipe,
+  menu,
+}
+
+export interface ResourceDrag {
+  item: ResourceHeader;
+  kind: DragKind;
+}
+
+export const platColors: { [key in PlatKind]: string } = {
+  [PlatKind.P_Empty]: "grey-darken-1",
+  [PlatKind.P_Entree]: "green",
+  [PlatKind.P_PlatPrincipal]: "orange-darken-3",
+  [PlatKind.P_Dessert]: "pink-lighten-1",
+};
+
+export interface MenuItem {
+  id: number;
+  title: string;
+  plat: PlatKind;
+  isReceipe: boolean;
+}
+
+export function sortMenuContent(menu: MenuExt): MenuItem[] {
+  const out = (menu.Ingredients || [])
+    .map((ing) => ({
+      id: ing.IdIngredient,
+      title: ing.Ingredient.Name,
+      plat: ing.Plat,
+      isReceipe: false,
+    }))
+    .concat(
+      (menu.Receipes || []).map((rec) => ({
+        id: rec.Receipe.Id,
+        title: rec.Receipe.Name,
+        plat: rec.Receipe.Plat,
+        isReceipe: true,
+      }))
+    );
+  out.sort((a, b) =>
+    a.plat == b.plat
+      ? a.isReceipe == b.isReceipe
+        ? 0
+        : -1
+      : -(a.plat - b.plat)
+  );
+  return out;
 }

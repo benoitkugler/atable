@@ -74,8 +74,8 @@
               <v-col align-self="center" cols="6">
                 <v-select
                   :items="selectItems"
-                  v-model="activeSejour"
-                  @update:model-value="notifyActiveSejour"
+                  :model-value="rc.activeSejour?.Sejour.Id"
+                  @update:model-value="updateActiveSejour"
                   class="my-2"
                   variant="outlined"
                   label="Séjour actif"
@@ -89,7 +89,7 @@
                   icon
                   class="mx-1"
                   size="small"
-                  @click="sejourToEdit = activeSejour"
+                  @click="sejourToEdit = copy(rc.activeSejour)"
                 >
                   <v-icon>mdi-pencil</v-icon>
                 </v-btn>
@@ -98,16 +98,22 @@
                   icon
                   class="mx-1"
                   size="small"
-                  @click="sejourToDelete = activeSejour"
+                  @click="sejourToDelete = copy(rc.activeSejour)"
                 >
                   <v-icon color="red">mdi-delete</v-icon>
                 </v-btn>
               </v-col>
             </v-row>
-            <v-card-text>
+            <v-card-text v-if="rc.activeSejour != null">
+              <mono-group
+                v-if="rc.activeSejour.Groups?.length == 1"
+                :group="rc.activeSejour.Groups[0]"
+                @update="updateGroup"
+                @create="createGroup"
+              ></mono-group>
               <group-list
-                v-if="activeSejour != null"
-                :sejour="activeSejour"
+                v-else
+                :sejour="rc.activeSejour"
                 @update="updateGroup"
                 @delete="deleteGroup"
                 @create="createGroup"
@@ -124,9 +130,12 @@
 <script lang="ts" setup>
 import DateField from "@/components/DateField.vue";
 import GroupList from "@/components/sejours/GroupList.vue";
+import MonoGroup from "@/components/sejours/MonoGroup.vue";
 import { Group, SejourExt } from "@/logic/api_gen";
-import { controller } from "@/logic/controller";
+import { controller, copy } from "@/logic/controller";
 import { onActivated } from "vue";
+import { nextTick } from "vue";
+import { reactive } from "vue";
 import { computed } from "vue";
 import { onMounted } from "vue";
 import { ref } from "vue";
@@ -136,14 +145,13 @@ onActivated(fetchSejours);
 
 const sejours = ref<SejourExt[]>([]);
 const selectItems = computed(() =>
-  sejours.value.map((s) => ({ title: s.Sejour.Name, value: s }))
+  sejours.value.map((s) => ({ title: s.Sejour.Name, value: s.Sejour.Id }))
 );
-
-const activeSejour = ref<SejourExt | null>(controller.activeSejour);
-
-function notifyActiveSejour() {
-  controller.activeSejour = activeSejour.value;
+function updateActiveSejour(id: number) {
+  rc.activeSejour = sejours.value.find((s) => s.Sejour.Id == id)!;
 }
+
+const rc = reactive(controller);
 
 async function fetchSejours() {
   const res = await controller.SejoursGet();
@@ -157,22 +165,21 @@ async function createSejour() {
   const res = await controller.SejoursCreate();
   if (res === undefined) return;
 
-  controller.showMessage!("Séjour ajouté avec succès.");
+  controller.showMessage("Séjour ajouté avec succès.");
   sejours.value.push(res);
 
-  activeSejour.value = res;
-  notifyActiveSejour();
+  //   activeSejour.value = res;
+  //   notifyActiveSejour();
+  rc.activeSejour = res;
   sejourToEdit.value = res;
 }
 
 function ensureSelected() {
-  if (activeSejour.value != null) return;
+  if (rc.activeSejour != null) return;
 
-  if (controller.activeSejour == null && sejours.value.length != 0) {
-    controller.activeSejour = sejours.value[0];
+  if (sejours.value.length != 0) {
+    rc.activeSejour = sejours.value[0];
   }
-
-  activeSejour.value = controller.activeSejour;
 }
 
 const sejourToDelete = ref<SejourExt | null>(null);
@@ -182,12 +189,12 @@ async function deleteSejour() {
   const res = await controller.SejoursDelete({ id: toDelete.Sejour.Id });
   if (res == undefined) return;
 
-  controller.showMessage!("Séjour supprimé avec succès.");
+  controller.showMessage("Séjour supprimé avec succès.");
   sejours.value = sejours.value.filter(
     (s) => s.Sejour.Id != toDelete.Sejour.Id
   );
-  activeSejour.value = null;
-  controller.activeSejour = null;
+  //   activeSejour.value = null;
+  rc.activeSejour = null;
   sejourToDelete.value = null;
 
   ensureSelected();
@@ -200,49 +207,49 @@ async function updateSejour() {
   const res = await controller.SejoursUpdate(toEdit.Sejour);
   if (res == undefined) return;
 
-  controller.showMessage!("Séjour modifié avec succès.");
+  controller.showMessage("Séjour modifié avec succès.");
   const index = sejours.value.findIndex(
     (sej) => sej.Sejour.Id == toEdit.Sejour.Id
   );
   sejours.value[index] = toEdit;
 
-  activeSejour.value = toEdit;
+  rc.activeSejour = toEdit;
   sejourToEdit.value = null;
 }
 
 const groupList = ref<InstanceType<typeof GroupList> | null>(null);
 async function createGroup() {
-  const sej = activeSejour.value;
-  if (sej == null) return;
+  if (rc.activeSejour == null) return;
+
   const res = await controller.SejoursCreateGroupe({
-    "id-sejour": sej.Sejour.Id,
+    "id-sejour": rc.activeSejour.Sejour.Id,
   });
   if (res == undefined) return;
-  controller.showMessage!("Groupe ajouté avec succès.");
+  controller.showMessage("Groupe ajouté avec succès.");
 
-  sej.Groups = (sej.Groups || []).concat(res);
-  notifyActiveSejour();
-  groupList.value?.startEdit(res);
+  rc.activeSejour.Groups = (rc.activeSejour.Groups || []).concat(res);
+  //   notifyActiveSejour();
+  nextTick(() => groupList.value?.startEdit(res));
 }
 
 async function updateGroup(group: Group) {
   const res = await controller.SejoursUpdateGroupe(group);
   if (res == undefined) return;
-  controller.showMessage!("Groupe modifié avec succès.");
+  controller.showMessage("Groupe modifié avec succès.");
 
-  const l = activeSejour.value?.Groups || [];
+  const l = rc.activeSejour?.Groups || [];
   const index = l.findIndex((g) => g.Id == group.Id);
   l[index] = group;
-  notifyActiveSejour();
+  //   notifyActiveSejour();
 }
 
 async function deleteGroup(group: Group) {
   const res = await controller.SejoursDeleteGroupe({ "id-group": group.Id });
   if (res == undefined) return;
-  controller.showMessage!("Groupe supprimé avec succès.");
+  controller.showMessage("Groupe supprimé avec succès.");
 
-  const l = activeSejour.value?.Groups || [];
-  activeSejour.value!.Groups = l.filter((g) => g.Id != group.Id);
-  notifyActiveSejour();
+  const l = rc.activeSejour?.Groups || [];
+  rc.activeSejour!.Groups = l.filter((g) => g.Id != group.Id);
+  //   notifyActiveSejour();
 }
 </script>

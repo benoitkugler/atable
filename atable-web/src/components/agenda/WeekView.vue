@@ -42,7 +42,11 @@
     </v-row>
     <table width="100%">
       <tr>
-        <td v-for="i in 7" :key="i">
+        <td
+          v-for="i in 7"
+          :key="i"
+          style="max-width: 250px; vertical-align: top"
+        >
           <DayCard
             :date="dayForCol(i - 1)"
             :meals="mealsForCol(i - 1)"
@@ -109,7 +113,7 @@ const showAssistant = ref(false);
 async function wizzardCreate(params: AssistantMealsIn) {
   const res = await controller.MealsWizzard(params);
   if (res === undefined) return;
-  controller.showMessage!("Repas générés avec succès");
+  controller.showMessage("Repas générés avec succès");
   showAssistant.value = false;
   meals.value = res || [];
 }

@@ -16,9 +16,9 @@ type PlatKind uint8
 
 const (
 	P_Empty         PlatKind = iota // Autre
-	P_Entree                        // Entrée
-	P_PlatPrincipal                 // Plat principal
 	P_Dessert                       // Dessert
+	P_PlatPrincipal                 // Plat principal
+	P_Entree                        // Entrée
 )
 
 // Unite describes how an ingredient is measured.
@@ -42,4 +42,12 @@ type QuantityR struct {
 	Val   float64
 	Unite Unite
 	For   int // the number of person [Value] refers to.
+}
+
+func (rs IdReceipeSet) ToMenuLinks(idMenu IdMenu) MenuReceipes {
+	links := make(MenuReceipes, 0, len(rs))
+	for rec := range rs {
+		links = append(links, MenuReceipe{IdMenu: idMenu, IdReceipe: rec})
+	}
+	return links
 }

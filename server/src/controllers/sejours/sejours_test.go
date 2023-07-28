@@ -11,25 +11,25 @@ import (
 	tu "github.com/benoitkugler/atable/utils/testutils"
 )
 
-func setup(t *testing.T) (db tu.TestDB, _ users.User) {
+func setup(t *testing.T) (db tu.TestDB, _ users.User, _ menus.Menu) {
 	db = tu.NewTestDB(t, "../../sql/users/gen_create.sql", "../../sql/menus/gen_create.sql", "../../sql/sejours/gen_create.sql")
 
 	user, err := users.User{IsAdmin: true, Mail: "test@free.fr", Password: "a"}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ing1, err := menus.Ingredient{Name: "1"}.Insert(db)
+	ing1, err := menus.Ingredient{Name: "Ing1"}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ing2, err := menus.Ingredient{Name: "2"}.Insert(db)
+	ing2, err := menus.Ingredient{Name: "Ing2"}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	rec, err := menus.Receipe{Owner: user.Id, Name: "1"}.Insert(db)
+	rec, err := menus.Receipe{Owner: user.Id, Name: "Receipe1"}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	menu1, err := menus.Menu{Owner: user.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	menu2, err := menus.Menu{Owner: user.Id}.Insert(db)
+	menu2, err := menus.Menu{Owner: user.Id, IsFavorite: true}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	db.InTx(func(tx *sql.Tx) {
@@ -63,11 +63,11 @@ func setup(t *testing.T) (db tu.TestDB, _ users.User) {
 	_, err = sej.Group{Sejour: sej1.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	return db, user
+	return db, user, menu2
 }
 
 func TestSejours(t *testing.T) {
-	db, user := setup(t)
+	db, user, _ := setup(t)
 	defer db.Remove()
 
 	ct := NewController(db.DB, user)
