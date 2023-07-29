@@ -2,3 +2,4 @@ server/node_modules/**/*
 atable-web/src/env.ts
 server/.env
 server/main
+ 
