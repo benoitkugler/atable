@@ -38,7 +38,7 @@ const props = defineProps<{
 
 const items = ref<MenuItem[] | null>(null);
 
-onMounted(() => (console.log("mounted"), fetch()));
+onMounted(fetch);
 
 watch(props, (old) => {
   if (old.meal.Meal.Id != props.meal.Meal.Id) fetch();

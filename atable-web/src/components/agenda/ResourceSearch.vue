@@ -7,7 +7,7 @@
         density="comfortable"
         label="Rechercher un menu, une recette ou un ingrédient"
         v-model="pattern"
-        @update:model-value="onType"
+        @update:model-value="debounce.onType(pattern)"
         placeholder="Entrez au moins 2 charactères..."
         hide-details
       ></v-text-field>
@@ -63,7 +63,12 @@ import {
   ResourceHeader,
   PlatKindLabels,
 } from "@/logic/api_gen";
-import { DragKind, ResourceDrag, controller, copy } from "@/logic/controller";
+import {
+  Debouncer,
+  DragKind,
+  ResourceDrag,
+  controller,
+} from "@/logic/controller";
 import { computed } from "vue";
 import { ref } from "vue";
 import ResourceResult from "./ResourceResult.vue";
@@ -87,15 +92,7 @@ const isResEmpty = computed(() => {
 });
 
 // debounce feature for text field
-let timerId = 0;
-function onType() {
-  const debounceDelay = 300;
-  // cancel pending call
-  clearTimeout(timerId);
-
-  // delay new call for 'debounceDelay'
-  timerId = window.setTimeout(() => search(pattern.value), debounceDelay);
-}
+const debounce = new Debouncer(search);
 
 async function search(pattern: string) {
   if (pattern.length < 2) return;

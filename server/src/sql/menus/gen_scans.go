@@ -971,6 +971,25 @@ func DeleteReceipeItemsByIdIngredients(tx DB, idIngredients_ ...IdIngredient) (R
 	return ScanReceipeItems(rows)
 }
 
+// SelectReceipeItemsByIdReceipeAndIdIngredient selects the items matching the given fields.
+func SelectReceipeItemsByIdReceipeAndIdIngredient(tx DB, idReceipe IdReceipe, idIngredient IdIngredient) (item []ReceipeItem, err error) {
+	rows, err := tx.Query("SELECT * FROM receipe_items WHERE IdReceipe = $1 AND IdIngredient = $2", idReceipe, idIngredient)
+	if err != nil {
+		return nil, err
+	}
+	return ScanReceipeItems(rows)
+}
+
+// DeleteReceipeItemsByIdReceipeAndIdIngredient deletes the item matching the given fields, returning
+// the deleted items.
+func DeleteReceipeItemsByIdReceipeAndIdIngredient(tx DB, idReceipe IdReceipe, idIngredient IdIngredient) (item []ReceipeItem, err error) {
+	rows, err := tx.Query("DELETE FROM receipe_items WHERE IdReceipe = $1 AND IdIngredient = $2 RETURNING *", idReceipe, idIngredient)
+	if err != nil {
+		return nil, err
+	}
+	return ScanReceipeItems(rows)
+}
+
 // SelectReceipeItemByIdReceipeAndIdIngredient return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectReceipeItemByIdReceipeAndIdIngredient(tx DB, idReceipe IdReceipe, idIngredient IdIngredient) (item ReceipeItem, found bool, err error) {
 	row := tx.QueryRow("SELECT * FROM receipe_items WHERE IdReceipe = $1 AND IdIngredient = $2", idReceipe, idIngredient)

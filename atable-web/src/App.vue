@@ -38,6 +38,19 @@
             </v-list-item>
           </template>
         </v-tooltip>
+        <v-tooltip text="Bibliothèque de menus et recettes">
+          <template v-slot:activator="{ isActive, props }">
+            <v-list-item
+              v-on="{ isActive }"
+              v-bind="props"
+              color="secondary"
+              title="Bibliothèque"
+              prepend-icon="mdi-notebook-heart-outline"
+              :to="{ name: 'library' }"
+            >
+            </v-list-item>
+          </template>
+        </v-tooltip>
       </v-list>
     </v-navigation-drawer>
 
@@ -86,6 +99,8 @@ const title = computed(() => {
       if (sejour == null) return "Organisation d'un séjour";
       return `Organisation du séjour courant : ${sejour.Sejour.Name}`;
     }
+    case "library":
+      return "Bibliothèque de menus favoris et recettes";
     default:
       return "";
   }

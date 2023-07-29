@@ -10,6 +10,69 @@ class DateTag {
 // AAAA-MM-YY date format
 export type Date_ = string & DateTag;
 
+// github.com/benoitkugler/atable/controllers/library.AddMenuIngredientIn
+export interface AddMenuIngredientIn {
+  IdMenu: IdMenu;
+  IdIngredient: IdIngredient;
+}
+// github.com/benoitkugler/atable/controllers/library.AddMenuReceipeIn
+export interface AddMenuReceipeIn {
+  IdMenu: IdMenu;
+  IdReceipe: IdReceipe;
+}
+// github.com/benoitkugler/atable/controllers/library.AddReceipeIngredientIn
+export interface AddReceipeIngredientIn {
+  IdReceipe: IdReceipe;
+  IdIngredient: IdIngredient;
+}
+// github.com/benoitkugler/atable/controllers/library.IngredientHeader
+export interface IngredientHeader {
+  Title: string;
+  ID: number;
+  IsPersonnal: boolean;
+  Kind: IngredientKind;
+}
+// github.com/benoitkugler/atable/controllers/library.MenuExt
+export interface MenuExt {
+  Id: IdMenu;
+  Owner: IdUser;
+  IsFavorite: boolean;
+  Ingredients: MenuIngredientExt[] | null;
+  Receipes: Receipe[] | null;
+}
+// github.com/benoitkugler/atable/controllers/library.MenuIngredientExt
+export interface MenuIngredientExt {
+  IdMenu: IdMenu;
+  IdIngredient: IdIngredient;
+  Quantity: QuantityR;
+  Plat: PlatKind;
+  Ingredient: Ingredient;
+}
+// github.com/benoitkugler/atable/controllers/library.ReceipeExt
+export interface ReceipeExt {
+  Receipe: Receipe;
+  Ingredients: ReceipeIngredientExt[] | null;
+}
+// github.com/benoitkugler/atable/controllers/library.ReceipeHeader
+export interface ReceipeHeader {
+  Title: string;
+  ID: number;
+  IsPersonnal: boolean;
+  Plat: PlatKind;
+}
+// github.com/benoitkugler/atable/controllers/library.ReceipeIngredientExt
+export interface ReceipeIngredientExt {
+  Id: IdIngredient;
+  Name: string;
+  Kind: IngredientKind;
+  Quantity: QuantityR;
+}
+// github.com/benoitkugler/atable/controllers/library.ResourceHeader
+export interface ResourceHeader {
+  Title: string;
+  ID: number;
+  IsPersonnal: boolean;
+}
 // github.com/benoitkugler/atable/controllers/sejours.AddIngredientIn
 export interface AddIngredientIn {
   IdMenu: IdMenu;
@@ -28,13 +91,6 @@ export interface AssistantMealsIn {
   WithGouter: boolean;
   GroupsForCinquieme: IdGroup[] | null;
   DeleteExisting: boolean;
-}
-// github.com/benoitkugler/atable/controllers/sejours.IngredientHeader
-export interface IngredientHeader {
-  Title: string;
-  ID: number;
-  IsPersonnal: boolean;
-  Kind: IngredientKind;
 }
 // github.com/benoitkugler/atable/controllers/sejours.MealCreateIn
 export interface MealCreateIn {
@@ -59,55 +115,17 @@ export interface MealsLoadOut {
   Menus: { [key: IdMenu]: MenuExt } | null;
   Meals: MealExt[] | null;
 }
-// github.com/benoitkugler/atable/controllers/sejours.MenuExt
-export interface MenuExt {
-  Ingredients: MenuIngredientExt[] | null;
-  Receipes: ReceipeExt[] | null;
-}
-// github.com/benoitkugler/atable/controllers/sejours.MenuIngredientExt
-export interface MenuIngredientExt {
-  IdMenu: IdMenu;
-  IdIngredient: IdIngredient;
-  Quantity: QuantityR;
-  Plat: PlatKind;
-  Ingredient: Ingredient;
-}
 // github.com/benoitkugler/atable/controllers/sejours.MoveGroupIn
 export interface MoveGroupIn {
   Group: IdGroup;
   From: IdMeal;
   To: IdMeal;
 }
-// github.com/benoitkugler/atable/controllers/sejours.ReceipeExt
-export interface ReceipeExt {
-  Receipe: Receipe;
-  Ingredients: ReceipeIngredientExt[] | null;
-}
-// github.com/benoitkugler/atable/controllers/sejours.ReceipeHeader
-export interface ReceipeHeader {
-  Title: string;
-  ID: number;
-  IsPersonnal: boolean;
-  Plat: PlatKind;
-}
-// github.com/benoitkugler/atable/controllers/sejours.ReceipeIngredientExt
-export interface ReceipeIngredientExt {
-  Id: IdIngredient;
-  Name: string;
-  Kind: IngredientKind;
-  Quantity: QuantityR;
-}
 // github.com/benoitkugler/atable/controllers/sejours.RemoveItemIn
 export interface RemoveItemIn {
   IdMenu: IdMenu;
   ID: number;
   IsReceipe: boolean;
-}
-// github.com/benoitkugler/atable/controllers/sejours.ResourceHeader
-export interface ResourceHeader {
-  Title: string;
-  ID: number;
-  IsPersonnal: boolean;
 }
 // github.com/benoitkugler/atable/controllers/sejours.ResourceSearchOut
 export interface ResourceSearchOut {
@@ -181,6 +199,8 @@ export const IngredientKindLabels: { [key in IngredientKind]: string } = {
   [IngredientKind.I_Boulangerie]: "Boulangerie",
 };
 
+// github.com/benoitkugler/atable/sql/menus.Ingredients
+export type Ingredients = { [key: IdIngredient]: Ingredient } | null;
 // github.com/benoitkugler/atable/sql/menus.MenuIngredient
 export interface MenuIngredient {
   IdMenu: IdMenu;
@@ -217,6 +237,14 @@ export interface Receipe {
   Name: string;
   Description: string;
 }
+// github.com/benoitkugler/atable/sql/menus.ReceipeItem
+export interface ReceipeItem {
+  IdReceipe: IdReceipe;
+  IdIngredient: IdIngredient;
+  Quantity: QuantityR;
+}
+// github.com/benoitkugler/atable/sql/menus.Receipes
+export type Receipes = { [key: IdReceipe]: Receipe } | null;
 // github.com/benoitkugler/atable/sql/menus.Unite
 export enum Unite {
   U_Piece = 0,
@@ -872,4 +900,368 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessMealsSetMenu(data: MenuExt): void {}
+
+  protected async rawLibraryLoadIngredients() {
+    const fullUrl = this.baseUrl + "/api/library/all-ingredients";
+    const rep: AxiosResponse<Ingredients> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** LibraryLoadIngredients wraps rawLibraryLoadIngredients and handles the error */
+  async LibraryLoadIngredients() {
+    this.startRequest();
+    try {
+      const out = await this.rawLibraryLoadIngredients();
+      this.onSuccessLibraryLoadIngredients(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessLibraryLoadIngredients(data: Ingredients): void {}
+
+  protected async rawLibraryLoadReceipes() {
+    const fullUrl = this.baseUrl + "/api/library/all-receipes";
+    const rep: AxiosResponse<Receipes> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** LibraryLoadReceipes wraps rawLibraryLoadReceipes and handles the error */
+  async LibraryLoadReceipes() {
+    this.startRequest();
+    try {
+      const out = await this.rawLibraryLoadReceipes();
+      this.onSuccessLibraryLoadReceipes(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessLibraryLoadReceipes(data: Receipes): void {}
+
+  protected async rawLibraryLoadMenu(params: { idMenu: number }) {
+    const fullUrl = this.baseUrl + "/api/library/menus";
+    const rep: AxiosResponse<MenuExt> = await Axios.get(fullUrl, {
+      params: { idMenu: String(params["idMenu"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** LibraryLoadMenu wraps rawLibraryLoadMenu and handles the error */
+  async LibraryLoadMenu(params: { idMenu: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawLibraryLoadMenu(params);
+      this.onSuccessLibraryLoadMenu(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessLibraryLoadMenu(data: MenuExt): void {}
+
+  protected async rawLibraryCreateMenu() {
+    const fullUrl = this.baseUrl + "/api/library/menus";
+    const rep: AxiosResponse<ResourceHeader> = await Axios.put(fullUrl, null, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** LibraryCreateMenu wraps rawLibraryCreateMenu and handles the error */
+  async LibraryCreateMenu() {
+    this.startRequest();
+    try {
+      const out = await this.rawLibraryCreateMenu();
+      this.onSuccessLibraryCreateMenu(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessLibraryCreateMenu(data: ResourceHeader): void {}
+
+  protected async rawLibraryLoadReceipe(params: { idReceipe: number }) {
+    const fullUrl = this.baseUrl + "/api/library/receipes";
+    const rep: AxiosResponse<ReceipeExt> = await Axios.get(fullUrl, {
+      params: { idReceipe: String(params["idReceipe"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** LibraryLoadReceipe wraps rawLibraryLoadReceipe and handles the error */
+  async LibraryLoadReceipe(params: { idReceipe: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawLibraryLoadReceipe(params);
+      this.onSuccessLibraryLoadReceipe(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessLibraryLoadReceipe(data: ReceipeExt): void {}
+
+  protected async rawLibraryCreateReceipe() {
+    const fullUrl = this.baseUrl + "/api/library/receipes";
+    const rep: AxiosResponse<ReceipeHeader> = await Axios.put(fullUrl, null, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** LibraryCreateReceipe wraps rawLibraryCreateReceipe and handles the error */
+  async LibraryCreateReceipe() {
+    this.startRequest();
+    try {
+      const out = await this.rawLibraryCreateReceipe();
+      this.onSuccessLibraryCreateReceipe(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessLibraryCreateReceipe(data: ReceipeHeader): void {}
+
+  protected async rawLibraryUpdateReceipe(params: Receipe) {
+    const fullUrl = this.baseUrl + "/api/library/receipes";
+    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+    return true;
+  }
+
+  /** LibraryUpdateReceipe wraps rawLibraryUpdateReceipe and handles the error */
+  async LibraryUpdateReceipe(params: Receipe) {
+    this.startRequest();
+    try {
+      const out = await this.rawLibraryUpdateReceipe(params);
+      this.onSuccessLibraryUpdateReceipe();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessLibraryUpdateReceipe(): void {}
+
+  protected async rawLibraryAddReceipeIngredient(
+    params: AddReceipeIngredientIn,
+  ) {
+    const fullUrl = this.baseUrl + "/api/library/receipes/ingredients";
+    const rep: AxiosResponse<ReceipeIngredientExt> = await Axios.put(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() },
+    );
+    return rep.data;
+  }
+
+  /** LibraryAddReceipeIngredient wraps rawLibraryAddReceipeIngredient and handles the error */
+  async LibraryAddReceipeIngredient(params: AddReceipeIngredientIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawLibraryAddReceipeIngredient(params);
+      this.onSuccessLibraryAddReceipeIngredient(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessLibraryAddReceipeIngredient(
+    data: ReceipeIngredientExt,
+  ): void {}
+
+  protected async rawLibraryUpdateReceipeIngredient(params: ReceipeItem) {
+    const fullUrl = this.baseUrl + "/api/library/receipes/ingredients";
+    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+    return true;
+  }
+
+  /** LibraryUpdateReceipeIngredient wraps rawLibraryUpdateReceipeIngredient and handles the error */
+  async LibraryUpdateReceipeIngredient(params: ReceipeItem) {
+    this.startRequest();
+    try {
+      const out = await this.rawLibraryUpdateReceipeIngredient(params);
+      this.onSuccessLibraryUpdateReceipeIngredient();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessLibraryUpdateReceipeIngredient(): void {}
+
+  protected async rawLibraryDeleteReceipeIngredient(params: {
+    idReceipe: number;
+    idIngredient: number;
+  }) {
+    const fullUrl = this.baseUrl + "/api/library/receipes/ingredients";
+    await Axios.delete(fullUrl, {
+      params: {
+        idReceipe: String(params["idReceipe"]),
+        idIngredient: String(params["idIngredient"]),
+      },
+      headers: this.getHeaders(),
+    });
+    return true;
+  }
+
+  /** LibraryDeleteReceipeIngredient wraps rawLibraryDeleteReceipeIngredient and handles the error */
+  async LibraryDeleteReceipeIngredient(params: {
+    idReceipe: number;
+    idIngredient: number;
+  }) {
+    this.startRequest();
+    try {
+      const out = await this.rawLibraryDeleteReceipeIngredient(params);
+      this.onSuccessLibraryDeleteReceipeIngredient();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessLibraryDeleteReceipeIngredient(): void {}
+
+  protected async rawLibraryAddMenuIngredient(params: AddMenuIngredientIn) {
+    const fullUrl = this.baseUrl + "/api/library/menus/ingredients";
+    const rep: AxiosResponse<MenuIngredientExt> = await Axios.put(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() },
+    );
+    return rep.data;
+  }
+
+  /** LibraryAddMenuIngredient wraps rawLibraryAddMenuIngredient and handles the error */
+  async LibraryAddMenuIngredient(params: AddMenuIngredientIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawLibraryAddMenuIngredient(params);
+      this.onSuccessLibraryAddMenuIngredient(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessLibraryAddMenuIngredient(data: MenuIngredientExt): void {}
+
+  protected async rawLibraryUpdateMenuIngredient(params: MenuIngredient) {
+    const fullUrl = this.baseUrl + "/api/library/menus/ingredients";
+    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+    return true;
+  }
+
+  /** LibraryUpdateMenuIngredient wraps rawLibraryUpdateMenuIngredient and handles the error */
+  async LibraryUpdateMenuIngredient(params: MenuIngredient) {
+    this.startRequest();
+    try {
+      const out = await this.rawLibraryUpdateMenuIngredient(params);
+      this.onSuccessLibraryUpdateMenuIngredient();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessLibraryUpdateMenuIngredient(): void {}
+
+  protected async rawLibraryDeleteMenuIngredient(params: {
+    idMenu: number;
+    idIngredient: number;
+  }) {
+    const fullUrl = this.baseUrl + "/api/library/menus/ingredients";
+    await Axios.delete(fullUrl, {
+      params: {
+        idMenu: String(params["idMenu"]),
+        idIngredient: String(params["idIngredient"]),
+      },
+      headers: this.getHeaders(),
+    });
+    return true;
+  }
+
+  /** LibraryDeleteMenuIngredient wraps rawLibraryDeleteMenuIngredient and handles the error */
+  async LibraryDeleteMenuIngredient(params: {
+    idMenu: number;
+    idIngredient: number;
+  }) {
+    this.startRequest();
+    try {
+      const out = await this.rawLibraryDeleteMenuIngredient(params);
+      this.onSuccessLibraryDeleteMenuIngredient();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessLibraryDeleteMenuIngredient(): void {}
+
+  protected async rawLibraryAddMenuReceipe(params: AddMenuReceipeIn) {
+    const fullUrl = this.baseUrl + "/api/library/menus/receipes";
+    const rep: AxiosResponse<Receipe> = await Axios.put(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** LibraryAddMenuReceipe wraps rawLibraryAddMenuReceipe and handles the error */
+  async LibraryAddMenuReceipe(params: AddMenuReceipeIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawLibraryAddMenuReceipe(params);
+      this.onSuccessLibraryAddMenuReceipe(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessLibraryAddMenuReceipe(data: Receipe): void {}
+
+  protected async rawLibraryDeleteMenuReceipe(params: {
+    idMenu: number;
+    idReceipe: number;
+  }) {
+    const fullUrl = this.baseUrl + "/api/library/menus/receipes";
+    await Axios.delete(fullUrl, {
+      params: {
+        idMenu: String(params["idMenu"]),
+        idReceipe: String(params["idReceipe"]),
+      },
+      headers: this.getHeaders(),
+    });
+    return true;
+  }
+
+  /** LibraryDeleteMenuReceipe wraps rawLibraryDeleteMenuReceipe and handles the error */
+  async LibraryDeleteMenuReceipe(params: {
+    idMenu: number;
+    idReceipe: number;
+  }) {
+    this.startRequest();
+    try {
+      const out = await this.rawLibraryDeleteMenuReceipe(params);
+      this.onSuccessLibraryDeleteMenuReceipe();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessLibraryDeleteMenuReceipe(): void {}
 }

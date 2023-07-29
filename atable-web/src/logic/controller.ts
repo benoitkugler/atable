@@ -3,12 +3,13 @@ import {
   AbstractAPI,
   Horaire,
   HoraireLabels,
+  IdUser,
   MenuExt,
   PlatKind,
+  QuantityR,
   ResourceHeader,
   SejourExt,
 } from "./api_gen";
-import { json } from "stream/consumers";
 
 function arrayBufferToString(buffer: ArrayBuffer) {
   const uintArray = new Uint8Array(buffer);
@@ -17,6 +18,7 @@ function arrayBufferToString(buffer: ArrayBuffer) {
 }
 
 class Controller extends AbstractAPI {
+  public idUser: IdUser = devLogMeta.IdUser;
   public activeSejour: SejourExt | null = null;
 
   /** UI hook which should display an error */
@@ -172,35 +174,57 @@ export const platColors: { [key in PlatKind]: string } = {
   [PlatKind.P_Dessert]: "pink-lighten-1",
 };
 
+export interface MenuResource {
+  Id: number;
+  Title: string;
+  Kind: "receipe" | "ingredient";
+}
+
 export interface MenuItem {
   id: number;
   title: string;
   plat: PlatKind;
   isReceipe: boolean;
+  quantity?: QuantityR; // null for receipe
 }
 
 export function sortMenuContent(menu: MenuExt): MenuItem[] {
   const out = (menu.Ingredients || [])
-    .map((ing) => ({
-      id: ing.IdIngredient,
-      title: ing.Ingredient.Name,
-      plat: ing.Plat,
-      isReceipe: false,
-    }))
+    .map(
+      (ing): MenuItem => ({
+        id: ing.IdIngredient,
+        title: ing.Ingredient.Name,
+        plat: ing.Plat,
+        isReceipe: false,
+        quantity: ing.Quantity,
+      })
+    )
     .concat(
       (menu.Receipes || []).map((rec) => ({
-        id: rec.Receipe.Id,
-        title: rec.Receipe.Name,
-        plat: rec.Receipe.Plat,
+        id: rec.Id,
+        title: rec.Name,
+        plat: rec.Plat,
         isReceipe: true,
       }))
     );
   out.sort((a, b) =>
-    a.plat == b.plat
-      ? a.isReceipe == b.isReceipe
-        ? 0
-        : -1
-      : -(a.plat - b.plat)
+    a.plat == b.plat ? a.title.localeCompare(b.title) : -(a.plat - b.plat)
   );
   return out;
+}
+
+export class Debouncer {
+  private timerId = 0;
+
+  constructor(private action: (s: string) => void) {}
+
+  /** onType will call `action` after a delay */
+  onType = (pattern: string) => {
+    const debounceDelay = 300;
+    // cancel pending call
+    clearTimeout(this.timerId);
+
+    // delay new call for 'debounceDelay'
+    this.timerId = window.setTimeout(() => this.action(pattern), debounceDelay);
+  };
 }

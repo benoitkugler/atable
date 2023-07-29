@@ -43,10 +43,10 @@
 
 <script lang="ts" setup>
 import { MenuIngredient } from "@/logic/api_gen";
-import PlatSelect from "./PlatSelect.vue";
+import PlatSelect from "@/components/PlatSelect.vue";
 import { copy } from "@/logic/controller";
 import { ref } from "vue";
-import UniteSelect from "./UniteSelect.vue";
+import UniteSelect from "@/components/UniteSelect.vue";
 import { watch } from "vue";
 
 const props = defineProps<{

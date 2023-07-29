@@ -36,6 +36,7 @@ type Receipe struct {
 
 // ReceipeItem is a link object.
 //
+// gomacro:SQL _SELECT KEY (IdReceipe, IdIngredient)
 // gomacro:SQL ADD UNIQUE(IdReceipe, IdIngredient)
 type ReceipeItem struct {
 	IdReceipe    IdReceipe `gomacro-sql-on-delete:"CASCADE"`

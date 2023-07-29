@@ -1,13 +1,14 @@
 package main
 
 import (
+	"github.com/benoitkugler/atable/controllers/library"
 	"github.com/benoitkugler/atable/controllers/sejours"
 	"github.com/benoitkugler/atable/controllers/users"
 
 	"github.com/labstack/echo/v4"
 )
 
-func setupWebAPI(e *echo.Echo, tvc *users.Controller, sej *sejours.Controller) {
+func setupWebAPI(e *echo.Echo, tvc *users.Controller, sej *sejours.Controller, lib *library.Controller) {
 	e.POST("/api/inscription", tvc.AskInscription)
 	e.GET(users.ValidateInscriptionEndPoint, tvc.ValidateInscription)
 	e.POST("/api/loggin", tvc.Loggin)
@@ -37,4 +38,21 @@ func setupWebAPI(e *echo.Echo, tvc *users.Controller, sej *sejours.Controller) {
 	gr.PUT("/api/meals/receipes", sej.MealsAddReceipe)
 	gr.POST("/api/meals/remove", sej.MealsRemoveItem)
 	gr.POST("/api/meals/menus", sej.MealsSetMenu)
+
+	gr.GET("/api/library/all-ingredients", lib.LibraryLoadIngredients)
+	gr.GET("/api/library/all-receipes", lib.LibraryLoadReceipes)
+	gr.GET("/api/library/menus", lib.LibraryLoadMenu)
+	gr.PUT("/api/library/menus", lib.LibraryCreateMenu)
+	gr.GET("/api/library/receipes", lib.LibraryLoadReceipe)
+	gr.PUT("/api/library/receipes", lib.LibraryCreateReceipe)
+	gr.POST("/api/library/receipes", lib.LibraryUpdateReceipe)
+	gr.PUT("/api/library/receipes/ingredients", lib.LibraryAddReceipeIngredient)
+	gr.POST("/api/library/receipes/ingredients", lib.LibraryUpdateReceipeIngredient)
+	gr.DELETE("/api/library/receipes/ingredients", lib.LibraryDeleteReceipeIngredient)
+
+	gr.PUT("/api/library/menus/ingredients", lib.LibraryAddMenuIngredient)
+	gr.POST("/api/library/menus/ingredients", lib.LibraryUpdateMenuIngredient)
+	gr.DELETE("/api/library/menus/ingredients", lib.LibraryDeleteMenuIngredient)
+	gr.PUT("/api/library/menus/receipes", lib.LibraryAddMenuReceipe)
+	gr.DELETE("/api/library/menus/receipes", lib.LibraryDeleteMenuReceipe)
 }

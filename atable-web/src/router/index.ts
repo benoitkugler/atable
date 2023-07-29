@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from "vue-router";
 
 import Sejours from "@/views/Sejours.vue";
 import Agenda from "@/views/Agenda.vue";
+import Library from "@/views/Library.vue";
 
 const routes = [
   {
@@ -14,6 +15,11 @@ const routes = [
     path: "/agenda",
     name: "agenda",
     component: Agenda,
+  },
+  {
+    path: "/library",
+    name: "library",
+    component: Library,
   },
 ];
 

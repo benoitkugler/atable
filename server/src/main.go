@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/benoitkugler/atable/controllers/library"
 	"github.com/benoitkugler/atable/controllers/sejours"
 	"github.com/benoitkugler/atable/controllers/users"
 	"github.com/benoitkugler/atable/mailer"
@@ -118,6 +119,7 @@ func main() {
 	fmt.Println("Admin teacher loaded.")
 
 	sc := sejours.NewController(db, admin)
+	lc := library.NewController(db, admin)
 
 	e := echo.New()
 	e.HideBanner = true
@@ -131,7 +133,7 @@ func main() {
 		devSetup(e, uc)
 	}
 
-	setupRoutes(e, uc, sc)
+	setupRoutes(e, uc, sc, lc)
 
 	if *dryPtr {
 		// sanityChecks(db, *skipValidation)
@@ -208,8 +210,8 @@ func serveWebApp(c echo.Context) error {
 	return c.File("static/web-app/index.html")
 }
 
-func setupRoutes(e *echo.Echo, uc *users.Controller, sc *sejours.Controller) {
-	setupWebAPI(e, uc, sc)
+func setupRoutes(e *echo.Echo, uc *users.Controller, sc *sejours.Controller, lc *library.Controller) {
+	setupWebAPI(e, uc, sc, lc)
 
 	// global static files used by frontend app
 	e.Group("/static", middleware.Gzip(), cacheStatic).Static("/*", "static")

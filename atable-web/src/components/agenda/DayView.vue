@@ -127,6 +127,8 @@
               @update-menu-ingredient="
                 (id) => startUpdateIngredient(id, meal.Meal.Menu)
               "
+              @go-to-menu="goToMenu(meal.Meal.Menu)"
+              @go-to-receipe="goToReceipe"
             ></meal-ext-row>
           </v-list>
         </v-col>
@@ -140,7 +142,6 @@
 
 <script lang="ts" setup>
 import {
-  PlatKind,
   type Horaire,
   type IdGroup,
   type IdIngredient,
@@ -166,6 +167,7 @@ import { onMounted } from "vue";
 import { onActivated } from "vue";
 import MealExtRow from "./MealExtRow.vue";
 import MenuIngredientForm from "./MenuIngredientForm.vue";
+import { useRouter } from "vue-router";
 
 const props = defineProps<{
   offset: number;
@@ -208,7 +210,13 @@ async function createMeal(horaire: Horaire) {
   data.value.Meals = (data.value.Meals || []).concat(res);
   // register the new empty menu
   const m = data.value.Menus || {};
-  m[res.Meal.Menu] = { Ingredients: [], Receipes: [] };
+  m[res.Meal.Menu] = {
+    Id: res.Meal.Menu,
+    Owner: controller.idUser,
+    IsFavorite: false,
+    Ingredients: [],
+    Receipes: [],
+  };
   data.value.Menus = m;
 }
 
@@ -335,5 +343,13 @@ async function updateIngredient() {
   data.value.Menus = m;
 
   menuIngToUpdate.value = null; // close dialog
+}
+
+const router = useRouter();
+function goToMenu(menu: IdMenu) {
+  router.push({ name: "library", query: { "id-menu": menu } });
+}
+function goToReceipe(rec: IdReceipe) {
+  router.push({ name: "library", query: { "id-receipe": rec } });
 }
 </script>

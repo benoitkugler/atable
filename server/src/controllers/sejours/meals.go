@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	lib "github.com/benoitkugler/atable/controllers/library"
 	"github.com/benoitkugler/atable/controllers/users"
 	men "github.com/benoitkugler/atable/sql/menus"
 	sej "github.com/benoitkugler/atable/sql/sejours"
@@ -313,12 +314,6 @@ func (ct *Controller) MealsSearch(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-type ResourceHeader struct {
-	Title       string
-	ID          int64
-	IsPersonnal bool // if false, it is owned by the admin account
-}
-
 type platTitle struct {
 	title string
 	kind  men.PlatKind
@@ -337,20 +332,10 @@ func sortedTitle(chunks []platTitle) string {
 	return s.String()[2:]
 }
 
-type ReceipeHeader struct {
-	ResourceHeader
-	Plat men.PlatKind
-}
-
-type IngredientHeader struct {
-	ResourceHeader
-	Kind men.IngredientKind
-}
-
 type ResourceSearchOut struct {
-	Menus       []ResourceHeader
-	Receipes    []ReceipeHeader
-	Ingredients []IngredientHeader
+	Menus       []lib.ResourceHeader
+	Receipes    []lib.ReceipeHeader
+	Ingredients []lib.IngredientHeader
 }
 
 func (ct *Controller) searchResource(pattern string, uID us.IdUser) (out ResourceSearchOut, err error) {
@@ -396,9 +381,9 @@ func (ct *Controller) searchResource(pattern string, uID us.IdUser) (out Resourc
 	// we are now ready to search
 	pattern = utils.Normalize(pattern)
 	for _, ing := range ingredients {
-		if strings.Contains(utils.Normalize(ing.Name), pattern) {
-			out.Ingredients = append(out.Ingredients, IngredientHeader{
-				ResourceHeader: ResourceHeader{
+		if pattern == "" || strings.Contains(utils.Normalize(ing.Name), pattern) {
+			out.Ingredients = append(out.Ingredients, lib.IngredientHeader{
+				ResourceHeader: lib.ResourceHeader{
 					Title:       ing.Name,
 					ID:          int64(ing.Id),
 					IsPersonnal: false,
@@ -408,9 +393,9 @@ func (ct *Controller) searchResource(pattern string, uID us.IdUser) (out Resourc
 		}
 	}
 	for _, receipe := range receipes {
-		if strings.Contains(utils.Normalize(receipe.Name), pattern) {
-			out.Receipes = append(out.Receipes, ReceipeHeader{
-				ResourceHeader: ResourceHeader{
+		if pattern == "" || strings.Contains(utils.Normalize(receipe.Name), pattern) {
+			out.Receipes = append(out.Receipes, lib.ReceipeHeader{
+				ResourceHeader: lib.ResourceHeader{
 					Title:       receipe.Name,
 					ID:          int64(receipe.Id),
 					IsPersonnal: receipe.Owner == uID,
@@ -438,8 +423,8 @@ func (ct *Controller) searchResource(pattern string, uID us.IdUser) (out Resourc
 			chunks = append(chunks, platTitle{title: rec.Name, kind: rec.Plat})
 		}
 		title := sortedTitle(chunks)
-		if strings.Contains(utils.Normalize(title), pattern) { // return the menu
-			out.Menus = append(out.Menus, ResourceHeader{
+		if pattern == "" || strings.Contains(utils.Normalize(title), pattern) { // return the menu
+			out.Menus = append(out.Menus, lib.ResourceHeader{
 				Title:       title,
 				ID:          int64(menu.Id),
 				IsPersonnal: menu.Owner == uID,
@@ -448,9 +433,13 @@ func (ct *Controller) searchResource(pattern string, uID us.IdUser) (out Resourc
 	}
 
 	sort.Slice(out.Menus, func(i, j int) bool { return out.Menus[i].Title < out.Menus[j].Title })
+
 	sort.Slice(out.Receipes, func(i, j int) bool { return out.Receipes[i].Title < out.Receipes[j].Title })
+	sort.SliceStable(out.Receipes, func(i, j int) bool { return out.Receipes[i].Plat > out.Receipes[j].Plat })
+
 	sort.Slice(out.Ingredients, func(i, j int) bool { return out.Ingredients[i].Title < out.Ingredients[j].Title })
 	sort.SliceStable(out.Ingredients, func(i, j int) bool { return out.Ingredients[i].Kind < out.Ingredients[j].Kind })
+
 	return out, nil
 }
 
@@ -473,26 +462,6 @@ func (ct *Controller) MealsLoad(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-type MenuIngredientExt struct {
-	men.MenuIngredient
-	Ingredient men.Ingredient
-}
-
-type ReceipeIngredientExt struct {
-	men.Ingredient
-	Quantity men.QuantityR
-}
-
-type ReceipeExt struct {
-	Receipe     men.Receipe
-	Ingredients []ReceipeIngredientExt
-}
-
-type MenuExt struct {
-	Ingredients []MenuIngredientExt
-	Receipes    []ReceipeExt
-}
-
 type MealExt struct {
 	Meal   sej.Meal
 	Groups sej.MealGroups
@@ -500,86 +469,8 @@ type MealExt struct {
 
 type MealsLoadOut struct {
 	Groups sej.Groups
-	Menus  map[men.IdMenu]MenuExt
+	Menus  map[men.IdMenu]lib.MenuExt
 	Meals  []MealExt
-}
-
-func loadMenuContents(db men.DB, ids []men.IdMenu) (map[men.IdMenu]MenuExt, error) {
-	menus, err := men.SelectMenus(db, ids...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	// load the menu contents
-	links1, err := men.SelectMenuIngredientsByIdMenus(db, menus.IDs()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	links2, err := men.SelectMenuReceipesByIdMenus(db, menus.IDs()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	receipes, err := men.SelectReceipes(db, links2.IdReceipes()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	links3, err := men.SelectReceipeItemsByIdReceipes(db, receipes.IDs()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	// load ingredients used in menu AND in receipes
-	ingredients, err := men.SelectIngredients(db, append(links1.IdIngredients(), links3.IdIngredients()...)...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	menuToIngredients, menuToReceipes := links1.ByIdMenu(), links2.ByIdMenu()
-	receipeToIngredients := links3.ByIdReceipe()
-
-	// build receipes only once
-	receipeMap := make(map[men.IdReceipe]ReceipeExt)
-	for _, receipe := range receipes {
-		ings := receipeToIngredients[receipe.Id]
-		item := ReceipeExt{
-			Receipe:     receipe,
-			Ingredients: make([]ReceipeIngredientExt, len(ings)),
-		}
-		for i, link := range ings {
-			ing := ingredients[link.IdIngredient]
-			item.Ingredients[i] = ReceipeIngredientExt{
-				Ingredient: ing,
-				Quantity:   link.Quantity,
-			}
-		}
-		receipeMap[receipe.Id] = item
-	}
-
-	// build the menus
-	out := make(map[men.IdMenu]MenuExt, len(menus))
-	for _, menu := range menus {
-		ings, recs := menuToIngredients[menu.Id], menuToReceipes[menu.Id]
-		mIngredients := make([]MenuIngredientExt, len(ings))
-		for i, link := range ings {
-			mIngredients[i] = MenuIngredientExt{
-				MenuIngredient: link,
-				Ingredient:     ingredients[link.IdIngredient],
-			}
-		}
-
-		mReceipes := make([]ReceipeExt, len(recs))
-		for i, link := range recs {
-			mReceipes[i] = receipeMap[link.IdReceipe]
-		}
-		out[menu.Id] = MenuExt{mIngredients, mReceipes}
-	}
-
-	return out, nil
-}
-
-func loadMenuContent(db men.DB, id men.IdMenu) (MenuExt, error) {
-	m, err := loadMenuContents(db, []men.IdMenu{id})
-	return m[id], err
 }
 
 func (ct *Controller) loadMeals(idSejour sej.IdSejour, day int, uID us.IdUser) (out MealsLoadOut, err error) {
@@ -605,7 +496,7 @@ func (ct *Controller) loadMeals(idSejour sej.IdSejour, day int, uID us.IdUser) (
 		return out, utils.SQLError(err)
 	}
 
-	out.Menus, err = loadMenuContents(ct.db, allMeals.Menus())
+	out.Menus, err = lib.LoadMenus(ct.db, allMeals.Menus())
 	if err != nil {
 		return out, err
 	}
@@ -635,7 +526,7 @@ func (ct *Controller) MealsPreview(c echo.Context) error {
 		return utils.SQLError(err)
 	}
 
-	out, err := loadMenuContent(ct.db, meal.Menu)
+	out, err := lib.LoadMenu(ct.db, meal.Menu)
 	if err != nil {
 		return err
 	}
@@ -919,7 +810,7 @@ func (ct *Controller) MealsAddReceipe(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) addReceipe(args AddReceipeIn, uID us.IdUser) (out MenuExt, _ error) {
+func (ct *Controller) addReceipe(args AddReceipeIn, uID us.IdUser) (out lib.MenuExt, _ error) {
 	menu, err := men.SelectMenu(ct.db, args.IdMenu)
 	if err != nil {
 		return out, utils.SQLError(err)
@@ -951,7 +842,7 @@ func (ct *Controller) addReceipe(args AddReceipeIn, uID us.IdUser) (out MenuExt,
 		return out, utils.SQLError(err)
 	}
 
-	m, err := loadMenuContent(ct.db, menu.Id)
+	m, err := lib.LoadMenu(ct.db, menu.Id)
 	return m, err
 }
 
@@ -979,7 +870,7 @@ func (ct *Controller) MealsAddIngredient(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) addIngredient(args AddIngredientIn, uID us.IdUser) (out MenuExt, _ error) {
+func (ct *Controller) addIngredient(args AddIngredientIn, uID us.IdUser) (out lib.MenuExt, _ error) {
 	menu, err := men.SelectMenu(ct.db, args.IdMenu)
 	if err != nil {
 		return out, utils.SQLError(err)
@@ -1008,7 +899,7 @@ func (ct *Controller) addIngredient(args AddIngredientIn, uID us.IdUser) (out Me
 		return out, utils.SQLError(err)
 	}
 
-	m, err := loadMenuContent(ct.db, menu.Id)
+	m, err := lib.LoadMenu(ct.db, menu.Id)
 	return m, err
 }
 
@@ -1036,7 +927,7 @@ func (ct *Controller) MealsSetMenu(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) setMenu(args SetMenuIn, uID us.IdUser) (out MenuExt, _ error) {
+func (ct *Controller) setMenu(args SetMenuIn, uID us.IdUser) (out lib.MenuExt, _ error) {
 	meal, err := sej.SelectMeal(ct.db, args.IdMeal)
 	if err != nil {
 		return out, utils.SQLError(err)
@@ -1082,7 +973,7 @@ func (ct *Controller) setMenu(args SetMenuIn, uID us.IdUser) (out MenuExt, _ err
 		return out, utils.SQLError(err)
 	}
 
-	m, err := loadMenuContent(ct.db, menu.Id)
+	m, err := lib.LoadMenu(ct.db, menu.Id)
 	return m, err
 }
 
@@ -1102,7 +993,7 @@ func (ct *Controller) MealsUpdateMenuIngredient(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) updateMenuIngredient(args men.MenuIngredient, uID us.IdUser) (out MenuExt, _ error) {
+func (ct *Controller) updateMenuIngredient(args men.MenuIngredient, uID us.IdUser) (out lib.MenuExt, _ error) {
 	menu, err := men.SelectMenu(ct.db, args.IdMenu)
 	if err != nil {
 		return out, utils.SQLError(err)
@@ -1130,7 +1021,7 @@ func (ct *Controller) updateMenuIngredient(args men.MenuIngredient, uID us.IdUse
 		return out, utils.SQLError(err)
 	}
 
-	return loadMenuContent(ct.db, menu.Id)
+	return lib.LoadMenu(ct.db, menu.Id)
 }
 
 type RemoveItemIn struct {
@@ -1157,7 +1048,7 @@ func (ct *Controller) MealsRemoveItem(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) removeItemFromMenu(args RemoveItemIn, uID us.IdUser) (out MenuExt, _ error) {
+func (ct *Controller) removeItemFromMenu(args RemoveItemIn, uID us.IdUser) (out lib.MenuExt, _ error) {
 	menu, err := men.SelectMenu(ct.db, args.IdMenu)
 	if err != nil {
 		return out, utils.SQLError(err)
@@ -1175,6 +1066,6 @@ func (ct *Controller) removeItemFromMenu(args RemoveItemIn, uID us.IdUser) (out 
 		return out, utils.SQLError(err)
 	}
 
-	out, err = loadMenuContent(ct.db, menu.Id)
+	out, err = lib.LoadMenu(ct.db, menu.Id)
 	return out, err
 }

@@ -2,7 +2,7 @@
   <v-list-item
     rounded
     class="bg-grey-lighten-5 my-2"
-    @dragover="onDragover"
+    @[!props.menu.IsFavorite&&`dragover`]="onDragover"
     @dragleave="acceptDrop = false"
     @drop="onDrop"
     :elevation="acceptDrop ? 2 : 0"
@@ -50,33 +50,40 @@
             :key="index"
             class="px-1"
           >
-            <v-hover>
-              <template v-slot:default="{ isHovering, props }">
-                <v-chip
-                  label
-                  v-bind="props"
-                  :color="platColors[item.plat]"
-                  :class="{ 'my-1': true, 'pr-0': isHovering }"
-                  @[!item.isReceipe&&`click`]="
-                    emit('updateMenuIngredient', item.id)
-                  "
-                >
-                  <template v-slot:append>
-                    <v-btn
-                      class="my-2 ml-2 mr-1"
-                      variant="tonal"
-                      icon="mdi-close"
-                      v-if="isHovering"
-                      size="26"
-                      @click.stop="emit('removeItem', item.id, item.isReceipe)"
-                    ></v-btn>
-                  </template>
-                  {{ item.title }}
-                </v-chip>
+            <v-chip
+              label
+              :color="platColors[item.plat]"
+              class="my-1 pr-2"
+              @click="
+                item.isReceipe
+                  ? emit('goToReceipe', item.id)
+                  : emit('updateMenuIngredient', item.id)
+              "
+              :disabled="props.menu.IsFavorite"
+            >
+              <template v-slot:append>
+                <v-btn
+                  class="my-2 mr-0"
+                  variant="plain"
+                  icon="mdi-close"
+                  v-if="!props.menu.IsFavorite"
+                  size="26"
+                  @click.stop="emit('removeItem', item.id, item.isReceipe)"
+                ></v-btn>
               </template>
-            </v-hover>
+              {{ item.title }}
+            </v-chip>
           </v-col>
         </v-row>
+      </v-col>
+
+      <v-col cols="auto" v-if="props.menu.IsFavorite" align-self="center">
+        <v-chip
+          prepend-icon="mdi-heart"
+          color="secondary"
+          @click="emit('goToMenu')"
+          >Menu favori</v-chip
+        >
       </v-col>
 
       <v-col cols="auto" align-self="center" class="my-1">
@@ -94,9 +101,9 @@
             <v-list-item>
               <v-btn flat @click="emit('update')">
                 <template v-slot:prepend>
-                  <v-icon>mdi-pencil</v-icon>
+                  <v-icon>mdi-cog</v-icon>
                 </template>
-                Modifier
+                Détails
               </v-btn>
             </v-list-item>
             <v-divider></v-divider>
@@ -125,8 +132,13 @@
 </template>
 
 <script lang="ts" setup>
-import type { Groups, IdIngredient, MealExt, MenuExt } from "@/logic/api_gen";
-import { PlatKind } from "@/logic/api_gen";
+import type {
+  Groups,
+  IdIngredient,
+  IdReceipe,
+  MealExt,
+  MenuExt,
+} from "@/logic/api_gen";
 import {
   ResourceDrag,
   formatHoraire,
@@ -151,6 +163,8 @@ const emit = defineEmits<{
   (event: "addResource", payload: ResourceDrag): void;
   (event: "removeItem", id: number, isReceipe: boolean): void;
   (event: "updateMenuIngredient", id: IdIngredient): void;
+  (event: "goToMenu"): void;
+  (event: "goToReceipe", id: IdReceipe): void;
 }>();
 
 function onGroupDragStart(event: DragEvent, idGroup: number) {
