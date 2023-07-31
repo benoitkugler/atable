@@ -1,14 +1,15 @@
 import 'dart:async';
 
-import 'package:atable/logic/models.dart';
 import 'package:atable/logic/shop.dart';
+import 'package:atable/logic/sql.dart';
+import 'package:atable/logic/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 /// ShopSessionMaster est utilisé pour une séance de course
 /// par l'application maitre (mobile)
 class ShopSessionMaster extends StatefulWidget {
-  final List<RepasExt> repass;
+  final List<MealExt> repass;
 
   const ShopSessionMaster(this.repass, {super.key});
 
@@ -21,7 +22,7 @@ class _ShopSessionMasterState extends State<ShopSessionMaster> {
 
   @override
   void initState() {
-    shopController = ShopControllerLocal(ShopList.fromRepass(widget.repass));
+    shopController = ShopControllerLocal(ShopList.fromMeals(widget.repass));
     super.initState();
   }
 
@@ -81,7 +82,7 @@ class _ShopSection extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
-                formatCategorieIngredient(section.categorie),
+                formatIngredientKind(section.categorie),
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),

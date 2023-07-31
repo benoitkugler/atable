@@ -19,6 +19,18 @@ const (
 	Cinquieme                    // Cinquième
 )
 
+var hours = [...]int{
+	8,
+	12,
+	16,
+	19,
+	22,
+}
+
+func (h Horaire) ApplyTo(date time.Time) time.Time {
+	return time.Date(date.Year(), date.Month(), date.Day(), hours[h], 0, 0, 0, date.Location())
+}
+
 // RestrictByDay restrict the map to the meals
 // registred for the given offset.
 func (ml Meals) RestrictByDay(day int) {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/benoitkugler/atable/pass"
 	"github.com/benoitkugler/atable/sql/menus"
 	sej "github.com/benoitkugler/atable/sql/sejours"
 	tu "github.com/benoitkugler/atable/utils/testutils"
@@ -13,7 +14,7 @@ func TestMeals(t *testing.T) {
 	db, user, _ := setup(t)
 	defer db.Remove()
 
-	ct := NewController(db.DB, user)
+	ct := NewController(db.DB, "", user, pass.Encrypter{})
 	sejour, err := ct.createSejour(user.Id)
 	tu.AssertNoErr(t, err)
 
@@ -26,7 +27,7 @@ func TestAssitantMeals(t *testing.T) {
 	db, user, _ := setup(t)
 	defer db.Remove()
 
-	ct := NewController(db.DB, user)
+	ct := NewController(db.DB, "", user, pass.Encrypter{})
 	sejour, err := ct.createSejour(user.Id)
 	tu.AssertNoErr(t, err)
 	group1 := sejour.Groups[0]
@@ -54,7 +55,7 @@ func TestSearch(t *testing.T) {
 	db, user, _ := setup(t)
 	defer db.Remove()
 
-	ct := NewController(db.DB, user)
+	ct := NewController(db.DB, "", user, pass.Encrypter{})
 	out, err := ct.searchResource("ing", user.Id)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(out.Ingredients) == 2 && len(out.Menus) == 1 && len(out.Receipes) == 0) // two ings and one menu
@@ -67,7 +68,7 @@ func TestSearch(t *testing.T) {
 func TestSQLMeals(t *testing.T) {
 	db, user, _ := setup(t)
 	defer db.Remove()
-	ct := NewController(db.DB, user)
+	ct := NewController(db.DB, "", user, pass.Encrypter{})
 
 	sejour, err := ct.createSejour(user.Id)
 	tu.AssertNoErr(t, err)
@@ -109,7 +110,7 @@ func TestSQLMeals(t *testing.T) {
 func TestMoveGroups(t *testing.T) {
 	db, user, _ := setup(t)
 	defer db.Remove()
-	ct := NewController(db.DB, user)
+	ct := NewController(db.DB, "", user, pass.Encrypter{})
 
 	sejour, err := ct.createSejour(user.Id)
 	tu.AssertNoErr(t, err)
@@ -130,7 +131,7 @@ func TestMoveGroups(t *testing.T) {
 func TestUpdateMenu(t *testing.T) {
 	db, user, menu := setup(t)
 	defer db.Remove()
-	ct := NewController(db.DB, user)
+	ct := NewController(db.DB, "", user, pass.Encrypter{})
 
 	rec, err := menus.Receipe{Owner: user.Id, Name: "Receipe2"}.Insert(db)
 	tu.AssertNoErr(t, err)

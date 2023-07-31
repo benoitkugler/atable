@@ -21,7 +21,7 @@ type Ingredient struct {
 }
 
 // Receipe is a list of ingredients
-// with (relative) quantities (see [ReceipeItem]).
+// with (relative) quantities (see [ReceipeIngredient]).
 //
 // [Receipe]s are owned by users.
 //
@@ -34,11 +34,11 @@ type Receipe struct {
 	Description string // notice, optional
 }
 
-// ReceipeItem is a link object.
+// ReceipeIngredient is a link object.
 //
 // gomacro:SQL _SELECT KEY (IdReceipe, IdIngredient)
 // gomacro:SQL ADD UNIQUE(IdReceipe, IdIngredient)
-type ReceipeItem struct {
+type ReceipeIngredient struct {
 	IdReceipe    IdReceipe `gomacro-sql-on-delete:"CASCADE"`
 	IdIngredient IdIngredient
 	Quantity     QuantityR

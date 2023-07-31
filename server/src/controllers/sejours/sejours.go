@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/benoitkugler/atable/controllers/users"
+	"github.com/benoitkugler/atable/pass"
 	sej "github.com/benoitkugler/atable/sql/sejours"
 	us "github.com/benoitkugler/atable/sql/users"
 	"github.com/benoitkugler/atable/utils"
@@ -21,11 +22,13 @@ var errAccessForbidden = errors.New("resource access forbidden")
 
 type Controller struct {
 	db    *sql.DB
+	host  string
 	admin us.User
+	key   pass.Encrypter
 }
 
-func NewController(db *sql.DB, admin us.User) *Controller {
-	return &Controller{db: db, admin: admin}
+func NewController(db *sql.DB, host string, admin us.User, key pass.Encrypter) *Controller {
+	return &Controller{db: db, host: host, admin: admin, key: key}
 }
 
 // SejoursGet return the [Sejour]s owned by the user
@@ -43,6 +46,9 @@ func (ct *Controller) SejoursGet(c echo.Context) error {
 type SejourExt struct {
 	Sejour sej.Sejour
 	Groups []sej.Group
+
+	// URL for a JSON file, to use in the client mobile app
+	ExportClientURL string
 }
 
 func (ct *Controller) getSejours(uID us.IdUser) ([]SejourExt, error) {
@@ -65,9 +71,14 @@ func (ct *Controller) getSejours(uID us.IdUser) ([]SejourExt, error) {
 		}
 		sort.Slice(groupList, func(i, j int) bool { return groupList[i].Id < groupList[j].Id })
 
+		cryptedID := ct.key.EncryptID(int64(sejour.Id))
+		clientURL := utils.BuildUrl(ct.host, ClientEnpoint,
+			map[string]string{clientQueryParam: string(cryptedID)})
+
 		out = append(out, SejourExt{
-			Sejour: sejour,
-			Groups: groupList,
+			Sejour:          sejour,
+			Groups:          groupList,
+			ExportClientURL: clientURL,
 		})
 	}
 

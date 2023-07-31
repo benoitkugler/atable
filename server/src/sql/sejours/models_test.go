@@ -29,9 +29,9 @@ func setup(t *testing.T, db tu.TestDB) (_ users.User, _, _ menus.Menu) {
 	tu.AssertNoErr(t, err)
 
 	db.InTx(func(tx *sql.Tx) {
-		err = menus.InsertManyReceipeItems(tx,
-			menus.ReceipeItem{IdReceipe: rec.Id, IdIngredient: ing1.Id},
-			menus.ReceipeItem{IdReceipe: rec.Id, IdIngredient: ing2.Id},
+		err = menus.InsertManyReceipeIngredients(tx,
+			menus.ReceipeIngredient{IdReceipe: rec.Id, IdIngredient: ing1.Id},
+			menus.ReceipeIngredient{IdReceipe: rec.Id, IdIngredient: ing2.Id},
 		)
 		tu.AssertNoErr(t, err)
 

@@ -1,40 +1,38 @@
-import 'package:atable/components/details_menu.dart';
+// import 'package:atable/components/details_menu.dart';
+import 'dart:math';
+
 import 'package:atable/components/shared.dart';
 import 'package:atable/components/shop_list.dart';
-import 'package:atable/logic/models.dart';
+import 'package:atable/logic/debug.dart';
+import 'package:atable/logic/shop.dart';
 import 'package:atable/logic/sql.dart';
+import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_sejours.dart';
+import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
 import 'package:atable/logic/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
-class RepasList extends StatefulWidget {
+class MealList extends StatefulWidget {
   final DBApi db;
-  final ValueNotifier<int> scrollTo;
 
-  const RepasList(this.db, this.scrollTo, {super.key});
+  const MealList(this.db, {super.key});
 
   @override
-  State<RepasList> createState() => _RepasListState();
+  State<MealList> createState() => _MealListState();
 }
 
-class _RepasListState extends State<RepasList> {
-  List<RepasExt> repass = [];
+class _MealListState extends State<MealList> {
+  List<MealExt> meals = [];
   final _scrollController = ItemScrollController();
 
-  // indices into [repass]
-  Set<int> selectedRepas = {};
+  // indices into [meals]
+  Set<int> selectedMeal = {};
 
   @override
   void initState() {
-    _loadRepas();
-    widget.scrollTo.addListener(_scrollToRepas);
+    _loadMeals();
     super.initState();
-  }
-
-  @override
-  void dispose() {
-    widget.scrollTo.removeListener(_scrollToRepas);
-    super.dispose();
   }
 
   @override
@@ -44,11 +42,17 @@ class _RepasListState extends State<RepasList> {
         title: const Text("Repas programmés"),
         actions: [
           IconButton(
-              onPressed: selectedRepas.isEmpty ? null : _showShop,
+              onPressed: () async {
+                await widget.db.importSejour(data);
+                _loadMeals();
+              },
+              icon: const Icon(Icons.download)),
+          IconButton(
+              onPressed: selectedMeal.isEmpty ? null : _showShop,
               icon: const Icon(Icons.store))
         ],
       ),
-      body: repass.isEmpty
+      body: meals.isEmpty
           ? const Center(
               child: Text("Aucun repas."),
             )
@@ -56,57 +60,55 @@ class _RepasListState extends State<RepasList> {
               padding: const EdgeInsets.only(
                   bottom: 50), // avoid add button hiding nbPersonnes field
               itemScrollController: _scrollController,
-              itemCount: repass.length,
+              itemCount: meals.length,
               itemBuilder: (context, index) => DismissibleDelete(
-                    itemKey: repass[index].repas.id,
-                    onDissmissed: () => _deleteRepas(repass[index]),
-                    confirmDismiss: () => _confirmeDelete(repass[index]),
-                    child: _RepasCard(
-                      repass[index],
-                      selectedRepas.contains(index),
+                    itemKey: meals[index].meal.id,
+                    onDissmissed: () => _deleteMeal(meals[index]),
+                    confirmDismiss: () => _confirmeDelete(meals[index]),
+                    child: _MealCard(
+                      meals[index],
+                      selectedMeal.contains(index),
                       () => _showMenuDetails(index),
-                      () => _onSelectRepas(index),
-                      (m) => _editRepas(index, m),
+                      () => _onSelectMeal(index),
+                      (m) => _editMeal(index, m),
                     ),
                   )),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addRepas,
-        child: const Icon(Icons.add),
-      ),
     );
   }
 
-  void _onSelectRepas(int index) {
-    // if the repas is currently selected, just unselect
-    final isSelected = selectedRepas.contains(index);
+  void _onSelectMeal(int index) {
+    // if the meal is currently selected, just unselect
+    final isSelected = selectedMeal.contains(index);
     if (isSelected) {
-      setState(() => selectedRepas.remove(index));
+      setState(() => selectedMeal.remove(index));
     } else {
       // select the range between the previous selected, if any
-      final l = selectedRepas.where((element) => element < index).toList();
+      final l = selectedMeal.where((element) => element < index).toList();
       l.sort();
       if (l.isEmpty) {
         // no selected element before index
-        setState(() => selectedRepas.add(index));
+        setState(() => selectedMeal.add(index));
       } else {
         final start = l.last;
         setState(() {
           for (var i = start; i <= index; i++) {
-            selectedRepas.add(i);
+            selectedMeal.add(i);
           }
         });
       }
     }
   }
 
-  void _scrollToRepas() async {
-    final id = widget.scrollTo.value;
-    final index = repass.indexWhere((element) => element.repas.id == id);
-    await _scrollToIndex(index);
-  }
+  void _scrollToClosest() {
+    if (meals.isEmpty) return;
 
-  void _scrollToEnd() {
-    _scrollToIndex(repass.length - 1);
+    // find the closest meal from the current time
+    final now = DateTime.now();
+    final distances =
+        meals.map((e) => now.difference(e.meal.date).inMinutes.abs()).toList();
+    final minDiff = distances.reduce(min);
+    final index = distances.indexOf(minDiff);
+    _scrollToIndex(index);
   }
 
   Future<void> _scrollToIndex(int index) async {
@@ -121,39 +123,25 @@ class _RepasListState extends State<RepasList> {
             ));
   }
 
-  void _loadRepas() async {
-    final l = await widget.db.getRepas();
+  void _loadMeals() async {
+    final l = await widget.db.getMeals();
     if (mounted) {
       setState(() {
-        repass = l;
-        selectedRepas = {};
+        meals = l;
+        selectedMeal = {};
       });
     }
+
+    _scrollToClosest();
   }
 
-  void _addRepas() async {
-    final newMenu = await widget.db
-        .createMenu(const Menu(id: 0, nbPersonnes: 10, label: ""));
-    final repasProps = (await widget.db.guessRepasProperties());
-
-    final newRepas =
-        await widget.db.createRepas(repasProps.copyWith(idMenu: newMenu.id));
-
-    setState(() {
-      repass.add(
-          RepasExt(newRepas, MenuExt(newMenu, [], []))); // préserve l'ordre
-    });
-
-    _scrollToEnd();
-  }
-
-  void _editRepas(int oldRepasIndex, Repas newRepas) async {
+  void _editMeal(int oldMealIndex, MealM newMeal) async {
     // met à jour le menu ...
-    await widget.db.updateRepas(newRepas);
+    await widget.db.updateMeal(newMeal);
 
     setState(() {
-      repass[oldRepasIndex] = repass[oldRepasIndex].copyWith(repas: newRepas);
-      repass.sort((a, b) => a.repas.date.compareTo(b.repas.date));
+      meals[oldMealIndex] = meals[oldMealIndex].copyWith(meal: newMeal);
+      meals.sort((a, b) => a.meal.date.compareTo(b.meal.date));
     });
 
     if (!mounted) return;
@@ -163,9 +151,9 @@ class _RepasListState extends State<RepasList> {
     ));
   }
 
-  Future<bool> _confirmeDelete(RepasExt repas) async {
+  Future<bool> _confirmeDelete(MealExt meal) async {
     final isMenuEmpty =
-        repas.menu.recettes.isEmpty && repas.menu.ingredients.isEmpty;
+        meal.menu.receipes.isEmpty && meal.menu.ingredients.isEmpty;
     if (isMenuEmpty) return true;
 
     final confirm = await showDialog<bool>(
@@ -184,12 +172,12 @@ class _RepasListState extends State<RepasList> {
     return confirm ?? false;
   }
 
-  void _deleteRepas(RepasExt repas) async {
+  void _deleteMeal(MealExt meal) async {
     setState(() {
-      repass.removeWhere((element) => element.repas.id == repas.repas.id);
-      selectedRepas = {}; // the indices have changed
+      meals.removeWhere((element) => element.meal.id == meal.meal.id);
+      selectedMeal = {}; // the indices have changed
     });
-    await widget.db.deleteRepas(repas.repas);
+    await widget.db.deleteMeal(meal.meal.id);
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -197,57 +185,59 @@ class _RepasListState extends State<RepasList> {
   }
 
   void _showMenuDetails(int menuIndex) async {
-    var menu = repass[menuIndex].menu;
+    var menu = meals[menuIndex].menu;
     await Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => DetailsMenu(widget.db, menu),
+      // builder: (context) => DetailsMenu(widget.db, menu),
+      builder: (context) => Placeholder(),
     ));
 
     // met à jour les données
     menu = await widget.db.getMenu(menu.menu.id);
     setState(() {
-      for (var i = 0; i < repass.length; i++) {
-        if (repass[i].menu.menu.id == menu.menu.id) {
-          repass[i] = repass[i].copyWith(menu: menu);
+      for (var i = 0; i < meals.length; i++) {
+        if (meals[i].menu.menu.id == menu.menu.id) {
+          meals[i] = meals[i].copyWith(menu: menu);
         }
       }
     });
   }
 
   void _showShop() async {
-    final selectedRepasL = selectedRepas.map((e) => repass[e]).toList();
+    final selectedMealL = selectedMeal.map((e) => meals[e]).toList();
     await Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => ShopSessionMaster(selectedRepasL),
+      builder: (context) => ShopSessionMaster(selectedMealL),
     ));
     setState(() {
-      selectedRepas.clear();
+      selectedMeal.clear();
     });
   }
 }
 
-class _RepasCard extends StatefulWidget {
-  final RepasExt repas;
+class _MealCard extends StatefulWidget {
+  final MealExt meal;
   final bool isSelected;
 
   final void Function() onTap;
   final void Function() onLongPress;
-  final void Function(Repas repas) onEdit;
+  final void Function(MealM meal) onEdit;
 
-  const _RepasCard(
-      this.repas, this.isSelected, this.onTap, this.onLongPress, this.onEdit,
+  const _MealCard(
+      this.meal, this.isSelected, this.onTap, this.onLongPress, this.onEdit,
       {super.key});
 
   @override
-  State<_RepasCard> createState() => _RepasCardState();
+  State<_MealCard> createState() => _MealCardState();
 }
 
-class _RepasCardState extends State<_RepasCard> {
+class _MealCardState extends State<_MealCard> {
   bool isEditingNbPersonnes = false;
+  bool isShowingDetails = false;
 
   @override
   Widget build(BuildContext context) {
-    final repas = widget.repas.repas;
-    final plats = widget.repas.requiredQuantites().entries.toList();
-    plats.sort((a, b) => a.key.index - b.key.index);
+    final meal = widget.meal.meal;
+    final plats = widget.meal.requiredQuantities().entries.toList();
+    plats.sort((a, b) => -(a.key.index - b.key.index));
 
     return Card(
       color: widget.isSelected ? Colors.yellow.shade100 : Colors.white,
@@ -264,20 +254,20 @@ class _RepasCardState extends State<_RepasCard> {
                 TextButton(
                   onPressed: _showDateEditor,
                   child: Text(
-                    widget.repas.repas.formatJour(),
+                    formatDate(widget.meal.meal.date),
                     style: const TextStyle(fontSize: 16),
                   ),
                 ),
                 const Text(" -  "),
-                PopupMenuButton<MomentRepas>(
-                  itemBuilder: (context) => MomentRepas.values
+                PopupMenuButton<Horaire>(
+                  itemBuilder: (context) => Horaire.values
                       .map((e) => PopupMenuItem(value: e, child: Text(e.label)))
                       .toList(),
-                  initialValue: MomentRepasE.fromDateTime(repas.date),
+                  initialValue: HoraireE.fromDateTime(meal.date),
                   onSelected: (m) => widget
-                      .onEdit(repas.copyWith(date: m.toDateTime(repas.date))),
+                      .onEdit(meal.copyWith(date: m.toDateTime(meal.date))),
                   child: Text(
-                    widget.repas.repas.formatHeure(),
+                    formatHeure(widget.meal.meal.date),
                     style: TextStyle(
                       color: Theme.of(context).primaryColor,
                       fontSize: 16,
@@ -311,11 +301,11 @@ class _RepasCardState extends State<_RepasCard> {
                             visualDensity: const VisualDensity(vertical: -3)),
                         onPressed: () =>
                             setState(() => isEditingNbPersonnes = true),
-                        child: Text("Pour ${widget.repas.repas.nbPersonnes}")),
+                        child: Text("Pour ${widget.meal.meal.for_}")),
               ]),
             ),
-            widget.repas.menu.ingredients.isEmpty &&
-                    widget.repas.menu.recettes.isEmpty
+            widget.meal.menu.ingredients.isEmpty &&
+                    widget.meal.menu.receipes.isEmpty
                 ? const Padding(
                     padding: EdgeInsets.all(12.0),
                     child: Text(
@@ -323,28 +313,69 @@ class _RepasCardState extends State<_RepasCard> {
                       style: TextStyle(fontStyle: FontStyle.italic),
                     ),
                   )
-                : Padding(
-                    padding: const EdgeInsets.all(4.0),
-                    child: Column(
-                        children: plats
-                            .map((item) => _PlatCard(item.key, item.value))
-                            .toList()),
-                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                        isShowingDetails
+                            ? Expanded(
+                                child: Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: Column(
+                                    children: plats
+                                        .map((item) =>
+                                            _PlatCard(item.key, item.value))
+                                        .toList()),
+                              ))
+                            : Expanded(child: _MenuSummary(widget.meal.menu)),
+                        Column(
+                          children: [
+                            IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    isShowingDetails = !isShowingDetails;
+                                  });
+                                },
+                                icon: isShowingDetails
+                                    ? const Icon(Icons.clear)
+                                    : const Icon(Icons.list)),
+                            IconButton(
+                                onPressed: _copy, icon: const Icon(Icons.copy)),
+                          ],
+                        )
+                      ])
           ],
         ),
       ),
     );
   }
 
+  void _copy() async {
+    final plats = widget.meal.requiredQuantities().entries.toList();
+    plats.sort((a, b) => -(a.key.index - b.key.index));
+
+    final text = plats
+        .map((e) => e.value
+            .map((e) =>
+                "${e.ingredient.name} : ${formatQuantite(e.quantite)} ${formatUnite(e.unite)}")
+            .join("\n"))
+        .join("\n\n");
+
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        backgroundColor: Colors.green,
+        content: Text("Menu copié dans le presse-papier")));
+  }
+
   void _onEditNbDone(String value) {
-    widget.onEdit(widget.repas.repas.copyWith(nbPersonnes: int.parse(value)));
+    widget.onEdit(widget.meal.meal.copyWith(for_: int.parse(value)));
     setState(() {
       isEditingNbPersonnes = false;
     });
   }
 
   void _showDateEditor() async {
-    final date = widget.repas.repas.date;
+    final date = widget.meal.meal.date;
     final lastDate = DateTime.now().add(const Duration(days: 365));
     final newDate = await showDatePicker(
         context: context,
@@ -353,14 +384,54 @@ class _RepasCardState extends State<_RepasCard> {
         lastDate: lastDate);
 
     if (newDate == null) return;
-    widget.onEdit(widget.repas.repas.copyWith(
+    widget.onEdit(widget.meal.meal.copyWith(
         date: newDate.add(Duration(minutes: date.minute, hours: date.hour))));
   }
 }
 
+class _MenuSummary extends StatelessWidget {
+  final MenuExt menu;
+  const _MenuSummary(this.menu, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final byPlat = <PlatKind, List<String>>{};
+    for (var ingredient in menu.ingredients) {
+      final l = byPlat.putIfAbsent(ingredient.link.plat, () => []);
+      l.add(ingredient.ingredient.name);
+    }
+    for (var receipe in menu.receipes) {
+      final l = byPlat.putIfAbsent(receipe.receipe.plat, () => []);
+      l.add(receipe.receipe.name);
+    }
+    for (var l in byPlat.values) {
+      l.sort();
+    }
+    final plats = byPlat.entries.toList();
+    plats.sort((a, b) => -(a.key.index - b.key.index));
+
+    return Padding(
+      padding: const EdgeInsets.all(4.0),
+      child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: plats
+              .map((item) => Card(
+                    color: item.key.color.withOpacity(0.8),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: Column(
+                        children: item.value.map((e) => Text(e)).toList(),
+                      ),
+                    ),
+                  ))
+              .toList()),
+    );
+  }
+}
+
 class _PlatCard extends StatelessWidget {
-  final CategoriePlat plat;
-  final List<IngQuant> ingredients;
+  final PlatKind plat;
+  final List<QuantityIngredient> ingredients;
   const _PlatCard(this.plat, this.ingredients, {super.key});
 
   @override
@@ -379,14 +450,15 @@ class _PlatCard extends StatelessWidget {
 }
 
 class _IngQuantRow extends StatelessWidget {
-  final IngQuant ing;
+  final QuantityIngredient ing;
   const _IngQuantRow(this.ing, {super.key});
 
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(ing.ingredient.nom),
+        Text(ing.ingredient.name),
         const Spacer(),
         Text("${formatQuantite(ing.quantite)} ${formatUnite(ing.unite)}"),
       ],

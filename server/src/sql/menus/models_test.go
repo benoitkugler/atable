@@ -32,9 +32,9 @@ func TestSQL(t *testing.T) {
 	tu.AssertNoErr(t, err)
 
 	db.InTx(func(tx *sql.Tx) {
-		err = InsertManyReceipeItems(tx,
-			ReceipeItem{IdReceipe: rec.Id, IdIngredient: ing1.Id, Quantity: randReceipeItem().Quantity},
-			ReceipeItem{IdReceipe: rec.Id, IdIngredient: ing2.Id, Quantity: randReceipeItem().Quantity},
+		err = InsertManyReceipeIngredients(tx,
+			ReceipeIngredient{IdReceipe: rec.Id, IdIngredient: ing1.Id, Quantity: randReceipeIngredient().Quantity},
+			ReceipeIngredient{IdReceipe: rec.Id, IdIngredient: ing2.Id, Quantity: randReceipeIngredient().Quantity},
 		)
 		tu.AssertNoErr(t, err)
 

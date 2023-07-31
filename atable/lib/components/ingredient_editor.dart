@@ -1,5 +1,5 @@
 import 'package:atable/logic/ingredients_table.dart';
-import 'package:atable/logic/models.dart';
+import 'package:atable/logic/models.back';
 import 'package:atable/logic/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

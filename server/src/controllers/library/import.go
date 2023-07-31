@@ -397,12 +397,12 @@ func (ct *Controller) importCSV2(args ImportReceipes2In, uID us.IdUser) ([]Recei
 				Ingredients: make([]ReceipeIngredientExt, len(receipe.Ingredients)),
 			}
 
-			links := make(men.ReceipeItems, len(receipe.Ingredients))
+			links := make(men.ReceipeIngredients, len(receipe.Ingredients))
 			for i, ing := range receipe.Ingredients {
 				quantity := men.QuantityR{Val: ing.Quantity, Unite: ing.Unite, For: receipe.For}
 				resolvedIngredient := args.Map[ing.Name]
 
-				links[i] = men.ReceipeItem{
+				links[i] = men.ReceipeIngredient{
 					IdReceipe:    rec.Id,
 					IdIngredient: resolvedIngredient.Id,
 					Quantity:     quantity,
@@ -413,7 +413,7 @@ func (ct *Controller) importCSV2(args ImportReceipes2In, uID us.IdUser) ([]Recei
 					Quantity:   quantity,
 				}
 			}
-			err = men.InsertManyReceipeItems(tx, links...)
+			err = men.InsertManyReceipeIngredients(tx, links...)
 			if err != nil {
 				return utils.SQLError(err)
 			}

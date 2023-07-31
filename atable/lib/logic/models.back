@@ -427,7 +427,7 @@ class Repas {
 
   /// [formatHeure] renvoie l'horaire du menu, formaté.
   String formatHeure() {
-    final moment = MomentRepasE.fromDateTime(date);
+    final moment = HoraireE.fromDateTime(date);
     if (moment != null) {
       return moment.label;
     }
@@ -564,18 +564,6 @@ Map<CategoriePlat, List<RecetteExt>> recettesByPlats(
     l.add(ing);
   }
   return crible;
-}
-
-/// [RecetteExt] est une [Recette] associé à tous ses ingrédients.
-class RecetteExt {
-  final Recette recette;
-  final List<RecetteIngredientExt> ingredients;
-  const RecetteExt(this.recette, this.ingredients);
-
-  RecetteExt copyWith(
-      {Recette? recette, List<RecetteIngredientExt>? ingredients}) {
-    return RecetteExt(recette ?? this.recette, ingredients ?? this.ingredients);
-  }
 }
 
 /// [MenuExt] est un [Menu] associé à tous ses ingrédients.

@@ -1,4 +1,9 @@
 {
+    "_dart": [
+        {
+            "Output": "../../atable/lib/logic/types/"
+        }
+    ],
     "sql/users/models.go": [
         {
             "Mode": "sql",
@@ -41,6 +46,12 @@
         {
             "Mode": "typescript/api",
             "Output": "../../atable-web/src/logic/api_gen.ts"
+        }
+    ],
+    "controllers/sejours/mobile_api_types.go": [
+        {
+            "Mode": "dart",
+            "Output": ""
         }
     ]
 }

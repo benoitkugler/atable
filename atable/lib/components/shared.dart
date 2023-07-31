@@ -1,17 +1,18 @@
-import 'package:atable/logic/models.dart';
+import 'package:atable/logic/sql.dart';
+import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
 import 'package:atable/logic/utils.dart';
 import 'package:flutter/material.dart';
 
-extension CategoriePlatColor on CategoriePlat {
+extension CategoriePlatColor on PlatKind {
   Color get color {
     switch (this) {
-      case CategoriePlat.entree:
+      case PlatKind.entree:
         return Colors.green.shade200;
-      case CategoriePlat.platPrincipal:
+      case PlatKind.platPrincipal:
         return Colors.deepOrange.shade200;
-      case CategoriePlat.dessert:
+      case PlatKind.dessert:
         return Colors.pink.shade200;
-      case CategoriePlat.divers:
+      case PlatKind.empty:
         return Colors.grey.shade300;
     }
   }
@@ -127,7 +128,7 @@ class _NombrePersonneEditorState extends State<NombrePersonneEditor> {
 }
 
 /// [IngredientRow] montre un ingrédient et sa quantité
-class IngredientRow<T extends IngQuantI> extends StatefulWidget {
+class IngredientRow<T extends QuantifiedIngI> extends StatefulWidget {
   final T ingredient;
 
   final void Function(double quantite) onEditQuantite;
@@ -142,7 +143,8 @@ class IngredientRow<T extends IngQuantI> extends StatefulWidget {
   State<IngredientRow> createState() => _IngredientRowState();
 }
 
-class _IngredientRowState<T extends IngQuantI> extends State<IngredientRow<T>> {
+class _IngredientRowState<T extends QuantifiedIngI>
+    extends State<IngredientRow<T>> {
   bool isEditingQuantity = false;
 
   @override
@@ -158,7 +160,7 @@ class _IngredientRowState<T extends IngQuantI> extends State<IngredientRow<T>> {
             children: [
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Text(ing.ingredient.nom),
+                child: Text(ing.ingredient.name),
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -172,8 +174,8 @@ class _IngredientRowState<T extends IngQuantI> extends State<IngredientRow<T>> {
             onTap: widget.onTap,
             visualDensity: const VisualDensity(vertical: -3),
             dense: true,
-            title: Text(ing.ingredient.nom),
-            subtitle: Text(formatCategorieIngredient(ing.ingredient.categorie)),
+            title: Text(ing.ingredient.name),
+            subtitle: Text(formatIngredientKind(ing.ingredient.kind)),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [

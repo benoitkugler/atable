@@ -811,8 +811,8 @@ func DeleteReceipesByOwners(tx DB, owners_ ...users.IdUser) ([]IdReceipe, error)
 	return ScanIdReceipeArray(rows)
 }
 
-func scanOneReceipeItem(row scanner) (ReceipeItem, error) {
-	var item ReceipeItem
+func scanOneReceipeIngredient(row scanner) (ReceipeIngredient, error) {
+	var item ReceipeIngredient
 	err := row.Scan(
 		&item.IdReceipe,
 		&item.IdIngredient,
@@ -821,22 +821,24 @@ func scanOneReceipeItem(row scanner) (ReceipeItem, error) {
 	return item, err
 }
 
-func ScanReceipeItem(row *sql.Row) (ReceipeItem, error) { return scanOneReceipeItem(row) }
+func ScanReceipeIngredient(row *sql.Row) (ReceipeIngredient, error) {
+	return scanOneReceipeIngredient(row)
+}
 
-// SelectAll returns all the items in the receipe_items table.
-func SelectAllReceipeItems(db DB) (ReceipeItems, error) {
-	rows, err := db.Query("SELECT * FROM receipe_items")
+// SelectAll returns all the items in the receipe_ingredients table.
+func SelectAllReceipeIngredients(db DB) (ReceipeIngredients, error) {
+	rows, err := db.Query("SELECT * FROM receipe_ingredients")
 	if err != nil {
 		return nil, err
 	}
-	return ScanReceipeItems(rows)
+	return ScanReceipeIngredients(rows)
 }
 
-type ReceipeItems []ReceipeItem
+type ReceipeIngredients []ReceipeIngredient
 
-func ScanReceipeItems(rs *sql.Rows) (ReceipeItems, error) {
+func ScanReceipeIngredients(rs *sql.Rows) (ReceipeIngredients, error) {
 	var (
-		item ReceipeItem
+		item ReceipeIngredient
 		err  error
 	)
 	defer func() {
@@ -845,9 +847,9 @@ func ScanReceipeItems(rs *sql.Rows) (ReceipeItems, error) {
 			err = errClose
 		}
 	}()
-	structs := make(ReceipeItems, 0, 16)
+	structs := make(ReceipeIngredients, 0, 16)
 	for rs.Next() {
-		item, err = scanOneReceipeItem(rs)
+		item, err = scanOneReceipeIngredient(rs)
 		if err != nil {
 			return nil, err
 		}
@@ -859,14 +861,14 @@ func ScanReceipeItems(rs *sql.Rows) (ReceipeItems, error) {
 	return structs, nil
 }
 
-// Insert the links ReceipeItem in the database.
+// Insert the links ReceipeIngredient in the database.
 // It is a no-op if 'items' is empty.
-func InsertManyReceipeItems(tx *sql.Tx, items ...ReceipeItem) error {
+func InsertManyReceipeIngredients(tx *sql.Tx, items ...ReceipeIngredient) error {
 	if len(items) == 0 {
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("receipe_items",
+	stmt, err := tx.Prepare(pq.CopyIn("receipe_ingredients",
 		"idreceipe",
 		"idingredient",
 		"quantity",
@@ -892,16 +894,16 @@ func InsertManyReceipeItems(tx *sql.Tx, items ...ReceipeItem) error {
 	return nil
 }
 
-// Delete the link ReceipeItem from the database.
+// Delete the link ReceipeIngredient from the database.
 // Only the foreign keys IdReceipe, IdIngredient fields are used in 'item'.
-func (item ReceipeItem) Delete(tx DB) error {
-	_, err := tx.Exec(`DELETE FROM receipe_items WHERE IdReceipe = $1 AND IdIngredient = $2;`, item.IdReceipe, item.IdIngredient)
+func (item ReceipeIngredient) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM receipe_ingredients WHERE IdReceipe = $1 AND IdIngredient = $2;`, item.IdReceipe, item.IdIngredient)
 	return err
 }
 
 // ByIdReceipe returns a map with 'IdReceipe' as keys.
-func (items ReceipeItems) ByIdReceipe() map[IdReceipe]ReceipeItems {
-	out := make(map[IdReceipe]ReceipeItems)
+func (items ReceipeIngredients) ByIdReceipe() map[IdReceipe]ReceipeIngredients {
+	out := make(map[IdReceipe]ReceipeIngredients)
 	for _, target := range items {
 		out[target.IdReceipe] = append(out[target.IdReceipe], target)
 	}
@@ -911,7 +913,7 @@ func (items ReceipeItems) ByIdReceipe() map[IdReceipe]ReceipeItems {
 // IdReceipes returns the list of ids of IdReceipe
 // contained in this link table.
 // They are not garanteed to be distinct.
-func (items ReceipeItems) IdReceipes() []IdReceipe {
+func (items ReceipeIngredients) IdReceipes() []IdReceipe {
 	out := make([]IdReceipe, len(items))
 	for index, target := range items {
 		out[index] = target.IdReceipe
@@ -919,25 +921,25 @@ func (items ReceipeItems) IdReceipes() []IdReceipe {
 	return out
 }
 
-func SelectReceipeItemsByIdReceipes(tx DB, idReceipes_ ...IdReceipe) (ReceipeItems, error) {
-	rows, err := tx.Query("SELECT * FROM receipe_items WHERE idreceipe = ANY($1)", IdReceipeArrayToPQ(idReceipes_))
+func SelectReceipeIngredientsByIdReceipes(tx DB, idReceipes_ ...IdReceipe) (ReceipeIngredients, error) {
+	rows, err := tx.Query("SELECT * FROM receipe_ingredients WHERE idreceipe = ANY($1)", IdReceipeArrayToPQ(idReceipes_))
 	if err != nil {
 		return nil, err
 	}
-	return ScanReceipeItems(rows)
+	return ScanReceipeIngredients(rows)
 }
 
-func DeleteReceipeItemsByIdReceipes(tx DB, idReceipes_ ...IdReceipe) (ReceipeItems, error) {
-	rows, err := tx.Query("DELETE FROM receipe_items WHERE idreceipe = ANY($1) RETURNING *", IdReceipeArrayToPQ(idReceipes_))
+func DeleteReceipeIngredientsByIdReceipes(tx DB, idReceipes_ ...IdReceipe) (ReceipeIngredients, error) {
+	rows, err := tx.Query("DELETE FROM receipe_ingredients WHERE idreceipe = ANY($1) RETURNING *", IdReceipeArrayToPQ(idReceipes_))
 	if err != nil {
 		return nil, err
 	}
-	return ScanReceipeItems(rows)
+	return ScanReceipeIngredients(rows)
 }
 
 // ByIdIngredient returns a map with 'IdIngredient' as keys.
-func (items ReceipeItems) ByIdIngredient() map[IdIngredient]ReceipeItems {
-	out := make(map[IdIngredient]ReceipeItems)
+func (items ReceipeIngredients) ByIdIngredient() map[IdIngredient]ReceipeIngredients {
+	out := make(map[IdIngredient]ReceipeIngredients)
 	for _, target := range items {
 		out[target.IdIngredient] = append(out[target.IdIngredient], target)
 	}
@@ -947,7 +949,7 @@ func (items ReceipeItems) ByIdIngredient() map[IdIngredient]ReceipeItems {
 // IdIngredients returns the list of ids of IdIngredient
 // contained in this link table.
 // They are not garanteed to be distinct.
-func (items ReceipeItems) IdIngredients() []IdIngredient {
+func (items ReceipeIngredients) IdIngredients() []IdIngredient {
 	out := make([]IdIngredient, len(items))
 	for index, target := range items {
 		out[index] = target.IdIngredient
@@ -955,45 +957,45 @@ func (items ReceipeItems) IdIngredients() []IdIngredient {
 	return out
 }
 
-func SelectReceipeItemsByIdIngredients(tx DB, idIngredients_ ...IdIngredient) (ReceipeItems, error) {
-	rows, err := tx.Query("SELECT * FROM receipe_items WHERE idingredient = ANY($1)", IdIngredientArrayToPQ(idIngredients_))
+func SelectReceipeIngredientsByIdIngredients(tx DB, idIngredients_ ...IdIngredient) (ReceipeIngredients, error) {
+	rows, err := tx.Query("SELECT * FROM receipe_ingredients WHERE idingredient = ANY($1)", IdIngredientArrayToPQ(idIngredients_))
 	if err != nil {
 		return nil, err
 	}
-	return ScanReceipeItems(rows)
+	return ScanReceipeIngredients(rows)
 }
 
-func DeleteReceipeItemsByIdIngredients(tx DB, idIngredients_ ...IdIngredient) (ReceipeItems, error) {
-	rows, err := tx.Query("DELETE FROM receipe_items WHERE idingredient = ANY($1) RETURNING *", IdIngredientArrayToPQ(idIngredients_))
+func DeleteReceipeIngredientsByIdIngredients(tx DB, idIngredients_ ...IdIngredient) (ReceipeIngredients, error) {
+	rows, err := tx.Query("DELETE FROM receipe_ingredients WHERE idingredient = ANY($1) RETURNING *", IdIngredientArrayToPQ(idIngredients_))
 	if err != nil {
 		return nil, err
 	}
-	return ScanReceipeItems(rows)
+	return ScanReceipeIngredients(rows)
 }
 
-// SelectReceipeItemsByIdReceipeAndIdIngredient selects the items matching the given fields.
-func SelectReceipeItemsByIdReceipeAndIdIngredient(tx DB, idReceipe IdReceipe, idIngredient IdIngredient) (item []ReceipeItem, err error) {
-	rows, err := tx.Query("SELECT * FROM receipe_items WHERE IdReceipe = $1 AND IdIngredient = $2", idReceipe, idIngredient)
+// SelectReceipeIngredientsByIdReceipeAndIdIngredient selects the items matching the given fields.
+func SelectReceipeIngredientsByIdReceipeAndIdIngredient(tx DB, idReceipe IdReceipe, idIngredient IdIngredient) (item []ReceipeIngredient, err error) {
+	rows, err := tx.Query("SELECT * FROM receipe_ingredients WHERE IdReceipe = $1 AND IdIngredient = $2", idReceipe, idIngredient)
 	if err != nil {
 		return nil, err
 	}
-	return ScanReceipeItems(rows)
+	return ScanReceipeIngredients(rows)
 }
 
-// DeleteReceipeItemsByIdReceipeAndIdIngredient deletes the item matching the given fields, returning
+// DeleteReceipeIngredientsByIdReceipeAndIdIngredient deletes the item matching the given fields, returning
 // the deleted items.
-func DeleteReceipeItemsByIdReceipeAndIdIngredient(tx DB, idReceipe IdReceipe, idIngredient IdIngredient) (item []ReceipeItem, err error) {
-	rows, err := tx.Query("DELETE FROM receipe_items WHERE IdReceipe = $1 AND IdIngredient = $2 RETURNING *", idReceipe, idIngredient)
+func DeleteReceipeIngredientsByIdReceipeAndIdIngredient(tx DB, idReceipe IdReceipe, idIngredient IdIngredient) (item []ReceipeIngredient, err error) {
+	rows, err := tx.Query("DELETE FROM receipe_ingredients WHERE IdReceipe = $1 AND IdIngredient = $2 RETURNING *", idReceipe, idIngredient)
 	if err != nil {
 		return nil, err
 	}
-	return ScanReceipeItems(rows)
+	return ScanReceipeIngredients(rows)
 }
 
-// SelectReceipeItemByIdReceipeAndIdIngredient return zero or one item, thanks to a UNIQUE SQL constraint.
-func SelectReceipeItemByIdReceipeAndIdIngredient(tx DB, idReceipe IdReceipe, idIngredient IdIngredient) (item ReceipeItem, found bool, err error) {
-	row := tx.QueryRow("SELECT * FROM receipe_items WHERE IdReceipe = $1 AND IdIngredient = $2", idReceipe, idIngredient)
-	item, err = ScanReceipeItem(row)
+// SelectReceipeIngredientByIdReceipeAndIdIngredient return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectReceipeIngredientByIdReceipeAndIdIngredient(tx DB, idReceipe IdReceipe, idIngredient IdIngredient) (item ReceipeIngredient, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM receipe_ingredients WHERE IdReceipe = $1 AND IdIngredient = $2", idReceipe, idIngredient)
+	item, err = ScanReceipeIngredient(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
 	}

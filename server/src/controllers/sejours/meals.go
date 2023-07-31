@@ -496,11 +496,12 @@ func (ct *Controller) loadMeals(idSejour sej.IdSejour, day int, uID us.IdUser) (
 		return out, utils.SQLError(err)
 	}
 
-	out.Menus, err = lib.LoadMenus(ct.db, allMeals.Menus())
+	mt, err := lib.LoadMenus(ct.db, allMeals.Menus())
 	if err != nil {
 		return out, err
 	}
 
+	out.Menus, _ = mt.Compile()
 	out.Meals = make([]MealExt, 0, len(allMeals))
 	for _, meal := range allMeals {
 		item := MealExt{

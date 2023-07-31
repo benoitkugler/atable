@@ -41,7 +41,7 @@ const (
 type QuantityR struct {
 	Val   float64
 	Unite Unite
-	For   int // the number of person [Value] refers to.
+	For   int `json:"For_"` // the number of person [Value] refers to.
 }
 
 func (rs IdReceipeSet) ToMenuLinks(idMenu IdMenu) MenuReceipes {

@@ -169,11 +169,12 @@ func (ct *Controller) LibraryLoadReceipe(c echo.Context) error {
 }
 
 func (ct *Controller) loadReceipe(id men.IdReceipe) (ReceipeExt, error) {
-	m, _, err := loadReceipes(ct.db, []men.IdReceipe{id}, nil)
+	m, err := loadReceipes(ct.db, []men.IdReceipe{id}, nil)
 	if err != nil {
 		return ReceipeExt{}, err
 	}
-	return m[id], nil
+	_, ma := m.Compile()
+	return ma[id], nil
 }
 
 func (ct *Controller) LibraryUpdateReceipe(c echo.Context) error {
@@ -240,13 +241,13 @@ func (ct *Controller) addReceipeIngredient(args AddReceipeIngredientIn, uID us.I
 		return ReceipeIngredientExt{}, utils.SQLError(err)
 	}
 	quantity := men.QuantityR{Val: 1, Unite: men.U_Piece, For: 10}
-	link := men.ReceipeItem{
+	link := men.ReceipeIngredient{
 		IdReceipe:    args.IdReceipe,
 		IdIngredient: args.IdIngredient,
 		Quantity:     quantity,
 	}
 
-	err = ct.inTx(func(tx *sql.Tx) error { return men.InsertManyReceipeItems(tx, link) })
+	err = ct.inTx(func(tx *sql.Tx) error { return men.InsertManyReceipeIngredients(tx, link) })
 
 	return ReceipeIngredientExt{Ingredient: ing, Quantity: quantity}, err
 }
@@ -254,7 +255,7 @@ func (ct *Controller) addReceipeIngredient(args AddReceipeIngredientIn, uID us.I
 func (ct *Controller) LibraryUpdateReceipeIngredient(c echo.Context) error {
 	uID := users.JWTUser(c)
 
-	var args men.ReceipeItem
+	var args men.ReceipeIngredient
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
@@ -267,18 +268,18 @@ func (ct *Controller) LibraryUpdateReceipeIngredient(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-func (ct *Controller) updateReceipeIngredient(link men.ReceipeItem, uID us.IdUser) error {
+func (ct *Controller) updateReceipeIngredient(link men.ReceipeIngredient, uID us.IdUser) error {
 	_, err := ct.checkReceipeOwner(link.IdReceipe, uID)
 	if err != nil {
 		return err
 	}
 
 	err = ct.inTx(func(tx *sql.Tx) error {
-		_, err = men.DeleteReceipeItemsByIdReceipeAndIdIngredient(tx, link.IdReceipe, link.IdIngredient)
+		_, err = men.DeleteReceipeIngredientsByIdReceipeAndIdIngredient(tx, link.IdReceipe, link.IdIngredient)
 		if err != nil {
 			return utils.SQLError(err)
 		}
-		err = men.InsertManyReceipeItems(tx, link)
+		err = men.InsertManyReceipeIngredients(tx, link)
 		if err != nil {
 			return utils.SQLError(err)
 		}
@@ -313,7 +314,7 @@ func (ct *Controller) deleteReceipeIngredient(idR men.IdReceipe, idG men.IdIngre
 		return err
 	}
 
-	_, err = men.DeleteReceipeItemsByIdReceipeAndIdIngredient(ct.db, idR, idG)
+	_, err = men.DeleteReceipeIngredientsByIdReceipeAndIdIngredient(ct.db, idR, idG)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -564,34 +565,89 @@ type MenuExt struct {
 }
 
 // resolve the receipe, and return the `additionalIngredients`
-func loadReceipes(db men.DB, ids []men.IdReceipe, additionalIngredients []men.IdIngredient) (map[men.IdReceipe]ReceipeExt, men.Ingredients, error) {
+// the Menu fields of the returned value are empty
+func loadReceipes(db men.DB, ids []men.IdReceipe, additionalIngredients []men.IdIngredient) (MenuTables, error) {
 	receipes, err := men.SelectReceipes(db, ids...)
 	if err != nil {
-		return nil, nil, utils.SQLError(err)
+		return MenuTables{}, utils.SQLError(err)
 	}
-	links, err := men.SelectReceipeItemsByIdReceipes(db, receipes.IDs()...)
+	links, err := men.SelectReceipeIngredientsByIdReceipes(db, receipes.IDs()...)
 	if err != nil {
-		return nil, nil, utils.SQLError(err)
+		return MenuTables{}, utils.SQLError(err)
 	}
 
 	// load ingredients used in receipes, as well as given
 	ingredients, err := men.SelectIngredients(db, append(links.IdIngredients(), additionalIngredients...)...)
 	if err != nil {
-		return nil, nil, utils.SQLError(err)
+		return MenuTables{}, utils.SQLError(err)
 	}
 
-	receipeToIngredients := links.ByIdReceipe()
+	return MenuTables{
+		Ingredients:        ingredients,
+		Receipes:           receipes,
+		ReceipeIngredients: links,
+	}, nil
+}
 
-	// build receipes only once
+// LoadMenus resolves the receipes and ingredients for
+// the given menus
+func LoadMenus(db men.DB, ids []men.IdMenu) (MenuTables, error) {
+	menus, err := men.SelectMenus(db, ids...)
+	if err != nil {
+		return MenuTables{}, utils.SQLError(err)
+	}
+
+	// load the menu contents
+	links1, err := men.SelectMenuIngredientsByIdMenus(db, menus.IDs()...)
+	if err != nil {
+		return MenuTables{}, utils.SQLError(err)
+	}
+	links2, err := men.SelectMenuReceipesByIdMenus(db, menus.IDs()...)
+	if err != nil {
+		return MenuTables{}, utils.SQLError(err)
+	}
+
+	mt, err := loadReceipes(db, links2.IdReceipes(), links1.IdIngredients())
+	if err != nil {
+		return MenuTables{}, err
+	}
+
+	mt.Menus = menus
+	mt.MenuIngredients = links1
+	mt.MenuReceipes = links2
+
+	return mt, nil
+}
+
+// LoadMenu is a convenience helper, calling [LoadMenus] with only one menu.
+func LoadMenu(db men.DB, id men.IdMenu) (MenuExt, error) {
+	m, err := LoadMenus(db, []men.IdMenu{id})
+	ma, _ := m.Compile()
+	return ma[id], err
+}
+
+type MenuTables struct {
+	Ingredients        men.Ingredients
+	Receipes           men.Receipes
+	ReceipeIngredients men.ReceipeIngredients
+	Menus              men.Menus
+	MenuReceipes       men.MenuReceipes
+	MenuIngredients    men.MenuIngredients
+}
+
+// Compile resolve the link tables
+func (mt MenuTables) Compile() (map[men.IdMenu]MenuExt, map[men.IdReceipe]ReceipeExt) {
+	// build the receipes
+	receipeToIngredients := mt.ReceipeIngredients.ByIdReceipe()
 	receipeMap := make(map[men.IdReceipe]ReceipeExt)
-	for _, receipe := range receipes {
+	for _, receipe := range mt.Receipes {
 		ings := receipeToIngredients[receipe.Id]
 		item := ReceipeExt{
 			Receipe:     receipe,
 			Ingredients: make([]ReceipeIngredientExt, len(ings)),
 		}
 		for i, link := range ings {
-			ing := ingredients[link.IdIngredient]
+			ing := mt.Ingredients[link.IdIngredient]
 			item.Ingredients[i] = ReceipeIngredientExt{
 				Ingredient: ing,
 				Quantity:   link.Quantity,
@@ -600,42 +656,16 @@ func loadReceipes(db men.DB, ids []men.IdReceipe, additionalIngredients []men.Id
 		receipeMap[receipe.Id] = item
 	}
 
-	return receipeMap, ingredients, nil
-}
-
-// LoadMenus resolves the receipes and ingredients for
-// the given menus.
-func LoadMenus(db men.DB, ids []men.IdMenu) (map[men.IdMenu]MenuExt, error) {
-	menus, err := men.SelectMenus(db, ids...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	// load the menu contents
-	links1, err := men.SelectMenuIngredientsByIdMenus(db, menus.IDs()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	links2, err := men.SelectMenuReceipesByIdMenus(db, menus.IDs()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	menuToIngredients, menuToReceipes := links1.ByIdMenu(), links2.ByIdMenu()
-
-	receipeMap, ingredients, err := loadReceipes(db, links2.IdReceipes(), links1.IdIngredients())
-	if err != nil {
-		return nil, err
-	}
-
 	// build the menus
-	out := make(map[men.IdMenu]MenuExt, len(menus))
-	for _, menu := range menus {
+	menuToIngredients, menuToReceipes := mt.MenuIngredients.ByIdMenu(), mt.MenuReceipes.ByIdMenu()
+	menusMap := make(map[men.IdMenu]MenuExt, len(mt.Menus))
+	for _, menu := range mt.Menus {
 		ings, recs := menuToIngredients[menu.Id], menuToReceipes[menu.Id]
 		mIngredients := make([]MenuIngredientExt, len(ings))
 		for i, link := range ings {
 			mIngredients[i] = MenuIngredientExt{
 				MenuIngredient: link,
-				Ingredient:     ingredients[link.IdIngredient],
+				Ingredient:     mt.Ingredients[link.IdIngredient],
 			}
 		}
 
@@ -643,14 +673,7 @@ func LoadMenus(db men.DB, ids []men.IdMenu) (map[men.IdMenu]MenuExt, error) {
 		for i, link := range recs {
 			mReceipes[i] = receipeMap[link.IdReceipe].Receipe
 		}
-		out[menu.Id] = MenuExt{menu, mIngredients, mReceipes}
+		menusMap[menu.Id] = MenuExt{menu, mIngredients, mReceipes}
 	}
-
-	return out, nil
-}
-
-// LoadMenu is a convenience helper, calling [LoadMenus] with only one menu.
-func LoadMenu(db men.DB, id men.IdMenu) (MenuExt, error) {
-	m, err := LoadMenus(db, []men.IdMenu{id})
-	return m[id], err
+	return menusMap, receipeMap
 }

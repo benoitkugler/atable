@@ -88,8 +88,8 @@ func randReceipe() Receipe {
 	return s
 }
 
-func randReceipeItem() ReceipeItem {
-	var s ReceipeItem
+func randReceipeIngredient() ReceipeIngredient {
+	var s ReceipeIngredient
 	s.IdReceipe = randIdReceipe()
 	s.IdIngredient = randIdIngredient()
 	s.Quantity = randQuantityR()

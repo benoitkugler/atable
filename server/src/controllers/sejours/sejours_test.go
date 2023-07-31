@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/benoitkugler/atable/pass"
 	"github.com/benoitkugler/atable/sql/menus"
 	sej "github.com/benoitkugler/atable/sql/sejours"
 	"github.com/benoitkugler/atable/sql/users"
@@ -33,9 +34,9 @@ func setup(t *testing.T) (db tu.TestDB, _ users.User, _ menus.Menu) {
 	tu.AssertNoErr(t, err)
 
 	db.InTx(func(tx *sql.Tx) {
-		err = menus.InsertManyReceipeItems(tx,
-			menus.ReceipeItem{IdReceipe: rec.Id, IdIngredient: ing1.Id},
-			menus.ReceipeItem{IdReceipe: rec.Id, IdIngredient: ing2.Id},
+		err = menus.InsertManyReceipeIngredients(tx,
+			menus.ReceipeIngredient{IdReceipe: rec.Id, IdIngredient: ing1.Id},
+			menus.ReceipeIngredient{IdReceipe: rec.Id, IdIngredient: ing2.Id},
 		)
 		tu.AssertNoErr(t, err)
 
@@ -70,7 +71,7 @@ func TestSejours(t *testing.T) {
 	db, user, _ := setup(t)
 	defer db.Remove()
 
-	ct := NewController(db.DB, user)
+	ct := NewController(db.DB, "", user, pass.Encrypter{})
 	sejours, err := ct.getSejours(user.Id)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(sejours) == 2)

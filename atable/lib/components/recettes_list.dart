@@ -4,7 +4,7 @@ import 'package:atable/components/details_recette.dart';
 import 'package:atable/components/import_dialog.dart';
 import 'package:atable/components/menus_list.dart';
 import 'package:atable/components/shared.dart';
-import 'package:atable/logic/models.dart';
+import 'package:atable/logic/models.back';
 import 'package:atable/logic/sql.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';

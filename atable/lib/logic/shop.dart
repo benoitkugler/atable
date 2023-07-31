@@ -1,6 +1,7 @@
 import 'dart:convert';
 
-import 'package:atable/logic/models.dart';
+import 'package:atable/logic/sql.dart';
+import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
 import 'package:atable/logic/utils.dart';
 import 'package:http/http.dart' as http;
 
@@ -19,19 +20,19 @@ String formatQuantites(Quantites quantite) {
 class IngredientQuantite {
   final int id;
   final String nom;
-  final CategorieIngredient categorie;
+  final IngredientKind kind;
   final String quantite;
 
   bool checked;
 
-  IngredientQuantite(this.id, this.nom, this.categorie, this.quantite,
+  IngredientQuantite(this.id, this.nom, this.kind, this.quantite,
       {this.checked = false});
 
   Map<String, dynamic> toJson() {
     return {
       "id": id,
       "nom": nom,
-      "categorie": categorie.index,
+      "kind": kind.index,
       "quantite": quantite,
       "checked": checked,
     };
@@ -39,13 +40,13 @@ class IngredientQuantite {
 
   factory IngredientQuantite.fromJson(Map<String, dynamic> map) {
     return IngredientQuantite(map["id"], map["nom"],
-        CategorieIngredient.values[map["categorie"] as int], map["quantite"],
+        IngredientKind.values[map["kind"] as int], map["quantite"],
         checked: map["checked"]);
   }
 }
 
 class ShopSection {
-  final CategorieIngredient categorie;
+  final IngredientKind categorie;
   final List<IngredientQuantite> ingredients;
 
   const ShopSection(this.categorie, this.ingredients);
@@ -57,12 +58,12 @@ class ShopList {
   final List<IngredientQuantite> _list;
   ShopList(this._list);
 
-  /// [fromRepass] regroupe les ingrédients des [repass], regroupés par catégories
-  factory ShopList.fromRepass(List<RepasExt> repass) {
+  /// [fromMeals] regroupe les ingrédients des [meals], regroupés par catégories
+  factory ShopList.fromMeals(List<MealExt> meals) {
     final tmp = <int, Quantites>{}; // par ID
     final ingregients = <int, Ingredient>{}; // par ID
-    for (var repas in repass) {
-      for (var plat in repas.requiredQuantites().values) {
+    for (var repas in meals) {
+      for (var plat in repas.requiredQuantities().values) {
         for (var ing in plat) {
           ingregients[ing.ingredient.id] = ing.ingredient;
 
@@ -73,15 +74,15 @@ class ShopList {
       }
     }
     return ShopList(tmp.keys
-        .map((id) => IngredientQuantite(id, ingregients[id]!.nom,
-            ingregients[id]!.categorie, formatQuantites(tmp[id]!)))
+        .map((id) => IngredientQuantite(id, ingregients[id]!.name,
+            ingregients[id]!.kind, formatQuantites(tmp[id]!)))
         .toList());
   }
 
   List<ShopSection> bySections() {
-    final byCategorie = <CategorieIngredient, List<IngredientQuantite>>{};
+    final byCategorie = <IngredientKind, List<IngredientQuantite>>{};
     for (var ing in _list) {
-      final l = byCategorie.putIfAbsent(ing.categorie, () => []);
+      final l = byCategorie.putIfAbsent(ing.kind, () => []);
       l.add(ing);
     }
     return byCategorie.entries.map((e) => ShopSection(e.key, e.value)).toList();

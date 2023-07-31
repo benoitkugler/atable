@@ -1,4 +1,4 @@
-import 'package:atable/logic/models.dart';
+import 'package:atable/logic/models.back';
 
 /// Tous les champs [id] valent -1.
 const ingredientsSuggestions = [

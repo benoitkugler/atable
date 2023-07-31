@@ -2,7 +2,7 @@ import 'package:atable/components/details_ingredient.dart';
 import 'package:atable/components/import_dialog.dart';
 import 'package:atable/components/ingredient_editor.dart';
 import 'package:atable/components/shared.dart';
-import 'package:atable/logic/models.dart';
+import 'package:atable/logic/models.back';
 import 'package:atable/logic/sql.dart';
 import 'package:atable/logic/utils.dart';
 import 'package:flutter/material.dart';

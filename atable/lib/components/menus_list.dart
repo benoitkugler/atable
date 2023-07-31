@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:atable/components/details_menu.dart';
 import 'package:atable/components/shared.dart';
-import 'package:atable/logic/models.dart';
+import 'package:atable/logic/models.back';
 import 'package:atable/logic/sql.dart';
 import 'package:flutter/material.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';

@@ -118,7 +118,7 @@ func main() {
 	}
 	fmt.Println("Admin teacher loaded.")
 
-	sc := sejours.NewController(db, admin)
+	sc := sejours.NewController(db, host, admin, encKey)
 	lc := library.NewController(db, admin)
 
 	e := echo.New()
@@ -207,7 +207,7 @@ func cacheStatic(next echo.HandlerFunc) echo.HandlerFunc {
 }
 
 func serveWebApp(c echo.Context) error {
-	return c.File("static/web-app/index.html")
+	return c.File("static/atable-web/index.html")
 }
 
 func setupRoutes(e *echo.Echo, uc *users.Controller, sc *sejours.Controller, lc *library.Controller) {
@@ -223,4 +223,7 @@ func setupRoutes(e *echo.Echo, uc *users.Controller, sc *sejours.Controller, lc 
 	} {
 		e.GET(route, serveWebApp, noCache)
 	}
+
+	// client API
+	e.GET(sejours.ClientEnpoint, sc.SejoursExportToClient)
 }

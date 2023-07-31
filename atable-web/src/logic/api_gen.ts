@@ -256,8 +256,8 @@ export interface Receipe {
   Name: string;
   Description: string;
 }
-// github.com/benoitkugler/atable/sql/menus.ReceipeItem
-export interface ReceipeItem {
+// github.com/benoitkugler/atable/sql/menus.ReceipeIngredient
+export interface ReceipeIngredient {
   IdReceipe: IdReceipe;
   IdIngredient: IdIngredient;
   Quantity: QuantityR;
@@ -351,9 +351,9 @@ export abstract class AbstractAPI {
     protected authToken: string,
   ) {}
 
-  abstract handleError(error: any): void;
+  protected abstract handleError(error: any): void;
 
-  abstract startRequest(): void;
+  protected abstract startRequest(): void;
 
   getHeaders() {
     return { Authorization: "Bearer " + this.authToken };
@@ -1174,14 +1174,14 @@ export abstract class AbstractAPI {
     data: ReceipeIngredientExt,
   ): void {}
 
-  protected async rawLibraryUpdateReceipeIngredient(params: ReceipeItem) {
+  protected async rawLibraryUpdateReceipeIngredient(params: ReceipeIngredient) {
     const fullUrl = this.baseUrl + "/api/library/receipes/ingredients";
     await Axios.post(fullUrl, params, { headers: this.getHeaders() });
     return true;
   }
 
   /** LibraryUpdateReceipeIngredient wraps rawLibraryUpdateReceipeIngredient and handles the error */
-  async LibraryUpdateReceipeIngredient(params: ReceipeItem) {
+  async LibraryUpdateReceipeIngredient(params: ReceipeIngredient) {
     this.startRequest();
     try {
       const out = await this.rawLibraryUpdateReceipeIngredient(params);
