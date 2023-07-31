@@ -1,10 +1,5 @@
 <template>
-  <v-card @click="emit('goTo')">
-    <v-row justify="start" no-gutters class="pa-0 my-2">
-      <v-col cols="auto">
-        <v-card-title>{{ formatDate(props.date) }}</v-card-title>
-      </v-col>
-    </v-row>
+  <v-card @click="emit('goTo')" :title="formatDate(props.date)">
     <v-card-text class="pa-0 mb-">
       <v-row no-gutters>
         <v-col v-if="!meals.length" class="my-2 text-center pb-1">

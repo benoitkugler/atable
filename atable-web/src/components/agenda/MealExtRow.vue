@@ -49,10 +49,12 @@
             v-for="(item, index) in sortedMenuContent"
             :key="index"
             class="px-1"
+            align-self="center"
           >
-            <v-chip
+            <v-card
               label
               :color="platColors[item.plat]"
+              variant="tonal"
               class="my-1 pr-2"
               @click="
                 item.isReceipe
@@ -61,18 +63,33 @@
               "
               :disabled="props.menu.IsFavorite"
             >
-              <template v-slot:append>
-                <v-btn
-                  class="my-2 mr-0"
-                  variant="plain"
-                  icon="mdi-close"
-                  v-if="!props.menu.IsFavorite"
-                  size="26"
-                  @click.stop="emit('removeItem', item.id, item.isReceipe)"
-                ></v-btn>
-              </template>
-              {{ item.title }}
-            </v-chip>
+              <v-row no-gutters>
+                <v-col align-self="center" class="px-2 py-1">
+                  <v-row no-gutters>
+                    <v-col cols="12">
+                      {{ item.title }}
+                    </v-col>
+                    <v-col>
+                      <small v-if="item.quantity != null">
+                        {{ item.quantity.Val }}
+                        {{ UniteLabels[item.quantity.Unite] }}
+                        (pour {{ item.quantity.For }} per.)
+                      </small>
+                    </v-col>
+                  </v-row>
+                </v-col>
+                <v-col cols="auto" align-self="center">
+                  <v-btn
+                    class="my-2 mr-0"
+                    variant="plain"
+                    icon="mdi-close"
+                    v-if="!props.menu.IsFavorite"
+                    size="x-small"
+                    @click.stop="emit('removeItem', item.id, item.isReceipe)"
+                  ></v-btn>
+                </v-col>
+              </v-row>
+            </v-card>
           </v-col>
         </v-row>
       </v-col>
@@ -132,12 +149,13 @@
 </template>
 
 <script lang="ts" setup>
-import type {
-  Groups,
-  IdIngredient,
-  IdReceipe,
-  MealExt,
-  MenuExt,
+import {
+  UniteLabels,
+  type Groups,
+  type IdIngredient,
+  type IdReceipe,
+  type MealExt,
+  type MenuExt,
 } from "@/logic/api_gen";
 import {
   ResourceDrag,

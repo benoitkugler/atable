@@ -1,31 +1,39 @@
 <template>
-  <v-card elevation="0">
-    <v-row>
-      <v-col align-self="center">
-        <v-card-title>Menus et recettes</v-card-title>
-        <v-card-subtitle
-          >Retrouver vos menus favoris et vos recettes.</v-card-subtitle
-        >
-      </v-col>
-      <v-col cols="auto" align-self="center" class="ma-2">
-        <v-menu>
-          <template v-slot:activator="{ isActive, props }">
-            <v-btn v-on="{ isActive }" v-bind="props">
-              <template v-slot:prepend>
-                <v-icon color="success">mdi-plus</v-icon>
-              </template>
-              Ajouter...</v-btn
-            >
-          </template>
-          <v-list density="compact">
-            <v-list-item title="Ajouter un menu" @click="createMenu">
-            </v-list-item>
-            <v-list-item title="Ajouter une recette" @click="createReceipe">
-            </v-list-item>
-          </v-list>
-        </v-menu>
-      </v-col>
-    </v-row>
+  <v-card
+    elevation="0"
+    title="Menus et recettes"
+    subtitle="Retrouver vos menus favoris et vos recettes."
+  >
+    <v-dialog v-model="showImportCSV" max-width="1000px">
+      <ImportCsvMain @import-done="onImportCSV"></ImportCsvMain>
+    </v-dialog>
+
+    <template v-slot:append>
+      <v-menu>
+        <template v-slot:activator="{ isActive, props }">
+          <v-btn v-on="{ isActive }" v-bind="props">
+            <template v-slot:prepend>
+              <v-icon color="success">mdi-plus</v-icon>
+            </template>
+            Ajouter...</v-btn
+          >
+        </template>
+        <v-list density="compact">
+          <v-list-item title="Ajouter une recette" @click="createReceipe">
+          </v-list-item>
+          <v-list-item title="Ajouter un menu" @click="createMenu">
+          </v-list-item>
+        </v-list>
+      </v-menu>
+      <v-divider vertical></v-divider>
+      <v-btn class="mx-2" @click="showImportCSV = true">
+        <template v-slot:prepend>
+          <v-icon>mdi-file-table-outline</v-icon>
+        </template>
+        Importer...</v-btn
+      >
+    </template>
+
     <v-card-text>
       <v-row>
         <v-col>
@@ -75,6 +83,7 @@
 <script lang="ts" setup>
 import ListPage from "@/components/library/ListPage.vue";
 import {
+  ReceipeExt,
   ReceipeHeader,
   ResourceHeader,
   ResourceSearchOut,
@@ -84,6 +93,7 @@ import { onMounted } from "vue";
 import { onActivated } from "vue";
 import { computed } from "vue";
 import { ref } from "vue";
+import ImportCsvMain from "./ImportCsvMain.vue";
 
 const props = defineProps<{
   pageIndex: number;
@@ -119,8 +129,15 @@ const currentPage = computed<ResourceSearchOut>(() => {
   const receipes = resources.value.Receipes || [];
   const start = (props.pageIndex - 1) * pagination;
   const end = start + pagination;
+
   const outMenus = menus.slice(start, end);
-  const outReceipes = receipes.slice(start - menus.length, end - menus.length);
+  let outReceipes: ReceipeHeader[] = [];
+  if (end > menus.length) {
+    outReceipes = receipes.slice(
+      Math.max(start - menus.length, 0),
+      end - menus.length
+    );
+  }
   return { Ingredients: [], Receipes: outReceipes, Menus: outMenus };
 });
 
@@ -146,5 +163,11 @@ async function createReceipe() {
 
   // start edit
   emit("updateReceipe", res);
+}
+
+const showImportCSV = ref(false);
+function onImportCSV(receipes: ReceipeExt[]) {
+  showImportCSV.value = false;
+  search(""); // refresh the main list
 }
 </script>

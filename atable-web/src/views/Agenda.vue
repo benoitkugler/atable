@@ -16,21 +16,21 @@
       </v-row>
     </v-alert>
   </v-responsive>
-  <week-view
+  <view-week
     v-else-if="viewKind == 'week'"
     @go-to="
       (of) => {
-        viewKind = 'day';
         dayOffset = of;
+        viewKind = 'day';
       }
     "
-  ></week-view>
-  <day-view v-else :offset="dayOffset" @back="viewKind = 'week'"></day-view>
+  ></view-week>
+  <view-day v-else :offset="dayOffset" @back="viewKind = 'week'"></view-day>
 </template>
 
 <script lang="ts" setup>
-import DayView from "@/components/agenda/DayView.vue";
-import WeekView from "@/components/agenda/WeekView.vue";
+import ViewDay from "@/components/agenda/ViewDay.vue";
+import ViewWeek from "@/components/agenda/ViewWeek.vue";
 import { controller } from "@/logic/controller";
 import { ref } from "vue";
 

@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 
 	"github.com/labstack/echo/v4"
 	"github.com/lib/pq"
@@ -70,11 +71,28 @@ func BuildUrl(host, path string, query map[string]string) string {
 
 var noAccent = transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
 
-// Normalize remove trailing space, accents and convert to lower case
+// Normalize remove trailing spaces, accents, only keep alpha numeric chars
+// and convert to lower case
 func Normalize(s string) string {
 	output, _, e := transform.String(noAccent, s)
 	if e != nil {
 		output = s
 	}
-	return strings.ToLower(strings.TrimSpace(output))
+
+	return strings.ToLower(strings.Map(func(r rune) rune {
+		if 'a' <= r && r <= 'z' ||
+			'A' <= r && r <= 'Z' ||
+			'0' <= r && r <= '9' {
+			return r
+		}
+		return -1
+	}, strings.TrimSpace(output)))
+}
+
+func UpperFirst(s string) string {
+	if s == "" {
+		return ""
+	}
+	r, L := utf8.DecodeRuneInString(s)
+	return string(unicode.ToUpper(r)) + s[L:]
 }

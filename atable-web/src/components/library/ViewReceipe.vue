@@ -65,22 +65,20 @@
           </v-form>
         </v-col>
         <v-col>
-          <v-card>
-            <v-row>
-              <v-col align-self="center">
-                <v-card-title> Ingrédients </v-card-title>
-                <v-card-subtitle v-if="hasSameForPeople != null">
-                  Pour {{ hasSameForPeople }} personnes
-                </v-card-subtitle>
-              </v-col>
-              <v-col cols="7" v-if="!isReadonly">
-                <ResourceSelector
-                  :items="DB"
-                  label="Ajouter un ingrédient"
-                  @selected="addIngredient"
-                ></ResourceSelector>
-              </v-col>
-            </v-row>
+          <v-card
+            title="Ingrédients"
+            :subtitle="
+              hasSameForPeople ? ` Pour ${hasSameForPeople} personnes` : ''
+            "
+          >
+            <template v-slot:append v-if="!isReadonly">
+              <ResourceSelector
+                :items="DB"
+                label="Ajouter un ingrédient"
+                @selected="(item) => addIngredient(item.Id)"
+                @create-ingredient="createAndAddIngredient"
+              ></ResourceSelector>
+            </template>
             <v-card-text>
               <div v-if="!inner.Ingredients?.length" class="text-center">
                 <i>La recette est vide.</i>
@@ -127,20 +125,28 @@
         </v-col>
       </v-row>
     </v-card-text>
+    <v-card-text v-else>
+      <v-progress-linear indeterminate></v-progress-linear>
+    </v-card-text>
   </v-card>
 </template>
 
 <script setup lang="ts">
 import {
-  type ReceipeHeader,
   type ReceipeExt,
   type IdIngredient,
   IngredientKindLabels,
   QuantityR,
   PlatKind,
   IdReceipe,
+  Ingredient,
 } from "@/logic/api_gen";
-import { MenuResource, controller, platColors } from "@/logic/controller";
+import {
+  MenuResource,
+  controller,
+  platColors,
+  resourcesToList,
+} from "@/logic/controller";
 import { onMounted } from "vue";
 import { ref } from "vue";
 import PlatSelect from "@/components/PlatSelect.vue";
@@ -187,11 +193,7 @@ async function fetch() {
 
   const ings = await controller.LibraryLoadIngredients();
   if (ings === undefined) return;
-  DB.value = Object.values(ings || {}).map((ing) => ({
-    Title: ing.Name,
-    Id: ing.Id,
-    Kind: "ingredient",
-  }));
+  DB.value = resourcesToList(ings, {});
 }
 
 const tmpName = ref("");
@@ -210,18 +212,30 @@ async function save() {
   controller.showMessage("Recette modifiée avec succès.");
 }
 
-async function addIngredient(item: MenuResource) {
-  if (inner.value?.Ingredients?.find((ing) => ing.Id == item.Id) != undefined)
+async function addIngredient(idIngredient: IdIngredient) {
+  if (
+    inner.value?.Ingredients?.find((ing) => ing.Id == idIngredient) != undefined
+  )
     return;
 
   const res = await controller.LibraryAddReceipeIngredient({
     IdReceipe: props.receipe,
-    IdIngredient: item.Id,
+    IdIngredient: idIngredient,
   });
   if (res == undefined) return;
 
   controller.showMessage("Ingrédient ajouté avec succès.");
   inner.value!.Ingredients = (inner.value?.Ingredients || []).concat(res);
+}
+
+async function createAndAddIngredient(ingredient: Ingredient) {
+  const res = await controller.LibraryCreateIngredient(ingredient);
+  if (res === undefined) return;
+  controller.showMessage("Ingrédient créé avec succès.");
+  // update the local DB
+  DB.value.push({ Id: res.Id, Title: res.Name, Kind: "ingredient" });
+
+  addIngredient(res.Id);
 }
 
 const hasSameForPeople = computed(() => {

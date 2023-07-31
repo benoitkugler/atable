@@ -25,12 +25,23 @@ export interface AddReceipeIngredientIn {
   IdReceipe: IdReceipe;
   IdIngredient: IdIngredient;
 }
+// github.com/benoitkugler/atable/controllers/library.ImportReceipes1Out
+export interface ImportReceipes1Out {
+  Receipes: ReceipeI[] | null;
+  Map: { [key: string]: Ingredient } | null;
+}
 // github.com/benoitkugler/atable/controllers/library.IngredientHeader
 export interface IngredientHeader {
   Title: string;
   ID: number;
   IsPersonnal: boolean;
   Kind: IngredientKind;
+}
+// github.com/benoitkugler/atable/controllers/library.IngredientI
+export interface IngredientI {
+  Name: string;
+  Quantity: number;
+  Unite: Unite;
 }
 // github.com/benoitkugler/atable/controllers/library.MenuExt
 export interface MenuExt {
@@ -59,6 +70,13 @@ export interface ReceipeHeader {
   ID: number;
   IsPersonnal: boolean;
   Plat: PlatKind;
+}
+// github.com/benoitkugler/atable/controllers/library.ReceipeI
+export interface ReceipeI {
+  Name: string;
+  For: number;
+  Plat: PlatKind;
+  Ingredients: IngredientI[] | null;
 }
 // github.com/benoitkugler/atable/controllers/library.ReceipeIngredientExt
 export interface ReceipeIngredientExt {
@@ -923,6 +941,28 @@ export abstract class AbstractAPI {
 
   protected onSuccessLibraryLoadIngredients(data: Ingredients): void {}
 
+  protected async rawLibraryCreateIngredient(params: Ingredient) {
+    const fullUrl = this.baseUrl + "/api/library/all-ingredients";
+    const rep: AxiosResponse<Ingredient> = await Axios.put(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** LibraryCreateIngredient wraps rawLibraryCreateIngredient and handles the error */
+  async LibraryCreateIngredient(params: Ingredient) {
+    this.startRequest();
+    try {
+      const out = await this.rawLibraryCreateIngredient(params);
+      this.onSuccessLibraryCreateIngredient(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessLibraryCreateIngredient(data: Ingredient): void {}
+
   protected async rawLibraryLoadReceipes() {
     const fullUrl = this.baseUrl + "/api/library/all-receipes";
     const rep: AxiosResponse<Receipes> = await Axios.get(fullUrl, {
@@ -944,6 +984,56 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessLibraryLoadReceipes(data: Receipes): void {}
+
+  protected async rawLibraryImportReceipes1(params: {}, file: File) {
+    const fullUrl = this.baseUrl + "/api/library/receipes/import";
+    const formData = new FormData();
+    formData.append("file", file, file.name);
+    const rep: AxiosResponse<ImportReceipes1Out> = await Axios.post(
+      fullUrl,
+      formData,
+      { headers: this.getHeaders() },
+    );
+    return rep.data;
+  }
+
+  /** LibraryImportReceipes1 wraps rawLibraryImportReceipes1 and handles the error */
+  async LibraryImportReceipes1(params: {}, file: File) {
+    this.startRequest();
+    try {
+      const out = await this.rawLibraryImportReceipes1(params, file);
+      this.onSuccessLibraryImportReceipes1(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessLibraryImportReceipes1(data: ImportReceipes1Out): void {}
+
+  protected async rawLibraryImportReceipes2(params: ImportReceipes1Out) {
+    const fullUrl = this.baseUrl + "/api/library/receipes/import";
+    const rep: AxiosResponse<ReceipeExt[] | null> = await Axios.put(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() },
+    );
+    return rep.data;
+  }
+
+  /** LibraryImportReceipes2 wraps rawLibraryImportReceipes2 and handles the error */
+  async LibraryImportReceipes2(params: ImportReceipes1Out) {
+    this.startRequest();
+    try {
+      const out = await this.rawLibraryImportReceipes2(params);
+      this.onSuccessLibraryImportReceipes2(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessLibraryImportReceipes2(data: ReceipeExt[] | null): void {}
 
   protected async rawLibraryLoadMenu(params: { idMenu: number }) {
     const fullUrl = this.baseUrl + "/api/library/menus";

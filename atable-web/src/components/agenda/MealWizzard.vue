@@ -17,6 +17,7 @@
             label="Durée du séjour"
             type="number"
             v-model.number="args.DaysNumber"
+            suffix="jours"
           ></v-text-field>
         </v-col>
         <v-col cols="auto" align-self="center">
@@ -42,25 +43,46 @@
       </v-row>
       <v-row no-gutters class="mt-4">
         <v-col>
-          <v-slide-group show-arrows>
-            <v-slide-group-item v-for="i in args.DaysNumber" :key="i">
-              <v-card :subtitle="dayForIndex(i - 1)" width="200px" class="ma-1">
-                <v-card-text
-                  ><v-select
-                    variant="outlined"
-                    density="compact"
-                    hide-details
-                    multiple
-                    chips
-                    :items="groupItems"
-                    label="Groupes en sortie"
-                    :model-value="excursionForIndex(i - 1)"
-                    @update:model-value="(l) => setExcursionForIndex(l, i - 1)"
-                  ></v-select
-                ></v-card-text>
-              </v-card>
-            </v-slide-group-item>
-          </v-slide-group>
+          <v-card subtitle="Groupes en sortie" elevation="0">
+            <v-slide-group show-arrows>
+              <v-slide-group-item v-for="i in args.DaysNumber" :key="i">
+                <v-card
+                  :subtitle="dayForIndex(i - 1)"
+                  width="200px"
+                  class="ma-1"
+                >
+                  <v-card-text
+                    class="text-center pb-1"
+                    @click="editExcursionIndex = i - 1"
+                  >
+                    <v-select
+                      @blur="editExcursionIndex = -1"
+                      :variant="
+                        editExcursionIndex == i - 1 ? 'outlined' : 'plain'
+                      "
+                      :menu-icon="editExcursionIndex == i - 1 ? undefined : ''"
+                      :label="
+                        editExcursionIndex == i - 1
+                          ? 'Groupes en sortie'
+                          : excursionForIndex(i - 1).length
+                          ? ''
+                          : 'Aucune sortie'
+                      "
+                      density="compact"
+                      hide-details
+                      multiple
+                      chips
+                      :items="groupItems"
+                      :model-value="excursionForIndex(i - 1)"
+                      @update:model-value="
+                        (l) => setExcursionForIndex(l, i - 1)
+                      "
+                    ></v-select>
+                  </v-card-text>
+                </v-card>
+              </v-slide-group-item>
+            </v-slide-group>
+          </v-card>
         </v-col>
       </v-row>
     </v-card-text>
@@ -91,7 +113,7 @@
 </template>
 
 <script lang="ts" setup>
-import { AssistantMealsIn, SejourExt } from "@/logic/api_gen";
+import { AssistantMealsIn, Groups, SejourExt } from "@/logic/api_gen";
 import { addDays, formatDate } from "@/logic/controller";
 import { computed } from "vue";
 import { watch } from "vue";
@@ -121,6 +143,10 @@ function defaultArgs() {
 
 const args = ref<AssistantMealsIn>(defaultArgs());
 
+const groups = computed(
+  () => new Map((props.sejour.Groups || []).map((gr) => [gr.Id, gr]))
+);
+
 const groupItems = computed(() =>
   (props.sejour.Groups || []).map((gr) => ({
     title: gr.Name || "Groupe par défaut",
@@ -141,4 +167,6 @@ function setExcursionForIndex(ids: number[], i: number) {
   m[i] = ids;
   args.value.Excursions = m;
 }
+
+const editExcursionIndex = ref(-1);
 </script>

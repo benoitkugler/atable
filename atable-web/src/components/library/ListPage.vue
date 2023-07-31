@@ -2,7 +2,6 @@
   <v-card
     :style="{
       'column-count': 2,
-      'column-fill': pageSize > 6 ? 'balance' : 'auto',
     }"
     class="py-2"
   >

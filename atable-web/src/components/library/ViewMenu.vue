@@ -21,24 +21,24 @@
     <v-card-text v-if="inner != null">
       <v-row>
         <v-col>
-          <v-card>
-            <v-row>
-              <v-col align-self="center">
-                <v-card-title> Recettes et ingrédients </v-card-title>
-                <v-card-subtitle
-                  v-if="inner.Ingredients?.length && hasSameForPeople != null"
-                >
-                  Ingrédients pour {{ hasSameForPeople }} personnes
-                </v-card-subtitle>
-              </v-col>
-              <v-col cols="7" v-if="!isReadonly">
-                <ResourceSelector
-                  :items="resourcesDB"
-                  label="Ajouter une recette ou un ingrédient"
-                  @selected="addResource"
-                ></ResourceSelector>
-              </v-col>
-            </v-row>
+          <v-card
+            title="Recettes et ingrédients"
+            :subtitle="
+              inner.Ingredients?.length && hasSameForPeople != null
+                ? `Ingrédients pour ${hasSameForPeople} personnes`
+                : ''
+            "
+          >
+            <template v-slot:append>
+              <ResourceSelector
+                v-if="!isReadonly"
+                :items="DB"
+                label="Ajouter une recette ou un ingrédient"
+                @selected="addResource"
+                @create-ingredient="createAndAddIngredient"
+              ></ResourceSelector>
+            </template>
+
             <v-card-text>
               <div v-if="!sortedItems.length" class="text-center">
                 <i>Le menu est vide.</i>
@@ -132,8 +132,19 @@
 </template>
 
 <script setup lang="ts">
-import { QuantityR, MenuExt, IdReceipe, IdMenu } from "@/logic/api_gen";
-import { MenuResource, controller, MenuItem } from "@/logic/controller";
+import {
+  QuantityR,
+  MenuExt,
+  IdReceipe,
+  IdMenu,
+  Ingredient,
+} from "@/logic/api_gen";
+import {
+  MenuResource,
+  controller,
+  MenuItem,
+  resourcesToList,
+} from "@/logic/controller";
 import { onMounted } from "vue";
 import { ref } from "vue";
 import ResourceSelector from "./ResourceSelector.vue";
@@ -158,7 +169,7 @@ const emit = defineEmits<{
 onMounted(fetch);
 
 const inner = ref<MenuExt | null>(null);
-const resourcesDB = ref<MenuResource[]>([]);
+const DB = ref<MenuResource[]>([]);
 
 const isReadonly = computed(() => inner.value?.Owner != controller.idUser);
 
@@ -181,46 +192,46 @@ async function fetch() {
 
   const ings = await controller.LibraryLoadIngredients();
   if (ings === undefined) return;
-  resourcesDB.value = Object.values(ings || {}).map((ing) => ({
-    Title: ing.Name,
-    Id: ing.Id,
-    Kind: "ingredient",
-  }));
   const recs = await controller.LibraryLoadReceipes();
   if (recs === undefined) return;
-  resourcesDB.value.push(
-    ...Object.values(recs || {}).map((rec) => ({
-      Title: rec.Name,
-      Id: rec.Id,
-      Kind: "receipe" as const,
-    }))
-  );
+
+  DB.value = resourcesToList(ings, recs);
 }
 
 async function addResource(item: MenuResource) {
   if (item.Kind == "ingredient") {
-    addIngredient(item);
+    addIngredient(item.Id);
   } else {
     addReceipe(item);
   }
 }
 
-async function addIngredient(item: MenuResource) {
+async function addIngredient(id: IdIngredient) {
   if (
-    inner.value?.Ingredients?.find((ing) => ing.IdIngredient == item.Id) !=
-    undefined
+    inner.value?.Ingredients?.find((ing) => ing.IdIngredient == id) != undefined
   )
     return;
 
   const res = await controller.LibraryAddMenuIngredient({
     IdMenu: props.menu,
-    IdIngredient: item.Id,
+    IdIngredient: id,
   });
   if (res == undefined) return;
 
   controller.showMessage("Ingrédient ajouté avec succès.");
   inner.value!.Ingredients = (inner.value?.Ingredients || []).concat(res);
 }
+
+async function createAndAddIngredient(ingredient: Ingredient) {
+  const res = await controller.LibraryCreateIngredient(ingredient);
+  if (res === undefined) return;
+  controller.showMessage("Ingrédient créé avec succès.");
+  // update the local DB
+  DB.value.push({ Id: res.Id, Title: res.Name, Kind: "ingredient" });
+
+  addIngredient(res.Id);
+}
+
 async function addReceipe(item: MenuResource) {
   if (inner.value?.Receipes?.find((ing) => ing.Id == item.Id) != undefined)
     return;

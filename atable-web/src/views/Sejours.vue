@@ -53,21 +53,16 @@
       </v-card>
     </v-dialog>
 
-    <v-responsive class="align-center text-center fill-height">
-      <v-card color="grey-lighten-4">
-        <v-row justify="space-between" class="pa-2">
-          <v-col cols="auto">
-            <v-card-title>Séjours</v-card-title>
-          </v-col>
-          <v-col cols="auto" align-self="center">
-            <v-btn class="mr-2" @click="createSejour">
-              <template v-slot:prepend="">
-                <v-icon color="green">mdi-plus</v-icon>
-              </template>
-              Ajouter un séjour
-            </v-btn>
-          </v-col>
-        </v-row>
+    <v-responsive class="align-center fill-height">
+      <v-card color="grey-lighten-4" title="Séjours">
+        <template v-slot:append>
+          <v-btn class="mr-2" @click="createSejour">
+            <template v-slot:prepend="">
+              <v-icon color="green">mdi-plus</v-icon>
+            </template>
+            Ajouter un séjour
+          </v-btn>
+        </template>
         <v-card-text>
           <v-card class="mt-2" elevation="0">
             <v-row justify="center" class="mx-1 mt-2">

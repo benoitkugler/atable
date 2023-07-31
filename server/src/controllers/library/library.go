@@ -86,6 +86,21 @@ func (ct *Controller) LibraryLoadReceipes(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
+func (ct *Controller) LibraryCreateIngredient(c echo.Context) error {
+	var args men.Ingredient
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	args.Name = utils.UpperFirst(args.Name)
+	ing, err := args.Insert(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return c.JSON(200, ing)
+}
+
 // LibraryCreateMenu creates a favorite menu for the given user
 func (ct *Controller) LibraryCreateMenu(c echo.Context) error {
 	uID := users.JWTUser(c)

@@ -4,9 +4,13 @@ import {
   Horaire,
   HoraireLabels,
   IdUser,
+  Ingredient,
+  IngredientKind,
+  Ingredients,
   MenuExt,
   PlatKind,
   QuantityR,
+  Receipes,
   ResourceHeader,
   SejourExt,
 } from "./api_gen";
@@ -174,12 +178,6 @@ export const platColors: { [key in PlatKind]: string } = {
   [PlatKind.P_Dessert]: "pink-lighten-1",
 };
 
-export interface MenuResource {
-  Id: number;
-  Title: string;
-  Kind: "receipe" | "ingredient";
-}
-
 export interface MenuItem {
   id: number;
   title: string;
@@ -227,4 +225,36 @@ export class Debouncer {
     // delay new call for 'debounceDelay'
     this.timerId = window.setTimeout(() => this.action(pattern), debounceDelay);
   };
+}
+
+export function upperFirst(s: string) {
+  if (!s.length) return s;
+  return s.at(0)?.toUpperCase() + s.substring(1);
+}
+
+export interface MenuResource {
+  Id: number;
+  Title: string;
+  Kind: "receipe" | "ingredient";
+  IngredientKind?: IngredientKind;
+}
+
+export function resourcesToList(ingredients: Ingredients, receipes: Receipes) {
+  const out: MenuResource[] = Object.values(ingredients || {}).map((ing) => ({
+    Title: ing.Name,
+    Id: ing.Id,
+    IngredientKind: ing.Kind,
+    Kind: "ingredient",
+  }));
+
+  out.push(
+    ...Object.values(receipes || {}).map((rec) => ({
+      Title: rec.Name,
+      Id: rec.Id,
+      Kind: "receipe" as const,
+    }))
+  );
+
+  out.sort((a, b) => a.Title.localeCompare(b.Title));
+  return out;
 }

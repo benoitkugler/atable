@@ -1,5 +1,5 @@
 <template>
-  <v-card elevation="0">
+  <v-card elevation="0" title="Groupes">
     <v-dialog
       :model-value="toDelete != null"
       @update:model-value="toDelete = null"
@@ -79,19 +79,14 @@
       </v-card>
     </v-dialog>
 
-    <v-row justify="space-between">
-      <v-col cols="auto" align-self="center">
-        <v-card-title> Groupes </v-card-title>
-      </v-col>
-      <v-col cols="auto" align-self="center">
-        <v-btn class="mr-4" density="comfortable" @click="emit('create')">
-          <template v-slot:prepend>
-            <v-icon color="green">mdi-plus</v-icon>
-          </template>
-          Ajouter un groupe</v-btn
-        >
-      </v-col>
-    </v-row>
+    <template v-slot:append>
+      <v-btn class="mr-4" density="comfortable" @click="emit('create')">
+        <template v-slot:prepend>
+          <v-icon color="green">mdi-plus</v-icon>
+        </template>
+        Ajouter un groupe</v-btn
+      >
+    </template>
     <v-card-text>
       <v-alert v-if="!props.sejour.Groups?.length" class="mb-4">
         <i> Aucun groupe n'est défini. </i>

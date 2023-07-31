@@ -1,4 +1,20 @@
 <template>
+  <v-dialog
+    :model-value="newIngredient != null"
+    @update:model-value="newIngredient = null"
+    max-width="700px"
+  >
+    <ingredient-editor
+      v-if="newIngredient != null"
+      :ingredient="newIngredient"
+      @update="
+        (ing) => {
+          newIngredient = null;
+          emit('createIngredient', ing);
+        }
+      "
+    ></ingredient-editor>
+  </v-dialog>
   <v-autocomplete
     class="my-2 mx-2"
     density="compact"
@@ -17,13 +33,27 @@
     item-title="Title"
     item-value="Id"
     return-object
-  ></v-autocomplete>
+    autofocus
+  >
+    <template v-slot:no-data>
+      <v-row no-gutters class="px-2">
+        <v-col align-self="center"><i>Aucun résultat.</i></v-col>
+        <v-col cols="auto">
+          <v-btn flat @click="startCreateIngredient">
+            Ajouter un ingrédient
+          </v-btn>
+        </v-col>
+      </v-row>
+    </template>
+  </v-autocomplete>
 </template>
 
 <script setup lang="ts">
-import { MenuResource } from "@/logic/controller";
+import { Ingredient, IngredientKind } from "@/logic/api_gen";
+import { MenuResource, upperFirst } from "@/logic/controller";
 import { nextTick } from "vue";
 import { ref } from "vue";
+import IngredientEditor from "./IngredientEditor.vue";
 
 const props = defineProps<{
   items: MenuResource[];
@@ -32,6 +62,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "selected", item: MenuResource): void;
+  (e: "createIngredient", item: Ingredient): void;
 }>();
 
 const search = ref("");
@@ -53,6 +84,20 @@ function customFilter(itemTitle: string, queryText: string) {
 function onAdd(v: MenuResource | null) {
   if (v == null) return;
   emit("selected", v);
+  // clear the selector
+  nextTick(() => {
+    search.value = "";
+    item.value = null;
+  });
+}
+
+const newIngredient = ref<Ingredient | null>(null);
+function startCreateIngredient() {
+  newIngredient.value = {
+    Id: 0,
+    Name: upperFirst(search.value),
+    Kind: IngredientKind.I_Empty,
+  };
   // clear the selector
   nextTick(() => {
     search.value = "";
