@@ -24,7 +24,7 @@
           <v-col>
             <v-text-field
               type="number"
-              v-model.number="inner.For"
+              v-model.number="inner.For_"
               label="Pour"
               variant="outlined"
               density="compact"

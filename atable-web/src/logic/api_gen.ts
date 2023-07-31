@@ -155,6 +155,7 @@ export interface ResourceSearchOut {
 export interface SejourExt {
   Sejour: Sejour;
   Groups: Group[] | null;
+  ExportClientURL: string;
 }
 // github.com/benoitkugler/atable/controllers/sejours.SetMenuIn
 export interface SetMenuIn {
@@ -245,7 +246,7 @@ export const PlatKindLabels: { [key in PlatKind]: string } = {
 export interface QuantityR {
   Val: number;
   Unite: Unite;
-  For: number;
+  For_: number;
 }
 // github.com/benoitkugler/atable/sql/menus.Receipe
 export interface Receipe {

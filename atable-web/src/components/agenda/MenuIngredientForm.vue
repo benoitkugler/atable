@@ -14,7 +14,7 @@
               density="compact"
               label="Pour tant de personnes"
               type="number"
-              v-model.number="inner.Quantity.For"
+              v-model.number="inner.Quantity.For_"
             ></v-text-field>
           </v-col>
           <v-col>

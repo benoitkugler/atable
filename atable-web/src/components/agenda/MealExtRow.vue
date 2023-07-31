@@ -73,7 +73,7 @@
                       <small v-if="item.quantity != null">
                         {{ item.quantity.Val }}
                         {{ UniteLabels[item.quantity.Unite] }}
-                        (pour {{ item.quantity.For }} per.)
+                        (pour {{ item.quantity.For_ }} per.)
                       </small>
                     </v-col>
                   </v-row>

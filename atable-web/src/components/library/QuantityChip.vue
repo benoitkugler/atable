@@ -11,7 +11,7 @@
         <b>{{ quantity.Val }}</b
         >&nbsp;
         {{ UniteLabels[quantity.Unite] }}
-        <template v-if="props.showFor">(pour {{ quantity.For }})</template>
+        <template v-if="props.showFor">(pour {{ quantity.For_ }})</template>
       </v-chip>
     </template>
     <QuantityEditor :quantity="quantity" @update="save"></QuantityEditor>

@@ -65,7 +65,7 @@
         </template>
         <v-card-text>
           <v-card class="mt-2" elevation="0">
-            <v-row justify="center" class="mx-1 mt-2">
+            <v-row class="mx-1 mt-2 px-4">
               <v-col align-self="center" cols="6">
                 <v-select
                   :items="selectItems"
@@ -98,7 +98,19 @@
                   <v-icon color="red">mdi-delete</v-icon>
                 </v-btn>
               </v-col>
+              <v-spacer></v-spacer>
+              <v-col cols="auto" align-self="center">
+                <v-btn
+                  variant="outlined"
+                  :disabled="rc.activeSejour == null"
+                  @click="copyClientLink"
+                >
+                  <template v-slot:append><v-icon>mdi-link</v-icon></template>
+                  Lier au smartphone
+                </v-btn>
+              </v-col>
             </v-row>
+
             <v-card-text v-if="rc.activeSejour != null">
               <mono-group
                 v-if="rc.activeSejour.Groups?.length == 1"
@@ -163,8 +175,6 @@ async function createSejour() {
   controller.showMessage("Séjour ajouté avec succès.");
   sejours.value.push(res);
 
-  //   activeSejour.value = res;
-  //   notifyActiveSejour();
   rc.activeSejour = res;
   sejourToEdit.value = res;
 }
@@ -188,7 +198,6 @@ async function deleteSejour() {
   sejours.value = sejours.value.filter(
     (s) => s.Sejour.Id != toDelete.Sejour.Id
   );
-  //   activeSejour.value = null;
   rc.activeSejour = null;
   sejourToDelete.value = null;
 
@@ -223,7 +232,6 @@ async function createGroup() {
   controller.showMessage("Groupe ajouté avec succès.");
 
   rc.activeSejour.Groups = (rc.activeSejour.Groups || []).concat(res);
-  //   notifyActiveSejour();
   nextTick(() => groupList.value?.startEdit(res));
 }
 
@@ -235,7 +243,6 @@ async function updateGroup(group: Group) {
   const l = rc.activeSejour?.Groups || [];
   const index = l.findIndex((g) => g.Id == group.Id);
   l[index] = group;
-  //   notifyActiveSejour();
 }
 
 async function deleteGroup(group: Group) {
@@ -245,6 +252,15 @@ async function deleteGroup(group: Group) {
 
   const l = rc.activeSejour?.Groups || [];
   rc.activeSejour!.Groups = l.filter((g) => g.Id != group.Id);
-  //   notifyActiveSejour();
+}
+
+async function copyClientLink() {
+  const link = rc.activeSejour!.ExportClientURL;
+  try {
+    await navigator.clipboard.writeText(link);
+    controller.showMessage("Lien copié dans le presse-papier.");
+  } catch (e) {
+    controller.onError("Presse-papier", `Impossible de copier le lien: ${e}`);
+  }
 }
 </script>

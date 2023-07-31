@@ -239,7 +239,7 @@ async function createAndAddIngredient(ingredient: Ingredient) {
 }
 
 const hasSameForPeople = computed(() => {
-  const s = new Set(inner.value?.Ingredients?.map((ing) => ing.Quantity.For));
+  const s = new Set(inner.value?.Ingredients?.map((ing) => ing.Quantity.For_));
   return s.size == 1 ? Array.from(s.keys())[0] : null;
 });
 
