@@ -42,10 +42,10 @@ Map<String, dynamic> mealMToJson(MealM item) {
 
 // github.com/benoitkugler/atable/controllers/sejours.TablesM
 class TablesM {
-  final Ingredients ingredients;
-  final Receipes receipes;
+  final List<Ingredient> ingredients;
+  final List<Receipe> receipes;
   final ReceipeIngredients receipeIngredients;
-  final Menus menus;
+  final List<Menu> menus;
   final MenuReceipes menuReceipes;
   final MenuIngredients menuIngredients;
   final List<MealM> meals;
@@ -62,10 +62,10 @@ class TablesM {
 TablesM tablesMFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return TablesM(
-      ingredientsFromJson(json['Ingredients']),
-      receipesFromJson(json['Receipes']),
+      listIngredientFromJson(json['Ingredients']),
+      listReceipeFromJson(json['Receipes']),
       receipeIngredientsFromJson(json['ReceipeIngredients']),
-      menusFromJson(json['Menus']),
+      listMenuFromJson(json['Menus']),
       menuReceipesFromJson(json['MenuReceipes']),
       menuIngredientsFromJson(json['MenuIngredients']),
       listMealMFromJson(json['Meals']));
@@ -73,14 +73,25 @@ TablesM tablesMFromJson(dynamic json_) {
 
 Map<String, dynamic> tablesMToJson(TablesM item) {
   return {
-    "Ingredients": ingredientsToJson(item.ingredients),
-    "Receipes": receipesToJson(item.receipes),
+    "Ingredients": listIngredientToJson(item.ingredients),
+    "Receipes": listReceipeToJson(item.receipes),
     "ReceipeIngredients": receipeIngredientsToJson(item.receipeIngredients),
-    "Menus": menusToJson(item.menus),
+    "Menus": listMenuToJson(item.menus),
     "MenuReceipes": menuReceipesToJson(item.menuReceipes),
     "MenuIngredients": menuIngredientsToJson(item.menuIngredients),
     "Meals": listMealMToJson(item.meals)
   };
+}
+
+List<Ingredient> listIngredientFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(ingredientFromJson).toList();
+}
+
+List<dynamic> listIngredientToJson(List<Ingredient> item) {
+  return item.map(ingredientToJson).toList();
 }
 
 List<MealM> listMealMFromJson(dynamic json) {
@@ -92,4 +103,26 @@ List<MealM> listMealMFromJson(dynamic json) {
 
 List<dynamic> listMealMToJson(List<MealM> item) {
   return item.map(mealMToJson).toList();
+}
+
+List<Menu> listMenuFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(menuFromJson).toList();
+}
+
+List<dynamic> listMenuToJson(List<Menu> item) {
+  return item.map(menuToJson).toList();
+}
+
+List<Receipe> listReceipeFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(receipeFromJson).toList();
+}
+
+List<dynamic> listReceipeToJson(List<Receipe> item) {
+  return item.map(receipeToJson).toList();
 }

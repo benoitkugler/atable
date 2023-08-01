@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:atable/logic/env.dart';
 import 'package:atable/logic/shop.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:atable/logic/utils.dart';
@@ -9,9 +10,10 @@ import 'package:qr_flutter/qr_flutter.dart';
 /// ShopSessionMaster est utilisé pour une séance de course
 /// par l'application maitre (mobile)
 class ShopSessionMaster extends StatefulWidget {
+  final Env env;
   final List<MealExt> repass;
 
-  const ShopSessionMaster(this.repass, {super.key});
+  const ShopSessionMaster(this.env, this.repass, {super.key});
 
   @override
   State<ShopSessionMaster> createState() => _ShopSessionMasterState();
@@ -45,7 +47,8 @@ class _ShopSessionMasterState extends State<ShopSessionMaster> {
       final ctL = shopController as ShopControllerLocal;
       // demande au serveur de créer une nouvelle session partagée
       try {
-        final ct = await ShopControllerShared.createSession(ctL.list);
+        final ct =
+            await ShopControllerShared.createSession(widget.env, ctL.list);
         setState(() {
           shopController = ct;
         });
@@ -207,9 +210,10 @@ class _ShopListImplState extends State<_ShopListImpl> {
 /// ShopSessionGuest est utilisé pour une session de course
 /// par les applications invitées (web)
 class ShopSessionGuest extends StatelessWidget {
+  final Env env;
   final String sessionID;
 
-  const ShopSessionGuest(this.sessionID, {super.key});
+  const ShopSessionGuest(this.env, this.sessionID, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -217,7 +221,7 @@ class ShopSessionGuest extends StatelessWidget {
       appBar: AppBar(title: const Text("Liste de courses partagées")),
       body: sessionID.isEmpty
           ? const Center(child: Text("Aucun code de session."))
-          : _ShopListImpl(ShopControllerShared(sessionID)),
+          : _ShopListImpl(ShopControllerShared(env, sessionID)),
     );
   }
 }

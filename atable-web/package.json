@@ -12,6 +12,7 @@
         "@mdi/font": "7.0.96",
         "axios": "^1.4.0",
         "core-js": "^3.29.0",
+        "qrcode-vue3": "^1.6.8",
         "roboto-fontface": "*",
         "vue": "^3.2.0",
         "vue-router": "^4.0.0",

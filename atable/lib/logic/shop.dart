@@ -1,12 +1,10 @@
 import 'dart:convert';
 
+import 'package:atable/logic/env.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
 import 'package:atable/logic/utils.dart';
 import 'package:http/http.dart' as http;
-
-const _serverHost = "https://intendance.alwaysdata.net"; // prod
-// const _serverHost = "http://localhost:1323" // dev
 
 typedef Quantites = Map<Unite, double>;
 
@@ -114,27 +112,28 @@ class ShopControllerLocal implements ShopController {
 
 /// [ShopControllerShared] uses a remote data store
 class ShopControllerShared implements ShopController {
+  final Env env;
   final String sessionID;
 
-  ShopControllerShared(this.sessionID);
+  ShopControllerShared(this.env, this.sessionID);
 
   // PUT : crée une session
   // GET (sessionID) : récupère la session demandée
   // POST (sessionID) : modifie la session demandée
-  static const _apiEndpoint = "$_serverHost/api/session";
+  static const _apiEndpoint = "/api/shop/session";
 
-  static const _guestEndpoint = "$_serverHost/shop";
+  static const _guestEndpoint = "/shop";
 
   /// [guestURL] renvoie l'url de la page d'accueil destinée
   /// à un nouvel invité
-  String guestURL() => Uri.parse(_guestEndpoint).replace(
-        queryParameters: {"sessionID": sessionID},
-      ).toString();
+  String guestURL() => env.urlFor(_guestEndpoint,
+      queryParameters: {"sessionID": sessionID}).toString();
 
   /// [createSession] demande au serveur de créer une nouvelle session,
   /// avec le contenu de [list]
-  static Future<ShopControllerShared> createSession(ShopList list) async {
-    final resp = await http.put(Uri.parse(_apiEndpoint),
+  static Future<ShopControllerShared> createSession(
+      Env env, ShopList list) async {
+    final resp = await http.put(env.urlFor(_apiEndpoint),
         body: jsonEncode(list._list.map((e) => e.toJson()).toList()),
         headers: {
           'Content-type': 'application/json',
@@ -142,13 +141,13 @@ class ShopControllerShared implements ShopController {
         });
     final sessionID =
         (jsonDecode(resp.body) as Map<String, dynamic>)["sessionID"];
-    return ShopControllerShared(sessionID);
+    return ShopControllerShared(env, sessionID);
   }
 
   @override
   Future<ShopList> fetchList() async {
-    final apiURL = Uri.parse(_apiEndpoint)
-        .replace(queryParameters: {"sessionID": sessionID});
+    final apiURL =
+        env.urlFor(_apiEndpoint, queryParameters: {"sessionID": sessionID});
     final resp = await http.get(apiURL);
     final json = jsonDecode(resp.body);
     if (json is Map) {
@@ -164,8 +163,8 @@ class ShopControllerShared implements ShopController {
 
   @override
   Future<ShopList> updateShop(int id, bool checked) async {
-    final apiURL = Uri.parse(_apiEndpoint)
-        .replace(queryParameters: {"sessionID": sessionID});
+    final apiURL =
+        env.urlFor(_apiEndpoint, queryParameters: {"sessionID": sessionID});
     final resp = await http.post(apiURL,
         body: jsonEncode(
           {"checked": checked, "id": id},

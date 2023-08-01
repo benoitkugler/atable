@@ -53,6 +53,37 @@
       </v-card>
     </v-dialog>
 
+    <v-dialog v-model="showClientLinkDialog" max-width="800px">
+      <v-card
+        title="Exporter sur un smartphone"
+        subtitle="Vous pouvez télécharger les repas d'un séjour sur l'application mobile À table !"
+      >
+        <v-card-text>
+          <v-row>
+            <v-col>
+              <v-text-field
+                label="Lien"
+                readonly
+                :model-value="rc.activeSejour!.ExportClientURL"
+                hide-details
+              >
+              </v-text-field>
+            </v-col>
+            <v-col cols="auto" align-self="center">
+              <v-btn icon="mdi-content-copy" @click="copyClientLink"> </v-btn>
+            </v-col>
+          </v-row>
+          <v-row justify="center" no-gutters>
+            <v-col cols="auto">
+              <QRCodeVue3
+                :value="rc.activeSejour!.ExportClientURL"
+              ></QRCodeVue3>
+            </v-col>
+          </v-row>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
     <v-responsive class="align-center fill-height">
       <v-card color="grey-lighten-4" title="Séjours">
         <template v-slot:append>
@@ -84,6 +115,7 @@
                   icon
                   class="mx-1"
                   size="small"
+                  :disabled="rc.activeSejour == null"
                   @click="sejourToEdit = copy(rc.activeSejour)"
                 >
                   <v-icon>mdi-pencil</v-icon>
@@ -93,6 +125,7 @@
                   icon
                   class="mx-1"
                   size="small"
+                  :disabled="rc.activeSejour == null"
                   @click="sejourToDelete = copy(rc.activeSejour)"
                 >
                   <v-icon color="red">mdi-delete</v-icon>
@@ -103,15 +136,15 @@
                 <v-btn
                   variant="outlined"
                   :disabled="rc.activeSejour == null"
-                  @click="copyClientLink"
+                  @click="showClientLinkDialog = true"
                 >
                   <template v-slot:append><v-icon>mdi-link</v-icon></template>
-                  Lier au smartphone
+                  Copier sur un smartphone
                 </v-btn>
               </v-col>
             </v-row>
 
-            <v-card-text v-if="rc.activeSejour != null">
+            <v-card-text v-if="rc.activeSejour != null" class="text-center">
               <mono-group
                 v-if="rc.activeSejour.Groups?.length == 1"
                 :group="rc.activeSejour.Groups[0]"
@@ -138,6 +171,7 @@
 import DateField from "@/components/DateField.vue";
 import GroupList from "@/components/sejours/GroupList.vue";
 import MonoGroup from "@/components/sejours/MonoGroup.vue";
+import QRCodeVue3 from "qrcode-vue3";
 import { Group, SejourExt } from "@/logic/api_gen";
 import { controller, copy } from "@/logic/controller";
 import { onActivated } from "vue";
@@ -253,6 +287,8 @@ async function deleteGroup(group: Group) {
   const l = rc.activeSejour?.Groups || [];
   rc.activeSejour!.Groups = l.filter((g) => g.Id != group.Id);
 }
+
+const showClientLinkDialog = ref(false);
 
 async function copyClientLink() {
   const link = rc.activeSejour!.ExportClientURL;

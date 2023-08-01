@@ -15,8 +15,8 @@ import (
 
 // Mobile API
 const (
-	ClientEnpoint    = "/api/client/import-sejour"
-	clientQueryParam = "idSejour"
+	ClientEnpoint    = "/import-sejour"
+	clientQueryParam = "id"
 )
 
 // SejoursExportToClient returns a list of the [Meal]s registred
@@ -24,6 +24,7 @@ const (
 // This endpoint should be used by a mobile app, in a setup step.
 func (ct *Controller) SejoursExportToClient(c echo.Context) error {
 	idCrypted := c.QueryParam(clientQueryParam)
+
 	id_, err := ct.key.DecryptID(pass.EncryptedID(idCrypted))
 	if err != nil {
 		return err
@@ -60,10 +61,23 @@ func (ct *Controller) exportToClient(idSejour sej.IdSejour) (out TablesM, _ erro
 	}
 	mealsToGroups := links.ByIdMeal()
 
-	out.MenuTables, err = lib.LoadMenus(ct.db, meals.Menus())
+	datas, err := lib.LoadMenus(ct.db, meals.Menus())
 	if err != nil {
 		return out, err
 	}
+
+	for _, ing := range datas.Ingredients {
+		out.Ingredients = append(out.Ingredients, ing)
+	}
+	for _, rec := range datas.Receipes {
+		out.Receipes = append(out.Receipes, rec)
+	}
+	out.ReceipeIngredients = datas.ReceipeIngredients
+	for _, menu := range datas.Menus {
+		out.Menus = append(out.Menus, menu)
+	}
+	out.MenuIngredients = datas.MenuIngredients
+	out.MenuReceipes = datas.MenuReceipes
 
 	// convert to the simplified mobile version
 	out.Meals = make([]MealM, 0, len(meals))

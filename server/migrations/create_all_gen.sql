@@ -47,7 +47,7 @@ CREATE TABLE receipes (
     Description text NOT NULL
 );
 
-CREATE TABLE receipe_items (
+CREATE TABLE receipe_ingredients (
     IdReceipe integer NOT NULL,
     IdIngredient integer NOT NULL,
     Quantity jsonb NOT NULL
@@ -58,22 +58,25 @@ ALTER TABLE ingredients
     ADD UNIQUE (Name);
 
 ALTER TABLE receipes
-    ADD UNIQUE (Name);
+    ADD UNIQUE (OWNER, Name);
 
 ALTER TABLE receipes
     ADD FOREIGN KEY (OWNER) REFERENCES users ON DELETE CASCADE;
 
-ALTER TABLE receipe_items
+ALTER TABLE receipe_ingredients
     ADD UNIQUE (IdReceipe, IdIngredient);
 
-ALTER TABLE receipe_items
+ALTER TABLE receipe_ingredients
     ADD FOREIGN KEY (IdReceipe) REFERENCES receipes ON DELETE CASCADE;
 
-ALTER TABLE receipe_items
+ALTER TABLE receipe_ingredients
     ADD FOREIGN KEY (IdIngredient) REFERENCES ingredients;
 
 ALTER TABLE menus
     ADD FOREIGN KEY (OWNER) REFERENCES users ON DELETE CASCADE;
+
+ALTER TABLE menu_ingredients
+    ADD UNIQUE (IdMenu, IdIngredient);
 
 ALTER TABLE menu_ingredients
     ADD FOREIGN KEY (IdMenu) REFERENCES menus ON DELETE CASCADE;
@@ -98,12 +101,12 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Val', 'Unite', 'For'))
+            bool_and(key IN ('Val', 'Unite', 'For_'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_number (data -> 'Val')
         AND gomacro_validate_json_menu_Unite (data -> 'Unite')
-        AND gomacro_validate_json_number (data -> 'For');
+        AND gomacro_validate_json_number (data -> 'For_');
     RETURN is_valid;
 END;
 $$
@@ -144,7 +147,7 @@ IMMUTABLE;
 ALTER TABLE menu_ingredients
     ADD CONSTRAINT Quantity_gomacro CHECK (gomacro_validate_json_menu_QuantityR (Quantity));
 
-ALTER TABLE receipe_items
+ALTER TABLE receipe_ingredients
     ADD CONSTRAINT Quantity_gomacro CHECK (gomacro_validate_json_menu_QuantityR (Quantity));
 
 -- sql/sejours/gen_create.sql

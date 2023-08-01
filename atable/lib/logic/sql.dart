@@ -482,16 +482,16 @@ class DBApi {
 
     // ... and insert new data
     final batch = db.batch();
-    for (var ingredient in tables.ingredients.values) {
+    for (var ingredient in tables.ingredients) {
       batch.insert("ingredients", ingredient.toSQLMap(false));
     }
-    for (var receipe in tables.receipes.values) {
+    for (var receipe in tables.receipes) {
       batch.insert("receipes", receipe.toSQLMap(false));
     }
     for (var link in tables.receipeIngredients) {
       batch.insert("receipe_ingredients", link.toSQLMap());
     }
-    for (var menu in tables.menus.values) {
+    for (var menu in tables.menus) {
       batch.insert("menus", menu.toSQLMap(false));
     }
     for (var link in tables.menuIngredients) {

@@ -9,12 +9,12 @@ BEGIN
     END IF;
     is_valid := (
         SELECT
-            bool_and(key IN ('Val', 'Unite', 'For'))
+            bool_and(key IN ('Val', 'Unite', 'For_'))
         FROM
             jsonb_each(data))
         AND gomacro_validate_json_number (data -> 'Val')
         AND gomacro_validate_json_menu_Unite (data -> 'Unite')
-        AND gomacro_validate_json_number (data -> 'For');
+        AND gomacro_validate_json_number (data -> 'For_');
     RETURN is_valid;
 END;
 $$

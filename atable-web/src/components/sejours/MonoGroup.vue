@@ -7,7 +7,7 @@
             <template v-slot:activator="{ isActive, props: innerProps }">
               <v-chip
                 color="secondary"
-                size="large"
+                size="x-large"
                 v-on="{ isActive }"
                 v-bind="innerProps"
               >

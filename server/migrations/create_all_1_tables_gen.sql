@@ -38,7 +38,7 @@ CREATE TABLE receipes (
     Description text NOT NULL
 );
 
-CREATE TABLE receipe_items (
+CREATE TABLE receipe_ingredients (
     IdReceipe integer NOT NULL,
     IdIngredient integer NOT NULL,
     Quantity jsonb NOT NULL

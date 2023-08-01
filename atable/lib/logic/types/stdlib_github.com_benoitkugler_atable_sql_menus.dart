@@ -66,17 +66,6 @@ IngredientKind ingredientKindFromJson(dynamic json) =>
 
 dynamic ingredientKindToJson(IngredientKind item) => item.toValue();
 
-// github.com/benoitkugler/atable/sql/menus.Ingredients
-typedef Ingredients = Map<IdIngredient, Ingredient>;
-
-Ingredients ingredientsFromJson(dynamic json) {
-  return dictIntToIngredientFromJson(json);
-}
-
-dynamic ingredientsToJson(Ingredients item) {
-  return dictIntToIngredientToJson(item);
-}
-
 // github.com/benoitkugler/atable/sql/menus.Menu
 class Menu {
   final IdMenu id;
@@ -185,17 +174,6 @@ MenuReceipes menuReceipesFromJson(dynamic json) {
 
 dynamic menuReceipesToJson(MenuReceipes item) {
   return listMenuReceipeToJson(item);
-}
-
-// github.com/benoitkugler/atable/sql/menus.Menus
-typedef Menus = Map<IdMenu, Menu>;
-
-Menus menusFromJson(dynamic json) {
-  return dictIntToMenuFromJson(json);
-}
-
-dynamic menusToJson(Menus item) {
-  return dictIntToMenuToJson(item);
 }
 
 // github.com/benoitkugler/atable/sql/menus.PlatKind
@@ -318,17 +296,6 @@ dynamic receipeIngredientsToJson(ReceipeIngredients item) {
   return listReceipeIngredientToJson(item);
 }
 
-// github.com/benoitkugler/atable/sql/menus.Receipes
-typedef Receipes = Map<IdReceipe, Receipe>;
-
-Receipes receipesFromJson(dynamic json) {
-  return dictIntToReceipeFromJson(json);
-}
-
-dynamic receipesToJson(Receipes item) {
-  return dictIntToReceipeToJson(item);
-}
-
 // github.com/benoitkugler/atable/sql/menus.Unite
 enum Unite { piece, kg, g, l, cL }
 
@@ -345,45 +312,6 @@ extension _UniteExt on Unite {
 Unite uniteFromJson(dynamic json) => _UniteExt.fromValue(json as int);
 
 dynamic uniteToJson(Unite item) => item.toValue();
-
-Map<IdIngredient, Ingredient> dictIntToIngredientFromJson(dynamic json) {
-  if (json == null) {
-    return {};
-  }
-  return (json as Map<String, dynamic>)
-      .map((k, v) => MapEntry(k as IdIngredient, ingredientFromJson(v)));
-}
-
-Map<String, dynamic> dictIntToIngredientToJson(
-    Map<IdIngredient, Ingredient> item) {
-  return item
-      .map((k, v) => MapEntry(intToJson(k).toString(), ingredientToJson(v)));
-}
-
-Map<IdMenu, Menu> dictIntToMenuFromJson(dynamic json) {
-  if (json == null) {
-    return {};
-  }
-  return (json as Map<String, dynamic>)
-      .map((k, v) => MapEntry(k as IdMenu, menuFromJson(v)));
-}
-
-Map<String, dynamic> dictIntToMenuToJson(Map<IdMenu, Menu> item) {
-  return item.map((k, v) => MapEntry(intToJson(k).toString(), menuToJson(v)));
-}
-
-Map<IdReceipe, Receipe> dictIntToReceipeFromJson(dynamic json) {
-  if (json == null) {
-    return {};
-  }
-  return (json as Map<String, dynamic>)
-      .map((k, v) => MapEntry(k as IdReceipe, receipeFromJson(v)));
-}
-
-Map<String, dynamic> dictIntToReceipeToJson(Map<IdReceipe, Receipe> item) {
-  return item
-      .map((k, v) => MapEntry(intToJson(k).toString(), receipeToJson(v)));
-}
 
 List<MenuIngredient> listMenuIngredientFromJson(dynamic json) {
   if (json == null) {

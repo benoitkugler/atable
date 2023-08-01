@@ -1,7 +1,10 @@
 import 'package:atable/components/shop_list.dart';
+import 'package:atable/logic/env.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'dart:js' as js;
+
+const env = Env(BuildMode.prod);
 
 void main() async {
   // the static app is called via an url setting the session ID
@@ -34,6 +37,6 @@ class ShopListGuestApp extends StatelessWidget {
         supportedLocales: const [
           Locale('fr'),
         ],
-        home: ShopSessionGuest(sessionID));
+        home: ShopSessionGuest(env, sessionID));
   }
 }
