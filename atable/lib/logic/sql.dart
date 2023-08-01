@@ -301,15 +301,21 @@ class ReceipeExt {
   }
 }
 
-class QuantityIngredient {
+class ResolvedQuantityIngredient {
   final Ingredient ingredient;
   final double quantite;
   final Unite unite;
-  const QuantityIngredient(this.ingredient, this.quantite, this.unite);
+  const ResolvedQuantityIngredient(this.ingredient, this.quantite, this.unite);
+}
+
+class RelativeQuantityIngredient {
+  final Ingredient ingredient;
+  final QuantityR quantity;
+  const RelativeQuantityIngredient(this.ingredient, this.quantity);
 }
 
 abstract class QuantifiedIngI {
-  QuantityIngredient iq();
+  RelativeQuantityIngredient iq();
 }
 
 class ReceipeIngredientExt implements QuantifiedIngI {
@@ -325,8 +331,8 @@ class ReceipeIngredientExt implements QuantifiedIngI {
   }
 
   @override
-  QuantityIngredient iq() =>
-      QuantityIngredient(ingredient, link.quantity.val, link.quantity.unite);
+  RelativeQuantityIngredient iq() =>
+      RelativeQuantityIngredient(ingredient, link.quantity);
 }
 
 class MenuIngredientExt implements QuantifiedIngI {
@@ -343,8 +349,8 @@ class MenuIngredientExt implements QuantifiedIngI {
   }
 
   @override
-  QuantityIngredient iq() =>
-      QuantityIngredient(ingredient, link.quantity.val, link.quantity.unite);
+  RelativeQuantityIngredient iq() =>
+      RelativeQuantityIngredient(ingredient, link.quantity);
 }
 
 /// [MenuExt] is a [Menu] with its [Receipe]s and [Ingredient]s.
@@ -380,13 +386,13 @@ class MealExt {
 
   /// [requiredQuantities] resolve the quantities for the
   /// required number of people.
-  Map<PlatKind, List<QuantityIngredient>> requiredQuantities() {
-    final out = <PlatKind, List<QuantityIngredient>>{};
+  Map<PlatKind, List<ResolvedQuantityIngredient>> requiredQuantities() {
+    final out = <PlatKind, List<ResolvedQuantityIngredient>>{};
     // resolve free ingredients
     for (var ing in menu.ingredients) {
       final quantite = ing.link.quantity.resolveFor(meal.for_);
-      final ingQuant =
-          QuantityIngredient(ing.ingredient, quantite, ing.link.quantity.unite);
+      final ingQuant = ResolvedQuantityIngredient(
+          ing.ingredient, quantite, ing.link.quantity.unite);
       final l = out.putIfAbsent(ing.link.plat, () => []);
       l.add(ingQuant);
     }
@@ -394,7 +400,7 @@ class MealExt {
     for (var receipe in menu.receipes) {
       for (var ing in receipe.ingredients) {
         final quantite = ing.link.quantity.resolveFor(meal.for_);
-        final ingQuant = QuantityIngredient(
+        final ingQuant = ResolvedQuantityIngredient(
             ing.ingredient, quantite, ing.link.quantity.unite);
         final l = out.putIfAbsent(receipe.receipe.plat, () => []);
         l.add(ingQuant);
@@ -509,6 +515,27 @@ class DBApi {
   Future<Ingredient> insertIngredient(Ingredient ing) async {
     final id = await db.insert("ingredients", ing.toSQLMap(true));
     return ing.copyWith(id: id);
+  }
+
+  Future<void> updateIngredient(Ingredient ing) async {
+    await db.update("ingredients", ing.toSQLMap(true),
+        where: "id = ?", whereArgs: [ing.id]);
+  }
+
+  Future<UtilisationsIngredient> getIngredientUses(int id) async {
+    final receipes = (await db.query("receipe_ingredients",
+            where: "idIngredient = ?", whereArgs: [id]))
+        .map(RI.fromSQLMap)
+        .map((e) => e.idReceipe)
+        .toSet()
+        .length;
+    final menus = (await db.query("menu_ingredients",
+            where: "idIngredient = ?", whereArgs: [id]))
+        .map(MI.fromSQLMap)
+        .map((e) => e.idMenu)
+        .toSet()
+        .length;
+    return UtilisationsIngredient(receipes, menus);
   }
 
   Future<List<ReceipeExt>> _loadReceipesIngs(Iterable<Receipe> receipes) async {
@@ -767,4 +794,10 @@ class DBApi {
 String _arrayPlaceholders(Iterable array) {
   final values = List.filled(array.length, "?").join(",");
   return "($values)";
+}
+
+class UtilisationsIngredient {
+  final int receipes;
+  final int menus;
+  const UtilisationsIngredient(this.receipes, this.menus);
 }

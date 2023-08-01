@@ -1,10 +1,10 @@
 // import 'package:atable/components/details_menu.dart';
 import 'dart:math';
 
+import 'package:atable/components/details_menu.dart';
 import 'package:atable/components/shared.dart';
 import 'package:atable/components/shop_list.dart';
 import 'package:atable/logic/debug.dart';
-import 'package:atable/logic/shop.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_sejours.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
@@ -187,8 +187,7 @@ class _MealListState extends State<MealList> {
   void _showMenuDetails(int menuIndex) async {
     var menu = meals[menuIndex].menu;
     await Navigator.of(context).push(MaterialPageRoute(
-      // builder: (context) => DetailsMenu(widget.db, menu),
-      builder: (context) => Placeholder(),
+      builder: (context) => DetailsMenu(widget.db, menu),
     ));
 
     // met à jour les données
@@ -431,7 +430,7 @@ class _MenuSummary extends StatelessWidget {
 
 class _PlatCard extends StatelessWidget {
   final PlatKind plat;
-  final List<QuantityIngredient> ingredients;
+  final List<ResolvedQuantityIngredient> ingredients;
   const _PlatCard(this.plat, this.ingredients, {super.key});
 
   @override
@@ -450,7 +449,7 @@ class _PlatCard extends StatelessWidget {
 }
 
 class _IngQuantRow extends StatelessWidget {
-  final QuantityIngredient ing;
+  final ResolvedQuantityIngredient ing;
   const _IngQuantRow(this.ing, {super.key});
 
   @override

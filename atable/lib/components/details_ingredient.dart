@@ -1,6 +1,6 @@
 import 'package:atable/components/ingredient_editor.dart';
-import 'package:atable/logic/models.back';
 import 'package:atable/logic/sql.dart';
+import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
 import 'package:atable/logic/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -39,14 +39,14 @@ class _DetailsIngredientState extends State<DetailsIngredient> {
         child: Column(children: [
           TextFormField(
             decoration: const InputDecoration(labelText: "Nom"),
-            initialValue: ingredient.nom,
+            initialValue: ingredient.name,
             onFieldSubmitted: _updateNom,
             inputFormatters: [
               TextInputFormatter.withFunction((oldValue, newValue) =>
                   newValue.copyWith(text: capitalize(newValue.text)))
             ],
           ),
-          CategorieIngredientEditor(ingredient.categorie, _updateCategorie),
+          IngredientKindEditor(ingredient.kind, _updateCategorie),
           AnimatedCrossFade(
               duration: const Duration(milliseconds: 400),
               crossFadeState: u != null
@@ -58,7 +58,7 @@ class _DetailsIngredientState extends State<DetailsIngredient> {
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
-                      "Utilisé dans ${u?.recettes} recette(s) et ${u?.menus} menu(s)."),
+                      "Utilisé dans ${u?.receipes} recette(s) et ${u?.menus} menu(s)."),
                 ),
               )),
         ]),
@@ -87,13 +87,13 @@ class _DetailsIngredientState extends State<DetailsIngredient> {
     ));
   }
 
-  _updateCategorie(CategorieIngredient cat) {
-    final ing = ingredient.copyWith(categorie: cat);
+  _updateCategorie(IngredientKind cat) {
+    final ing = ingredient.copyWith(kind: cat);
     _update(ing);
   }
 
   _updateNom(String nom) {
-    final ing = ingredient.copyWith(nom: nom);
+    final ing = ingredient.copyWith(name: nom);
     _update(ing);
   }
 }

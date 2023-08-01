@@ -1,15 +1,13 @@
 import 'package:atable/components/details_ingredient.dart';
-import 'package:atable/components/details_recette.dart';
-import 'package:atable/components/import_dialog.dart';
 import 'package:atable/components/ingredient_editor.dart';
-import 'package:atable/components/recettes_list.dart';
 import 'package:atable/components/shared.dart';
 import 'package:atable/logic/sql.dart';
+import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
 import 'package:atable/logic/utils.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
-/// [DetailsMenu] est utilisé pour modifier les ingrédients d'un repas
+/// [DetailsMenu] exposes the content of a [Menu]
+/// and its [Receipe]s
 class DetailsMenu extends StatefulWidget {
   final DBApi db;
 
@@ -31,65 +29,52 @@ class _DetailsMenuState extends State<DetailsMenu> {
     super.initState();
   }
 
+  int? get hasSameFor {
+    final allFors = menu.ingredients.map((e) => e.link.quantity.for_).toList();
+    for (var e in menu.receipes) {
+      allFors.addAll(e.ingredients.map((e) => e.link.quantity.for_));
+    }
+    final asSet = allFors.toSet();
+    return asSet.length == 1 ? asSet.first : null;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isAnonyme = menu.menu.label.isEmpty;
-    final hasIngredients = menu.ingredients
-        .isNotEmpty; // true si le menu a au mois un ingrédient 'libre'
     final platIngs = ingredientsByPlats(menu.ingredients);
-    final platRecettes = recettesByPlats(menu.recettes);
+    final platRecettes = recettesByPlats(menu.receipes);
     return Scaffold(
       appBar: AppBar(
-        title: Text(isAnonyme ? "Menu" : menu.menu.label),
-        actions: [
-          IconButton(
-              onPressed: _showRenameDialog,
-              icon: isAnonyme
-                  ? const Icon(Icons.favorite)
-                  : const Icon(Icons.edit)),
-          IconButton(
-              onPressed: _showImportDialog, icon: const Icon(Icons.upload))
-        ],
+        title: const Text("Détails du menu"),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        child: PopupMenuButton<int>(
-          onSelected: (value) =>
-              value == 0 ? _showAddRecette() : _showAddIngredient(),
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-                value: 0, child: Text("Ajouter une recette...")),
-            const PopupMenuItem(
-                value: 1, child: Text("Ajouter un ingrédient...")),
-          ],
-          child: const Icon(Icons.add),
-        ),
+        onPressed: _showAddIngredient,
+        tooltip: "Ajouter un ingrédient",
+        child: const Icon(Icons.add),
       ),
       body: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(height: 4),
-          AnimatedCrossFade(
-            duration: const Duration(milliseconds: 400),
-            crossFadeState: hasIngredients
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            firstChild: const SizedBox(),
-            secondChild: NombrePersonneEditor(menu.menu.nbPersonnes,
-                (v) => _updateMenu(menu.menu.copyWith(nbPersonnes: v.toInt()))),
-          ),
+          if (hasSameFor != null)
+            Card(
+              margin: const EdgeInsets.all(8),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                    "Les quantités sont exprimées pour $hasSameFor personnes"),
+              ),
+            ),
           Expanded(
             child: ListView(
-              children: CategoriePlat.values
+              children: PlatKind.values.reversed
                   .map((e) => _PlatCard(
                       e,
                       platIngs[e] ?? [],
                       platRecettes[e] ?? [],
+                      hasSameFor == null,
                       _removeIngredient,
                       _swapCategorie,
-                      _updateLink,
-                      _removeRecette,
-                      _goToRecette,
+                      _updateMenuIng,
+                      _updateReceipeIng,
                       _showIngredient))
                   .toList(),
             ),
@@ -100,7 +85,7 @@ class _DetailsMenuState extends State<DetailsMenu> {
   }
 
   void _showAddIngredient() async {
-    final allIngredients = await widget.db.getIngredients();
+    final allIngredients = (await widget.db.getIngredients()).toList();
     if (!mounted) return;
 
     await showDialog(
@@ -116,96 +101,32 @@ class _DetailsMenuState extends State<DetailsMenu> {
             ));
   }
 
-  void _showAddRecette() async {
-    final selectedRecette =
-        await Navigator.of(context).push(MaterialPageRoute<Recette>(
-      builder: (context) => Scaffold(
-        appBar: AppBar(
-          title: const Text("Choisir une recette"),
-        ),
-        body: RecetteSelector(
-            widget.db, (selected) => Navigator.of(context).pop(selected)),
-      ),
-    ));
-    if (selectedRecette == null) return; // import annulé
-    final recette =
-        await widget.db.insertMenuRecette(menu.menu.id, selectedRecette.id);
-    setState(() {
-      menu.recettes.add(recette);
-    });
-  }
-
-  void _showImportDialog() async {
-    final allIngredients = await widget.db.getIngredients();
-    if (!mounted) return;
-
-    final newIngredients = await showImportDialog(allIngredients, context);
-    if (newIngredients == null) return; // import annulé
-
-    // ajout des ingrédients
-    for (var item in newIngredients) {
-      Ingredient ing = item.ingredient;
-      if (ing.id <= 0) {
-        // register first the new ingredient
-        ing = await widget.db.insertIngredient(ing);
-      }
-
-      final link = MenuIngredient(
-          idMenu: menu.menu.id,
-          idIngredient: ing.id,
-          quantite: item.quantite,
-          unite: item.unite,
-          categorie: CategoriePlat.entree);
-      await widget.db.insertMenuIngredient(link);
-    }
-
-    final updated = await widget.db.getMenu(menu.menu.id);
-    setState(() {
-      menu = updated;
-    });
-  }
-
-  void _updateMenu(Menu newMenu) async {
-    setState(() {
-      menu = menu.copyWith(menu: newMenu);
-    });
-    await widget.db.updateMenu(newMenu);
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('Menu modifié.'),
-      duration: Duration(seconds: 1),
-      backgroundColor: Colors.green,
-    ));
-  }
-
-  void _showRenameDialog() async {
-    final newLabel = await showDialog<String>(
-        context: context,
-        builder: (context) => Dialog(
-              child: _RenameDialog(
-                  menu.menu.label, (s) => Navigator.of(context).pop(s)),
-            ));
-    if (newLabel == null) return;
-
-    _updateMenu(menu.menu.copyWith(label: newLabel));
-  }
-
   void _addIngredient(Ingredient ing) async {
     if (ing.id < 0) {
-      // register first the new ingredient, and record it in the proposition
+      // register first the new ingredient
       ing = await widget.db.insertIngredient(ing);
     }
+    var for_ = 10;
+    if (menu.ingredients.isNotEmpty) {
+      for_ = menu.ingredients.last.link.quantity.for_;
+    } else if (menu.receipes.isEmpty) {
+      final receipe = menu.receipes.last;
+      if (receipe.ingredients.isNotEmpty) {
+        for_ = receipe.ingredients.last.link.quantity.for_;
+      }
+    }
     final link = MenuIngredient(
-        idMenu: menu.menu.id,
-        idIngredient: ing.id,
-        quantite: 1,
-        unite: Unite.kg,
-        categorie: CategoriePlat.entree);
+        menu.menu.id, ing.id, QuantityR(1, Unite.kg, for_), PlatKind.entree);
     final newIngredients = await widget.db.insertMenuIngredient(link);
     setState(() {
       menu = menu.copyWith(ingredients: newIngredients);
     });
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Ingrédient ${ing.name} ajouté.'),
+      backgroundColor: Colors.green,
+    ));
   }
 
   void _removeIngredient(MenuIngredientExt ing) async {
@@ -217,28 +138,29 @@ class _DetailsMenuState extends State<DetailsMenu> {
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('Ingrédient ${ing.ingredient.nom} supprimé.'),
+      content: Text('Ingrédient ${ing.ingredient.name} supprimé.'),
       backgroundColor: Colors.green,
     ));
   }
 
-  void _swapCategorie(MenuIngredientExt ing, CategoriePlat newCategorie) async {
-    if (ing.link.categorie == newCategorie) return;
+  void _swapCategorie(MenuIngredientExt ing, PlatKind newPlat) async {
+    if (ing.link.plat == newPlat) return;
 
     await widget.db.deleteMenuIngredient(ing.link);
 
-    final newLink = ing.link.copyWith(categorie: newCategorie);
+    final newLink = ing.link.copyWith(plat: newPlat);
     final newIngredients = await widget.db.insertMenuIngredient(newLink);
     setState(() {
       menu = menu.copyWith(ingredients: newIngredients);
     });
   }
 
-  void _updateLink(
-      MenuIngredientExt ing, double newQuantite, Unite newUnite) async {
-    if (ing.link.quantite == newQuantite && ing.link.unite == newUnite) return;
+  void _updateMenuIng(MenuIngredientExt ing, QuantityR newQuantity) async {
+    if (ing.link.quantity.val == newQuantity.val &&
+        ing.link.quantity.unite == newQuantity.unite &&
+        ing.link.quantity.for_ == newQuantity.for_) return;
 
-    final newLink = ing.link.copyWith(quantite: newQuantite, unite: newUnite);
+    final newLink = ing.link.copyWith(quantity: newQuantity);
     await widget.db.updateMenuIngredient(newLink);
 
     setState(() {
@@ -246,34 +168,38 @@ class _DetailsMenuState extends State<DetailsMenu> {
           .indexWhere((element) => element.ingredient.id == ing.ingredient.id);
       menu.ingredients[index] = menu.ingredients[index].copyWith(link: newLink);
     });
-  }
-
-  void _removeRecette(RecetteExt recette) async {
-    await widget.db.deleteMenuRecette(
-        MenuRecette(idMenu: menu.menu.id, idRecette: recette.recette.id));
-    setState(() {
-      menu.recettes
-          .removeWhere((element) => element.recette.id == recette.recette.id);
-    });
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('Recette ${recette.recette.label} supprimée.'),
+      content: Text('Quantité pour ${ing.ingredient.name} modifiée.'),
       backgroundColor: Colors.green,
     ));
   }
 
-  void _goToRecette(RecetteExt recette) async {
-    await Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => DetailsRecette(widget.db, recette, false),
-    ));
-    // met à jour les données
-    recette = await widget.db.getRecette(recette.recette.id);
+  void _updateReceipeIng(
+      ReceipeIngredientExt toChange, QuantityR newQuantity) async {
+    if (toChange.link.quantity.val == newQuantity.val &&
+        toChange.link.quantity.unite == newQuantity.unite &&
+        toChange.link.quantity.for_ == newQuantity.for_) return;
+
+    final newLink = toChange.link.copyWith(quantity: newQuantity);
+    await widget.db.updateReceipeIngredient(newLink);
+
     setState(() {
-      final index = menu.recettes
-          .indexWhere((element) => element.recette.id == recette.recette.id);
-      menu.recettes[index] = recette;
+      menu.receipes
+          .where((rec) => rec.receipe.id == toChange.link.idReceipe)
+          .forEach((rec) {
+        final index = rec.ingredients
+            .indexWhere((ing) => ing.ingredient.id == toChange.ingredient.id);
+        rec.ingredients[index] = rec.ingredients[index].copyWith(link: newLink);
+      });
     });
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Quantité pour ${toChange.ingredient.name} modifiée.'),
+      backgroundColor: Colors.green,
+    ));
   }
 
   _showIngredient(Ingredient e) async {
@@ -288,29 +214,29 @@ class _DetailsMenuState extends State<DetailsMenu> {
 }
 
 class _PlatCard extends StatelessWidget {
-  final CategoriePlat plat;
+  final PlatKind plat;
   final List<MenuIngredientExt> ingredients;
-  final List<RecetteExt> recettes;
-
+  final List<ReceipeExt> recettes;
+  final bool showFor;
   final void Function(MenuIngredientExt) removeIngredient;
-  final void Function(MenuIngredientExt ing, CategoriePlat newCategorie)
+  final void Function(MenuIngredientExt ing, PlatKind newCategorie)
       swapCategorie;
-  final void Function(MenuIngredientExt ing, double newQuantite, Unite newUnite)
-      updateLink;
+  final void Function(MenuIngredientExt ing, QuantityR newQuantity)
+      updateMenuIng;
+  final void Function(ReceipeIngredientExt ing, QuantityR newQuantity)
+      updateReceipeIng;
 
-  final void Function(RecetteExt) removeRecette;
-  final void Function(RecetteExt) goToRecette;
   final void Function(Ingredient) showIngredient;
 
   const _PlatCard(
       this.plat,
       this.ingredients,
       this.recettes,
+      this.showFor,
       this.removeIngredient,
       this.swapCategorie,
-      this.updateLink,
-      this.removeRecette,
-      this.goToRecette,
+      this.updateMenuIng,
+      this.updateReceipeIng,
       this.showIngredient,
       {super.key});
 
@@ -326,7 +252,7 @@ class _PlatCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
-                formatCategoriePlat(plat),
+                formatPlatKind(plat),
                 style: const TextStyle(fontSize: 16),
               ),
             ),
@@ -351,15 +277,14 @@ class _PlatCard extends StatelessWidget {
                               onDissmissed: () => removeIngredient(e),
                               child: IngredientRow(
                                 e,
-                                (q) => updateLink(e, q, e.link.unite),
-                                (u) => updateLink(e, e.link.quantite, u),
+                                (q) => updateMenuIng(e, q),
                                 () => showIngredient(e.ingredient),
+                                showFor,
+                                allowDrag: true,
                               ),
                             )),
-                        ...recettes.map((e) => DismissibleDelete(
-                            itemKey: -e.recette.id,
-                            onDissmissed: () => removeRecette(e),
-                            child: _RecetteRow(e, () => goToRecette(e))))
+                        ...recettes.map((e) => _RecetteCard(
+                            e, showFor, updateReceipeIng, showIngredient))
                       ]),
                     ),
             ),
@@ -370,87 +295,65 @@ class _PlatCard extends StatelessWidget {
   }
 }
 
-class _RecetteRow extends StatelessWidget {
-  final RecetteExt recette;
-  final void Function() onGoTo;
+class _RecetteCard extends StatefulWidget {
+  final ReceipeExt receipe;
+  final bool showFor;
+  final void Function(ReceipeIngredientExt, QuantityR) updateReceipeIng;
+  final void Function(Ingredient) showIngredient;
 
-  const _RecetteRow(this.recette, this.onGoTo, {super.key});
+  const _RecetteCard(
+      this.receipe, this.showFor, this.updateReceipeIng, this.showIngredient,
+      {super.key});
+
+  @override
+  State<_RecetteCard> createState() => _RecetteCardState();
+}
+
+class _RecetteCardState extends State<_RecetteCard> {
+  bool showIngredients = false;
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      onTap: onGoTo,
-      visualDensity: const VisualDensity(vertical: -3),
-      dense: true,
-      title: Text(recette.recette.label),
-      subtitle: const Text("Recette"),
-      trailing: const Icon(Icons.navigate_next),
+    return Column(
+      children: [
+        ListTile(
+          visualDensity: const VisualDensity(vertical: -3),
+          dense: true,
+          title: Text(widget.receipe.receipe.name),
+          subtitle: const Text("Recette"),
+          trailing: IconButton(
+              onPressed: () =>
+                  setState(() => showIngredients = !showIngredients),
+              icon: showIngredients
+                  ? const Icon(Icons.expand_less)
+                  : const Icon(Icons.expand_more)),
+        ),
+        if (showIngredients)
+          ...widget.receipe.ingredients.map((e) => IngredientRow(
+              e,
+              (qu) => widget.updateReceipeIng(e, qu),
+              () => widget.showIngredient(e.ingredient),
+              widget.showFor))
+      ],
     );
   }
 }
 
-/// [_RenameDialog] permet de renommer un item
-class _RenameDialog extends StatefulWidget {
-  final String initialValue;
-  final void Function(String) onDone;
-
-  const _RenameDialog(this.initialValue, this.onDone, {super.key});
-
-  @override
-  State<_RenameDialog> createState() => _RenameDialogState();
+Map<PlatKind, List<MenuIngredientExt>> ingredientsByPlats(
+    List<MenuIngredientExt> ingredients) {
+  final Map<PlatKind, List<MenuIngredientExt>> crible = {};
+  for (var ing in ingredients) {
+    final l = crible.putIfAbsent(ing.link.plat, () => []);
+    l.add(ing);
+  }
+  return crible;
 }
 
-class _RenameDialogState extends State<_RenameDialog> {
-  final TextEditingController controller = TextEditingController();
-
-  @override
-  void initState() {
-    controller.text = widget.initialValue;
-    controller.addListener(() => setState(() {}));
-    super.initState();
+Map<PlatKind, List<ReceipeExt>> recettesByPlats(List<ReceipeExt> recettes) {
+  final Map<PlatKind, List<ReceipeExt>> crible = {};
+  for (var ing in recettes) {
+    final l = crible.putIfAbsent(ing.receipe.plat, () => []);
+    l.add(ing);
   }
-
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
-  }
-
-  bool get isInputValid => controller.text.isNotEmpty;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              widget.initialValue.isEmpty ? "Ajouter en favori" : "Renommer",
-              style: const TextStyle(fontSize: 18),
-            ),
-          ),
-          TextField(
-            autofocus: true,
-            controller: controller,
-            inputFormatters: [
-              TextInputFormatter.withFunction((oldValue, newValue) =>
-                  newValue.copyWith(text: capitalize(newValue.text)))
-            ],
-            decoration: const InputDecoration(labelText: "Nom"),
-          ),
-          const SizedBox(height: 20),
-          TextButton(
-            onPressed:
-                isInputValid ? () => widget.onDone(controller.text) : null,
-            style: TextButton.styleFrom(
-                backgroundColor: Colors.green, foregroundColor: Colors.white),
-            child: const Text("Renommer"),
-          )
-        ],
-      ),
-    );
-  }
+  return crible;
 }

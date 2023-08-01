@@ -1,5 +1,4 @@
-import 'package:atable/logic/ingredients_table.dart';
-import 'package:atable/logic/models.back';
+import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
 import 'package:atable/logic/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,13 +9,9 @@ class IngredientSelector extends StatefulWidget {
   final Ingredient? initialValue;
 
   final String title;
-  final void Function()? onAbort;
 
   const IngredientSelector(this.candidatesIngredients, this.onDone,
-      {super.key,
-      this.initialValue,
-      this.onAbort,
-      this.title = "Ajouter un ingrédient"});
+      {super.key, this.initialValue, this.title = "Ajouter un ingrédient"});
 
   @override
   State<IngredientSelector> createState() => _IngredientSelectorState();
@@ -24,8 +19,8 @@ class IngredientSelector extends StatefulWidget {
 
 class _IngredientSelectorState extends State<IngredientSelector> {
   int id = -1;
-  var nom = TextEditingController();
-  CategorieIngredient categorie = CategorieIngredient.legumes;
+  var name = TextEditingController();
+  IngredientKind kind = IngredientKind.legumes;
 
   @override
   void initState() {
@@ -43,8 +38,8 @@ class _IngredientSelectorState extends State<IngredientSelector> {
     final ing = widget.initialValue;
     if (ing != null) {
       id = ing.id;
-      nom.text = ing.nom;
-      categorie = ing.categorie;
+      name.text = ing.name;
+      kind = ing.kind;
     }
   }
 
@@ -101,19 +96,9 @@ class _IngredientSelectorState extends State<IngredientSelector> {
                         final option = options.elementAt(index);
                         return InkWell(
                           onTap: () => onSelected(option),
-                          child: Row(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Text(option.nom),
-                              ),
-                              const Spacer(),
-                              if (option.id > 0)
-                                const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Icon(Icons.star, color: Colors.yellow),
-                                ),
-                            ],
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(option.name),
                           ),
                         );
                       },
@@ -123,48 +108,31 @@ class _IngredientSelectorState extends State<IngredientSelector> {
               ),
               optionsBuilder: (textEditingValue) =>
                   textEditingValue.text.length >= 2
-                      ? searchIngredients([
-                          ...widget.candidatesIngredients,
-                          ...ingredientsSuggestions,
-                        ], textEditingValue.text)
+                      ? _searchIngredients(
+                          widget.candidatesIngredients, textEditingValue.text)
                       : [],
-              displayStringForOption: (option) => option.nom,
-              textEditingController: nom,
+              displayStringForOption: (option) => option.name,
+              textEditingController: name,
               onSelected: _onAutoComplete,
             ),
           ),
 
           // categorie editor
-          CategorieIngredientEditor(
-            categorie,
-            (c) => setState(() => categorie = c),
+          IngredientKindEditor(
+            kind,
+            (c) => setState(() => kind = c),
           ),
           const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: widget.onAbort != null
-                ? MainAxisAlignment.spaceBetween
-                : MainAxisAlignment.center,
-            children: [
-              if (widget.onAbort != null)
-                ElevatedButton(
-                  onPressed: widget.onAbort,
-                  style:
-                      ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-                  child: const Text("Ignorer"),
-                ),
-              ElevatedButton(
-                  onPressed: isEntryValid ? _addNewIngredient : null,
-                  style:
-                      ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                  child: const Text("Ajouter")),
-            ],
-          )
+          ElevatedButton(
+              onPressed: isEntryValid ? _addNewIngredient : null,
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              child: const Text("Ajouter")),
         ],
       ),
     );
   }
 
-  bool get isEntryValid => nom.text.isNotEmpty;
+  bool get isEntryValid => name.text.isNotEmpty;
 
   void _onAutoComplete(Ingredient ing) {
     if (ing.id >= 0) {
@@ -173,32 +141,50 @@ class _IngredientSelectorState extends State<IngredientSelector> {
     } else {
       // utilise juste la complétion
       setState(() {
-        nom.text = ing.nom;
-        categorie = ing.categorie;
+        name.text = ing.name;
+        kind = ing.kind;
       });
     }
   }
 
   // crée un nouvel ingrédient
   void _addNewIngredient() {
-    widget.onDone(Ingredient(id: id, nom: nom.text, categorie: categorie));
+    widget.onDone(Ingredient(-1, name.text, kind));
   }
 }
 
-class CategorieIngredientEditor extends StatelessWidget {
-  final CategorieIngredient value;
-  final void Function(CategorieIngredient) onChange;
+/// [_searchIngredients] filter the list by [name]
+List<Ingredient> _searchIngredients(List<Ingredient> candidates, String name) {
+  name = normalizeName(name);
+  candidates = candidates
+      .where((ing) => normalizeName(ing.name).contains(name))
+      .toList();
+  // remove duplicate
+  final seen = <String>{};
+  final List<Ingredient> out = [];
+  for (var ing in candidates) {
+    final name = normalizeName(ing.name);
+    if (seen.contains(name)) continue;
+    seen.add(name);
+    out.add(ing);
+  }
+  return out;
+}
 
-  const CategorieIngredientEditor(this.value, this.onChange, {super.key});
+class IngredientKindEditor extends StatelessWidget {
+  final IngredientKind value;
+  final void Function(IngredientKind) onChange;
+
+  const IngredientKindEditor(this.value, this.onChange, {super.key});
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButtonFormField<CategorieIngredient>(
+    return DropdownButtonFormField<IngredientKind>(
         decoration: const InputDecoration(labelText: "Catégorie"),
         value: value,
-        items: CategorieIngredient.values
-            .map((e) => DropdownMenuItem<CategorieIngredient>(
-                value: e, child: Text(formatCategorieIngredient(e))))
+        items: IngredientKind.values
+            .map((e) => DropdownMenuItem<IngredientKind>(
+                value: e, child: Text(formatIngredientKind(e))))
             .toList(),
         onChanged: (u) => u == null ? {} : onChange(u));
   }

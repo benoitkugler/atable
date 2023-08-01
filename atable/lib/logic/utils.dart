@@ -1,4 +1,5 @@
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
+import 'package:diacritic/diacritic.dart';
 
 /// [Horaire] est une simplication des horaires de repas
 /// (en pratique, un repas à 12h15 ou 12h20 n'a aucune influence)
@@ -140,3 +141,32 @@ String formatIngredientKind(IngredientKind cat) {
       return "Boulangerie";
   }
 }
+
+String formatPlatKind(PlatKind cat) {
+  switch (cat) {
+    case PlatKind.entree:
+      return "Entrée";
+    case PlatKind.platPrincipal:
+      return "Plat principal";
+    case PlatKind.dessert:
+      return "Dessert";
+    case PlatKind.empty:
+      return "Autre";
+  }
+}
+
+final a = 'a'.codeUnits.first;
+final z = 'z'.codeUnits.first;
+final A = 'A'.codeUnits.first;
+final Z = 'Z'.codeUnits.first;
+final c0 = '0'.codeUnits.first;
+final c9 = '9'.codeUnits.first;
+
+bool _isAlphaNum(int char) {
+  return a <= char && char <= z ||
+      A <= char && char <= Z ||
+      c0 <= char && char <= c9;
+}
+
+String normalizeName(String name) => String.fromCharCodes(
+    removeDiacritics(name.trim().toLowerCase()).codeUnits.where(_isAlphaNum));

@@ -59,6 +59,7 @@ class _ShopSessionMasterState extends State<ShopSessionMaster> {
     }
     final c = shopController as ShopControllerShared;
 
+    if (!mounted) return;
     Navigator.of(context).push(MaterialPageRoute(
       builder: (context) => _ShareQRCode(c.guestURL()),
     ));

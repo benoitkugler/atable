@@ -73,71 +73,18 @@ class DismissibleDelete extends StatelessWidget {
   }
 }
 
-/// [NombrePersonneEditor] montre un 'slider' permettant
-/// d'éditer un entier entre 1 et 40
-class NombrePersonneEditor extends StatefulWidget {
-  final int initialValue;
-  final void Function(int) onDone;
-
-  const NombrePersonneEditor(this.initialValue, this.onDone, {super.key});
-
-  @override
-  State<NombrePersonneEditor> createState() => _NombrePersonneEditorState();
-}
-
-class _NombrePersonneEditorState extends State<NombrePersonneEditor> {
-  late int nbPersonnes;
-
-  @override
-  void initState() {
-    nbPersonnes = widget.initialValue;
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 12.0, right: 12, left: 12),
-            child: Row(
-              children: [
-                Text(
-                  "Liste des ingrédients pour $nbPersonnes personnes",
-                  style: const TextStyle(fontSize: 16),
-                )
-              ],
-            ),
-          ),
-          Slider(
-            label: "$nbPersonnes",
-            value: nbPersonnes.toDouble(),
-            min: 1,
-            max: 40,
-            divisions: 40 - 1,
-            onChangeEnd: (v) => widget.onDone(v.toInt()),
-            onChanged: (v) => setState(() {
-              nbPersonnes = v.toInt();
-            }),
-          )
-        ],
-      ),
-    );
-  }
-}
-
-/// [IngredientRow] montre un ingrédient et sa quantité
+/// [IngredientRow] displays an ingredient and a quantity
 class IngredientRow<T extends QuantifiedIngI> extends StatefulWidget {
   final T ingredient;
 
-  final void Function(double quantite) onEditQuantite;
-  final void Function(Unite unite) onEditUnite;
+  final void Function(QuantityR qu) onEditQuantity;
   final void Function() onTap;
+  final bool showFor;
+  final bool allowDrag;
 
   const IngredientRow(
-      this.ingredient, this.onEditQuantite, this.onEditUnite, this.onTap,
-      {super.key});
+      this.ingredient, this.onEditQuantity, this.onTap, this.showFor,
+      {super.key, this.allowDrag = false});
 
   @override
   State<IngredientRow> createState() => _IngredientRowState();
@@ -150,79 +97,156 @@ class _IngredientRowState<T extends QuantifiedIngI>
   @override
   Widget build(BuildContext context) {
     final ing = widget.ingredient.iq();
-    return Draggable<T>(
-        affinity: Axis.vertical,
-        data: widget.ingredient,
-        feedback: Card(
-            child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(ing.ingredient.name),
+    final showFor = widget.showFor ? " (pour ${ing.quantity.for_} per.)" : '';
+    final child = ListTile(
+        onTap: widget.onTap,
+        visualDensity: const VisualDensity(vertical: -3),
+        dense: true,
+        title: Text(ing.ingredient.name),
+        subtitle: Text(formatIngredientKind(ing.ingredient.kind)),
+        trailing: OutlinedButton(
+          onPressed: _showEditor,
+          child: RichText(
+              text: TextSpan(
+                  style: Theme.of(context).textTheme.labelMedium,
+                  children: [
+                TextSpan(
+                    text: "${formatQuantite(ing.quantity.val)} ",
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                TextSpan(text: formatUnite(ing.quantity.unite)),
+                TextSpan(text: showFor, style: const TextStyle(fontSize: 10)),
+              ])),
+        ));
+    return widget.allowDrag
+        ? Draggable<T>(
+            affinity: Axis.vertical,
+            data: widget.ingredient,
+            feedback: Card(
+                child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(ing.ingredient.name),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                        "${formatQuantite(ing.quantity.val)} ${formatUnite(ing.quantity.unite)}"),
+                  )
+                ],
               ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                    "${formatQuantite(ing.quantite)} ${formatUnite(ing.unite)}"),
-              )
-            ],
-          ),
-        )),
-        child: ListTile(
-            onTap: widget.onTap,
-            visualDensity: const VisualDensity(vertical: -3),
-            dense: true,
-            title: Text(ing.ingredient.name),
-            subtitle: Text(formatIngredientKind(ing.ingredient.kind)),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                isEditingQuantity
-                    ? SizedBox(
-                        width: 60,
-                        child: TextField(
-                          decoration: const InputDecoration(isDense: true),
-                          autofocus: true,
-                          textAlign: TextAlign.center,
-                          keyboardType: TextInputType.number,
-                          onSubmitted: (value) {
-                            widget.onEditQuantite(double.parse(value));
-                            setState(() => isEditingQuantity = false);
-                          },
-                        ),
-                      )
-                    : TextButton(
-                        style: TextButton.styleFrom(
-                            visualDensity: const VisualDensity(horizontal: -3)),
-                        onPressed: () =>
-                            setState(() => isEditingQuantity = true),
-                        child: Text(formatQuantite(ing.quantite)),
-                      ),
-                _UniteEditor(
-                    ing.unite,
-                    (u) => setState(() {
-                          widget.onEditUnite(u);
-                        }))
-              ],
-            )));
+            )),
+            child: child)
+        : child;
+  }
+
+  void _showEditor() async {
+    final newQuantity = await showDialog<QuantityR>(
+      context: context,
+      builder: (context) => _QuantityEditor(widget.ingredient.iq().quantity),
+    );
+    if (newQuantity == null) return;
+    widget.onEditQuantity(newQuantity);
   }
 }
 
-class _UniteEditor extends StatelessWidget {
-  final Unite value;
-  final void Function(Unite) onChange;
+extension on QuantityR {
+  QuantityR copyWith({double? val, Unite? unite, int? for_}) =>
+      QuantityR(val ?? this.val, unite ?? this.unite, for_ ?? this.for_);
+}
 
-  const _UniteEditor(this.value, this.onChange, {super.key});
+class _QuantityEditor extends StatefulWidget {
+  final QuantityR quantity;
+
+  const _QuantityEditor(this.quantity, {super.key});
+
+  @override
+  State<_QuantityEditor> createState() => __QuantityEditorState();
+}
+
+class __QuantityEditorState extends State<_QuantityEditor> {
+  late QuantityR quantity;
+
+  @override
+  void initState() {
+    quantity = widget.quantity;
+    super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant _QuantityEditor oldWidget) {
+    quantity = widget.quantity;
+    super.didUpdateWidget(oldWidget);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return PopupTextButton<Unite>(
-      value,
-      Unite.values,
-      (value) => formatUnite(value).padRight(2),
-      onChange,
+    return AlertDialog(
+      title: const Text("Modifier la quantité"),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(quantity),
+          style: TextButton.styleFrom(foregroundColor: Colors.green),
+          child: const Text("Enregistrer"),
+        )
+      ],
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              SizedBox(
+                width: 80,
+                child: TextFormField(
+                  initialValue: formatQuantite(quantity.val),
+                  decoration: const InputDecoration(labelText: "Quantité"),
+                  autofocus: true,
+                  textAlign: TextAlign.center,
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    final val = double.tryParse(value);
+                    if (val == null) return;
+                    setState(() => quantity = quantity.copyWith(val: val));
+                  },
+                ),
+              ),
+              SizedBox(
+                width: 80,
+                child: DropdownButtonFormField<Unite>(
+                  decoration: const InputDecoration(labelText: "Unité"),
+                  value: quantity.unite,
+                  onChanged: (u) =>
+                      setState(() => quantity = quantity.copyWith(unite: u)),
+                  items: Unite.values
+                      .map((e) => DropdownMenuItem(
+                          value: e, child: Text(formatUnite(e))))
+                      .toList(),
+                ),
+              )
+            ],
+          ),
+          const SizedBox(height: 20),
+          TextFormField(
+            initialValue: quantity.for_.toString(),
+            textAlign: TextAlign.center,
+            keyboardType: TextInputType.number,
+            onChanged: (value) {
+              final for_ = int.tryParse(value);
+              if (for_ == null) return;
+              setState(() => quantity = quantity.copyWith(for_: for_));
+            },
+            decoration: const InputDecoration(
+                isDense: true,
+                labelText: "Pour",
+                helperText:
+                    "La quantité est exprimé pour ce nombre de personnes.",
+                helperMaxLines: 2),
+          )
+        ],
+      ),
     );
   }
 }
