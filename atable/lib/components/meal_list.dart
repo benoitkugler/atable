@@ -1,16 +1,17 @@
 // import 'package:atable/components/details_menu.dart';
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:atable/components/details_menu.dart';
 import 'package:atable/components/shared.dart';
 import 'package:atable/components/shop_list.dart';
-import 'package:atable/logic/debug.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_sejours.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
 import 'package:atable/logic/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 class MealList extends StatefulWidget {
@@ -42,11 +43,7 @@ class _MealListState extends State<MealList> {
         title: const Text("Repas programmés"),
         actions: [
           IconButton(
-              onPressed: () async {
-                await widget.db.importSejour(data);
-                _loadMeals();
-              },
-              icon: const Icon(Icons.download)),
+              onPressed: _showImportDialog, icon: const Icon(Icons.download)),
           IconButton(
               onPressed: selectedMeal.isEmpty ? null : _showShop,
               icon: const Icon(Icons.store))
@@ -74,6 +71,69 @@ class _MealListState extends State<MealList> {
                     ),
                   )),
     );
+  }
+
+  void _showImportDialog() async {
+    final link = await Clipboard.getData("text/plain");
+    if (!mounted) return;
+
+    final url = Uri.tryParse(link?.text ?? "");
+    final doImport = await showDialog<Uri>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Importer un séjour"),
+        content: Text(url != null
+            ? """Importer depuis le lien : 
+
+${url.toString()}
+
+${meals.isNotEmpty ? 'Attention, les repas en cours seront effacés.' : ''}
+            """
+            : "Vous pouvez importer un séjour depuis l'application Web en copiant le lien ou en scannant le QR code."),
+        actions: [
+          ElevatedButton(
+            onPressed:
+                url != null ? () => Navigator.of(context).pop(url) : null,
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            child: const Text("Importer"),
+          )
+        ],
+      ),
+    );
+
+    if (doImport == null) return;
+
+    setState(() {
+      meals = [];
+    });
+    final data = await _downloadSejour(doImport);
+    if (data == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Impossible de télécharger le séjour."),
+        backgroundColor: Colors.red,
+      ));
+      return;
+    }
+    await widget.db.importSejour(data);
+    _loadMeals();
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text("Séjour importé avec succès."),
+      backgroundColor: Colors.green,
+    ));
+  }
+
+  Future<TablesM?> _downloadSejour(Uri url) async {
+    final resp = await get(url);
+    if (resp.statusCode != 200) return null;
+
+    try {
+      return tablesMFromJson(jsonDecode(resp.body));
+    } catch (e) {
+      return null;
+    }
   }
 
   void _onSelectMeal(int index) {
