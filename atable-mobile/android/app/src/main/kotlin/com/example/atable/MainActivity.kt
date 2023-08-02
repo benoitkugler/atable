@@ -1,4 +1,4 @@
-package com.example.atable
+package com.intendance.atable
 
 import io.flutter.embedding.android.FlutterActivity
 
