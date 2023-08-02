@@ -80,6 +80,7 @@ func TestSejours(t *testing.T) {
 
 	sejour, err := ct.createSejour(user.Id)
 	tu.AssertNoErr(t, err)
+	tu.Assert(t, sejour.ExportClientURL != "")
 
 	sejour.Sejour.Name = "aslmakm"
 	err = ct.updateSejour(sejour.Sejour, user.Id)

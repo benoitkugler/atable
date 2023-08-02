@@ -51,6 +51,24 @@ type SejourExt struct {
 	ExportClientURL string
 }
 
+func (ct *Controller) newSejourExt(sejour sej.Sejour, groups sej.Groups) SejourExt {
+	var groupList []sej.Group
+	for _, gr := range groups {
+		groupList = append(groupList, gr)
+	}
+	sort.Slice(groupList, func(i, j int) bool { return groupList[i].Id < groupList[j].Id })
+
+	cryptedID := ct.key.EncryptID(int64(sejour.Id))
+	clientURL := utils.BuildUrl(ct.host, ClientEnpoint,
+		map[string]string{clientQueryParam: string(cryptedID)})
+
+	return SejourExt{
+		Sejour:          sejour,
+		Groups:          groupList,
+		ExportClientURL: clientURL,
+	}
+}
+
 func (ct *Controller) getSejours(uID us.IdUser) ([]SejourExt, error) {
 	sejours, err := sej.SelectSejoursByOwners(ct.db, uID)
 	if err != nil {
@@ -65,21 +83,7 @@ func (ct *Controller) getSejours(uID us.IdUser) ([]SejourExt, error) {
 
 	out := make([]SejourExt, 0, len(sejours))
 	for _, sejour := range sejours {
-		var groupList []sej.Group
-		for _, gr := range groupsMap[sejour.Id] {
-			groupList = append(groupList, gr)
-		}
-		sort.Slice(groupList, func(i, j int) bool { return groupList[i].Id < groupList[j].Id })
-
-		cryptedID := ct.key.EncryptID(int64(sejour.Id))
-		clientURL := utils.BuildUrl(ct.host, ClientEnpoint,
-			map[string]string{clientQueryParam: string(cryptedID)})
-
-		out = append(out, SejourExt{
-			Sejour:          sejour,
-			Groups:          groupList,
-			ExportClientURL: clientURL,
-		})
+		out = append(out, ct.newSejourExt(sejour, groupsMap[sejour.Id]))
 	}
 
 	// more recent first
@@ -124,7 +128,7 @@ func (ct *Controller) createSejour(uID us.IdUser) (SejourExt, error) {
 		return SejourExt{}, utils.SQLError(err)
 	}
 
-	return SejourExt{Sejour: sejour, Groups: []sej.Group{group}}, nil
+	return ct.newSejourExt(sejour, sej.Groups{group.Id: group}), nil
 }
 
 func (ct *Controller) checkSejourOwner(id sej.IdSejour, uID us.IdUser) (sej.Sejour, error) {
