@@ -227,10 +227,13 @@ func setupRoutes(e *echo.Echo, uc *users.Controller, sc *sejours.Controller, lc 
 	// web app
 	for _, route := range []string{
 		"/",
-		"/*",
+		"/sejours",
+		"/agenda",
+		"/library",
 	} {
 		e.GET(route, serveWebApp, noCache)
 	}
+	e.Group("/*", middleware.Gzip(), cacheStatic).Static("/*", "static/atable-web")
 
 	// client API
 	e.GET(sejours.ClientEnpoint, sc.SejoursExportToClient)

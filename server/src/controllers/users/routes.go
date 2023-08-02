@@ -62,9 +62,10 @@ type LogginIn struct {
 
 type LogginOut struct {
 	Error           string // empty means success
+	IsPasswordError bool   // else : unused mail
+	Id              us.IdUser
 	Token           string // token to use in the next requests
 	Pseudo          string
-	IsPasswordError bool // else : unused mail
 }
 
 func (ct *Controller) emailInscription(args AskInscriptionIn) (string, error) {
@@ -182,7 +183,7 @@ func (ct *Controller) loggin(args LogginIn) (LogginOut, error) {
 		return LogginOut{}, err
 	}
 
-	return LogginOut{Token: token, Pseudo: user.Pseudo}, nil
+	return LogginOut{Id: user.Id, Token: token, Pseudo: user.Pseudo}, nil
 }
 
 func (ct *Controller) Loggin(c echo.Context) error {

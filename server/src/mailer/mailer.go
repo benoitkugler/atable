@@ -42,7 +42,7 @@ func newMail(to []string, subject, text string, creds pass.SMTP, pjs []JoinedFil
 		e.To = []string{devMail}
 	}
 
-	e.From = fmt.Sprintf("Isyro <%s>", creds.User)
+	e.From = fmt.Sprintf("À table <%s>", creds.User)
 	e.Subject = subject
 	e.HTML = []byte(text)
 	e.Text = []byte(text)
