@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_sejours.dart';
+import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_shop-session.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_sejours.dart';
 import 'package:flutter/widgets.dart';
@@ -301,13 +302,6 @@ class ReceipeExt {
   }
 }
 
-class ResolvedQuantityIngredient {
-  final Ingredient ingredient;
-  final double quantite;
-  final Unite unite;
-  const ResolvedQuantityIngredient(this.ingredient, this.quantite, this.unite);
-}
-
 class RelativeQuantityIngredient {
   final Ingredient ingredient;
   final QuantityR quantity;
@@ -374,6 +368,13 @@ class MenuExt {
   }
 }
 
+class ResolvedQuantityIngredient {
+  final Ingredient ingredient;
+  final Quantite quantity;
+
+  const ResolvedQuantityIngredient(this.ingredient, this.quantity);
+}
+
 class MealExt {
   final MealM meal;
   final MenuExt menu;
@@ -391,8 +392,9 @@ class MealExt {
     // resolve free ingredients
     for (var ing in menu.ingredients) {
       final quantite = ing.link.quantity.resolveFor(meal.for_);
+      final origin = Origin(meal.date, meal.name, "");
       final ingQuant = ResolvedQuantityIngredient(
-          ing.ingredient, quantite, ing.link.quantity.unite);
+          ing.ingredient, Quantite(quantite, ing.link.quantity.unite, origin));
       final l = out.putIfAbsent(ing.link.plat, () => []);
       l.add(ingQuant);
     }
@@ -400,8 +402,9 @@ class MealExt {
     for (var receipe in menu.receipes) {
       for (var ing in receipe.ingredients) {
         final quantite = ing.link.quantity.resolveFor(meal.for_);
-        final ingQuant = ResolvedQuantityIngredient(
-            ing.ingredient, quantite, ing.link.quantity.unite);
+        final origin = Origin(meal.date, meal.name, receipe.receipe.name);
+        final ingQuant = ResolvedQuantityIngredient(ing.ingredient,
+            Quantite(quantite, ing.link.quantity.unite, origin));
         final l = out.putIfAbsent(receipe.receipe.plat, () => []);
         l.add(ingQuant);
       }
@@ -444,11 +447,11 @@ class DBApi {
     dbPath ??= await _defaultPath();
 
     // DEV MODE only : reset DB at start
-    final fi = File(dbPath);
-    if (await fi.exists()) {
-      await fi.delete();
-      print("DB deleted");
-    }
+    // final fi = File(dbPath);
+    // if (await fi.exists()) {
+    //   await fi.delete();
+    //   print("DB deleted");
+    // }
 
     // open/create the database
     final database = await openDatabase(dbPath, version: _apiVersion,

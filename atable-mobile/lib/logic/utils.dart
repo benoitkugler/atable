@@ -123,6 +123,18 @@ String formatUnite(Unite unite) {
   }
 }
 
+// formatQuantiteU choices the best representation
+String formatQuantiteU(double val, Unite unite) {
+  if (unite == Unite.g && val >= 1000) {
+    val = val / 1000;
+    unite = Unite.kg;
+  } else if (unite == Unite.cL && val >= 100) {
+    val = val / 100;
+    unite = Unite.l;
+  }
+  return "${formatQuantite(val)} ${formatUnite(unite)}";
+}
+
 String formatIngredientKind(IngredientKind cat) {
   switch (cat) {
     case IngredientKind.empty:

@@ -3,84 +3,72 @@ import 'dart:convert';
 import 'package:atable/logic/env.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
-import 'package:atable/logic/utils.dart';
+import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_shop-session.dart';
 import 'package:http/http.dart' as http;
 
-typedef Quantites = Map<Unite, double>;
+typedef CQuantites = List<MapEntry<Unite, double>>;
 
-String formatQuantites(Quantites quantite) {
-  return quantite.entries
-      .where((element) => element.value != 0)
-      .map((e) => "${formatQuantite(e.value)} ${formatUnite(e.key)}")
-      .join(", ");
-}
+extension E on IngredientUses {
+  IngredientUses copyWith({
+    Ingredient? ingredient,
+    List<Quantite>? quantites,
+    bool? checked,
+  }) =>
+      IngredientUses(
+        ingredient ?? this.ingredient,
+        quantites ?? this.quantites,
+        checked ?? this.checked,
+      );
 
-class IngredientQuantite {
-  final int id;
-  final String nom;
-  final IngredientKind kind;
-  final String quantite;
-
-  bool checked;
-
-  IngredientQuantite(this.id, this.nom, this.kind, this.quantite,
-      {this.checked = false});
-
-  Map<String, dynamic> toJson() {
-    return {
-      "id": id,
-      "nom": nom,
-      "kind": kind.index,
-      "quantite": quantite,
-      "checked": checked,
-    };
-  }
-
-  factory IngredientQuantite.fromJson(Map<String, dynamic> map) {
-    return IngredientQuantite(map["id"], map["nom"],
-        IngredientKind.values[map["kind"] as int], map["quantite"],
-        checked: map["checked"]);
+  CQuantites compile() {
+    final compiled = <Unite, double>{};
+    for (var use in quantites) {
+      final u = use.unite;
+      compiled[u] = (compiled[u] ?? 0) + use.quantite;
+    }
+    final out =
+        compiled.entries.where((element) => element.value != 0).toList();
+    out.sort((a, b) => a.key.index - b.key.index);
+    return out;
   }
 }
 
 class ShopSection {
   final IngredientKind categorie;
-  final List<IngredientQuantite> ingredients;
+  final List<IngredientUses> ingredients;
 
   const ShopSection(this.categorie, this.ingredients);
 
   bool get isDone => ingredients.every((element) => element.checked);
 }
 
-class ShopList {
-  final List<IngredientQuantite> _list;
-  ShopList(this._list);
+class ShopListW {
+  final List<IngredientUses> _list;
+  ShopListW(this._list);
 
   /// [fromMeals] regroupe les ingrédients des [meals], regroupés par catégories
-  factory ShopList.fromMeals(List<MealExt> meals) {
-    final tmp = <int, Quantites>{}; // par ID
-    final ingregients = <int, Ingredient>{}; // par ID
+  factory ShopListW.fromMeals(List<MealExt> meals) {
+    final uses = <IdIngredient, List<Quantite>>{};
+    final ingredients = <IdIngredient, Ingredient>{};
     for (var repas in meals) {
-      for (var plat in repas.requiredQuantities().values) {
-        for (var ing in plat) {
-          ingregients[ing.ingredient.id] = ing.ingredient;
+      for (var platL in repas.requiredQuantities().values) {
+        for (var ing in platL) {
+          ingredients[ing.ingredient.id] = ing.ingredient;
 
-          final qus = tmp.putIfAbsent(ing.ingredient.id, () => {});
-          final u = ing.unite;
-          qus[u] = (qus[u] ?? 0) + ing.quantite;
+          final usesList = uses.putIfAbsent(ing.ingredient.id, () => []);
+          usesList.add(ing.quantity);
         }
       }
     }
-    return ShopList(tmp.keys
-        .map((id) => IngredientQuantite(id, ingregients[id]!.name,
-            ingregients[id]!.kind, formatQuantites(tmp[id]!)))
+    return ShopListW(uses.keys
+        .map((id) => IngredientUses(ingredients[id]!, uses[id]!, false))
         .toList());
   }
 
   List<ShopSection> bySections() {
-    final byCategorie = <IngredientKind, List<IngredientQuantite>>{};
+    final byCategorie = <IngredientKind, List<IngredientUses>>{};
     for (var ing in _list) {
-      final l = byCategorie.putIfAbsent(ing.kind, () => []);
+      final l = byCategorie.putIfAbsent(ing.ingredient.kind, () => []);
       l.add(ing);
     }
     return byCategorie.entries.map((e) => ShopSection(e.key, e.value)).toList();
@@ -90,22 +78,23 @@ class ShopList {
 /// [ShopController] is the backend updating the
 /// shop list, either in local or shared mode.
 abstract class ShopController {
-  Future<ShopList> fetchList();
-  Future<ShopList> updateShop(int id, bool checked);
+  Future<ShopListW> fetchList();
+  Future<ShopListW> updateShop(int id, bool checked);
 }
 
 /// [ShopControllerLocal] use a local, in-memory data store
 class ShopControllerLocal implements ShopController {
-  final ShopList list;
+  final ShopListW list;
   const ShopControllerLocal(this.list);
 
   @override
-  Future<ShopList> fetchList() async => list;
+  Future<ShopListW> fetchList() async => list;
 
   @override
-  Future<ShopList> updateShop(int id, bool checked) async {
-    final index = list._list.indexWhere((element) => element.id == id);
-    list._list[index].checked = checked;
+  Future<ShopListW> updateShop(IdIngredient id, bool checked) async {
+    final index =
+        list._list.indexWhere((element) => element.ingredient.id == id);
+    list._list[index] = list._list[index].copyWith(checked: checked);
     return list;
   }
 }
@@ -132,9 +121,9 @@ class ShopControllerShared implements ShopController {
   /// [createSession] demande au serveur de créer une nouvelle session,
   /// avec le contenu de [list]
   static Future<ShopControllerShared> createSession(
-      Env env, ShopList list) async {
+      Env env, ShopListW list) async {
     final resp = await http.put(env.urlFor(_apiEndpoint),
-        body: jsonEncode(list._list.map((e) => e.toJson()).toList()),
+        body: jsonEncode(shopListToJson(list._list)),
         headers: {
           'Content-type': 'application/json',
           'Accept': 'application/json',
@@ -145,7 +134,7 @@ class ShopControllerShared implements ShopController {
   }
 
   @override
-  Future<ShopList> fetchList() async {
+  Future<ShopListW> fetchList() async {
     final apiURL =
         env.urlFor(_apiEndpoint, queryParameters: {"sessionID": sessionID});
     final resp = await http.get(apiURL);
@@ -155,14 +144,11 @@ class ShopControllerShared implements ShopController {
     } else if (json is! List) {
       throw "Réponse du serveur invalide.";
     }
-    final l = jsonDecode(resp.body) as List;
-    return ShopList(l
-        .map((e) => IngredientQuantite.fromJson(e as Map<String, dynamic>))
-        .toList());
+    return ShopListW(shopListFromJson(jsonDecode(resp.body)));
   }
 
   @override
-  Future<ShopList> updateShop(int id, bool checked) async {
+  Future<ShopListW> updateShop(int id, bool checked) async {
     final apiURL =
         env.urlFor(_apiEndpoint, queryParameters: {"sessionID": sessionID});
     final resp = await http.post(apiURL,
@@ -173,9 +159,6 @@ class ShopControllerShared implements ShopController {
           'Content-type': 'application/json',
           'Accept': 'application/json',
         });
-    final l = jsonDecode(resp.body) as List;
-    return ShopList(l
-        .map((e) => IngredientQuantite.fromJson(e as Map<String, dynamic>))
-        .toList());
+    return ShopListW(shopListFromJson(jsonDecode(resp.body)));
   }
 }

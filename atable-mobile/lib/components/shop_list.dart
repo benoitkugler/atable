@@ -6,6 +6,7 @@ import 'package:atable/logic/sql.dart';
 import 'package:atable/logic/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_shop-session.dart';
 
 /// ShopSessionMaster est utilisé pour une séance de course
 /// par l'application maitre (mobile)
@@ -24,7 +25,7 @@ class _ShopSessionMasterState extends State<ShopSessionMaster> {
 
   @override
   void initState() {
-    shopController = ShopControllerLocal(ShopList.fromMeals(widget.repass));
+    shopController = ShopControllerLocal(ShopListW.fromMeals(widget.repass));
     super.initState();
   }
 
@@ -102,26 +103,55 @@ class _ShopSection extends StatelessWidget {
   }
 }
 
-class _IngredientRow extends StatelessWidget {
-  final IngredientQuantite ingredient;
+String formatQuantites(CQuantites quantite) {
+  return quantite.map((e) => formatQuantiteU(e.value, e.key)).join(" et ");
+}
+
+class _IngredientRow extends StatefulWidget {
+  final IngredientUses ingredient;
   final void Function(int, bool) onUpdate;
 
   const _IngredientRow(this.ingredient, this.onUpdate, {super.key});
 
   @override
+  State<_IngredientRow> createState() => _IngredientRowState();
+}
+
+class _IngredientRowState extends State<_IngredientRow> {
+  bool showUses = false;
+  @override
   Widget build(BuildContext context) {
-    return ListTile(
-      enabled: !ingredient.checked,
-      dense: true,
-      leading: Text(ingredient.quantite),
-      title: Text(ingredient.nom),
-      onTap: () => onUpdate(ingredient.id, !ingredient.checked),
-      trailing: Checkbox(
-        activeColor: Colors.blue.shade100,
-        checkColor: Colors.grey,
-        value: ingredient.checked,
-        onChanged: (value) => onUpdate(ingredient.id, value!),
-      ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ExpansionTile(
+          leading: Padding(
+            padding: const EdgeInsets.only(top: 4.0),
+            child: Text(formatQuantites(widget.ingredient.compile())),
+          ),
+          title: Text(widget.ingredient.ingredient.name),
+          onExpansionChanged: (b) => setState(() => showUses = b),
+          trailing: Checkbox(
+            activeColor: Colors.blue.shade100,
+            checkColor: Colors.grey,
+            value: widget.ingredient.checked,
+            onChanged: (value) =>
+                widget.onUpdate(widget.ingredient.ingredient.id, value!),
+          ),
+          children: widget.ingredient.quantites
+              .map((use) => ListTile(
+                    dense: true,
+                    titleAlignment: ListTileTitleAlignment.center,
+                    leading: Text(formatQuantiteU(use.quantite, use.unite)),
+                    title: Text(formatDate(use.origin.mealDate)),
+                    subtitle: Text(use.origin.mealName),
+                    trailing: use.origin.receipeName.isEmpty
+                        ? null
+                        : Text(use.origin.receipeName),
+                  ))
+              .toList(),
+        ),
+      ],
     );
   }
 }
@@ -160,7 +190,7 @@ class _ShopListImpl extends StatefulWidget {
 class _ShopListImplState extends State<_ShopListImpl> {
   late final Timer timer;
 
-  ShopList list = ShopList([]);
+  ShopListW list = ShopListW([]);
 
   @override
   void initState() {

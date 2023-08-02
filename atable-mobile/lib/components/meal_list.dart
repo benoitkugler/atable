@@ -1,5 +1,4 @@
 // import 'package:atable/components/details_menu.dart';
-import 'dart:convert';
 import 'dart:math';
 
 import 'package:atable/components/details_menu.dart';
@@ -362,7 +361,7 @@ class _MealCardState extends State<_MealCard> {
     final text = plats
         .map((e) => e.value
             .map((e) =>
-                "${e.ingredient.name} : ${formatQuantite(e.quantite)} ${formatUnite(e.unite)}")
+                "${e.ingredient.name} : ${formatQuantiteU(e.quantity.quantite, e.quantity.unite)}")
             .join("\n"))
         .join("\n\n");
 
@@ -466,7 +465,7 @@ class _IngQuantRow extends StatelessWidget {
       children: [
         Text(ing.ingredient.name),
         const Spacer(),
-        Text("${formatQuantite(ing.quantite)} ${formatUnite(ing.unite)}"),
+        Text(formatQuantiteU(ing.quantity.quantite, ing.quantity.unite)),
       ],
     );
   }
