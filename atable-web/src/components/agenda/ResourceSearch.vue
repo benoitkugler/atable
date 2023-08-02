@@ -9,7 +9,8 @@
         v-model="pattern"
         @update:model-value="debounce.onType(pattern)"
         placeholder="Entrez au moins 2 charactères..."
-        hide-details
+        hint="Tapez :I, :R ou :M pour afficher tous les ingrédients, recettes ou menus."
+        persistent-hint
       ></v-text-field>
       <v-list class="overflow-y-auto my-2" max-height="70vh">
         <i v-if="pattern.length >= 2 && isResEmpty">

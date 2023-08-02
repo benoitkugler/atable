@@ -124,6 +124,7 @@ const title = computed(() => {
 
 function onLoggin(idUser: IdUser, token: string, pseudo: string) {
   rc.setLog(idUser, token, pseudo);
+  rc.showMessage(`Bon retour parmi nous, ${pseudo}`);
 }
 
 // setup notifications callbacks
