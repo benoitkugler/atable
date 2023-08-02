@@ -41,7 +41,7 @@
           ></v-select>
         </v-col>
       </v-row>
-      <v-row no-gutters class="mt-4">
+      <v-row no-gutters class="mt-4" v-if="groupItems.length >= 2">
         <v-col>
           <v-card subtitle="Groupes en sortie" elevation="0">
             <v-slide-group show-arrows>
@@ -142,10 +142,6 @@ function defaultArgs() {
 }
 
 const args = ref<AssistantMealsIn>(defaultArgs());
-
-const groups = computed(
-  () => new Map((props.sejour.Groups || []).map((gr) => [gr.Id, gr]))
-);
 
 const groupItems = computed(() =>
   (props.sejour.Groups || []).map((gr) => ({

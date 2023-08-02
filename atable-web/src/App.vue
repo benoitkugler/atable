@@ -1,10 +1,10 @@
 <template>
   <v-app>
-    <v-navigation-drawer rail expand-on-hover>
+    <v-navigation-drawer rail expand-on-hover v-if="rc.idUser != null">
       <v-list>
         <v-list-item
           :prepend-avatar="logo"
-          title="À table - Intendance"
+          :title="rc.pseudo"
           :subtitle="navSubtitle"
         ></v-list-item>
       </v-list>
@@ -51,6 +51,14 @@
             </v-list-item>
           </template>
         </v-tooltip>
+        <v-divider></v-divider>
+        <v-list-item
+          color="secondary"
+          title="Se déconnecter"
+          prepend-icon="mdi-logout"
+          @click="rc.idUser = null"
+        >
+        </v-list-item>
       </v-list>
     </v-navigation-drawer>
 
@@ -60,7 +68,7 @@
       </v-app-bar-title>
     </v-app-bar>
 
-    <v-main>
+    <v-main v-if="rc.idUser != null">
       <router-view />
 
       <success-snackbar
@@ -69,11 +77,14 @@
       ></success-snackbar>
       <error-snackbar :error="error"></error-snackbar>
     </v-main>
+    <v-main v-else>
+      <loggin @loggin="onLoggin"></loggin>
+    </v-main>
   </v-app>
 </template>
 
 <script lang="ts" setup>
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo.svg";
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 
@@ -81,16 +92,21 @@ import { Error, Messages, controller } from "@/logic/controller";
 import SuccessSnackbar from "./components/SuccessSnackbar.vue";
 import ErrorSnackbar from "./components/ErrorSnackbar.vue";
 import { ref } from "vue";
+import { reactive } from "vue";
+import Loggin from "./views/Loggin.vue";
+import { IdUser } from "./logic/api_gen";
 
 const version = process.env.VERSION;
 
-const navSubtitle = computed(() => `Version ${version || ""}`);
+const rc = reactive(controller);
+const navSubtitle = computed(() => `À table - Version ${version || ""}`);
 
 const route = useRoute();
 
 const error = ref<Error>({ Kind: "", HTML: "" });
 
 const title = computed(() => {
+  if (rc.idUser == null) return "À table";
   switch (route.name) {
     case "sejours":
       return "Séjours et groupes";
@@ -105,6 +121,10 @@ const title = computed(() => {
       return "";
   }
 });
+
+function onLoggin(idUser: IdUser, token: string, pseudo: string) {
+  rc.setLog(idUser, token, pseudo);
+}
 
 // setup notifications callbacks
 const messages = ref(new Messages());

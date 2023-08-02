@@ -22,7 +22,8 @@ function arrayBufferToString(buffer: ArrayBuffer) {
 }
 
 class Controller extends AbstractAPI {
-  public idUser: IdUser = devLogMeta.IdUser;
+  public idUser: IdUser | null = null;
+  public pseudo: string = "";
   public activeSejour: SejourExt | null = null;
 
   /** UI hook which should display an error */
@@ -31,11 +32,22 @@ class Controller extends AbstractAPI {
   /** UI hook which should display a snackbar */
   public showMessage: (message: string, color?: string) => void = () => {};
 
-  public isLoggedIn = false;
+  constructor(isDev: boolean) {
+    super(
+      isDev ? localhost : window.location.origin,
+      isDev ? devLogMeta.Token : ""
+    );
+    if (isDev) {
+      this.idUser = devLogMeta.IdUser;
+    }
+  }
 
-  logout() {
-    this.isLoggedIn = false;
-    this.authToken = "";
+  setLog(idUser: IdUser, token: string, pseudo: string) {
+    this.idUser = idUser;
+    this.authToken = token;
+    this.pseudo = pseudo;
+
+    this.activeSejour = null;
   }
 
   getToken() {
@@ -127,10 +139,7 @@ export function isInscriptionValidated() {
   return window.location.search.includes("show-success-inscription");
 }
 
-export const controller = new Controller(
-  IsDev ? localhost : window.location.origin,
-  IsDev ? devLogMeta.Token : ""
-);
+export const controller = new Controller(IsDev);
 
 export function copy<T>(v: T): T {
   return JSON.parse(JSON.stringify(v));

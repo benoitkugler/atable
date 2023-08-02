@@ -181,9 +181,10 @@ export interface LogginIn {
 // github.com/benoitkugler/atable/controllers/users.LogginOut
 export interface LogginOut {
   Error: string;
+  IsPasswordError: boolean;
+  Id: IdUser;
   Token: string;
   Pseudo: string;
-  IsPasswordError: boolean;
 }
 // github.com/benoitkugler/atable/sql/menus.IdIngredient
 export type IdIngredient = number;

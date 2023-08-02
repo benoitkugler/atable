@@ -212,7 +212,7 @@ async function createMeal(horaire: Horaire) {
   const m = data.value.Menus || {};
   m[res.Meal.Menu] = {
     Id: res.Meal.Menu,
-    Owner: controller.idUser,
+    Owner: controller.idUser!,
     IsFavorite: false,
     Ingredients: [],
     Receipes: [],

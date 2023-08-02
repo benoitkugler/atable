@@ -5,7 +5,7 @@
         ><v-col cols="auto" class="mb-2">
           <v-progress-circular indeterminate></v-progress-circular> </v-col
       ></v-row>
-      <div v-else>
+      <div v-else class="text-center">
         <v-chip
           v-for="(item, index) in items"
           :key="index"
@@ -15,6 +15,7 @@
         >
           {{ item.title }}
         </v-chip>
+        <i v-if="!items.length">Ce repas est vide.</i>
       </div>
     </v-card-text>
   </v-card>
