@@ -75,8 +75,8 @@
     <v-card-text class="fill-height">
       <v-row class="fill-height">
         <v-col>
-          <v-row>
-            <v-col cols="auto">
+          <v-row justify="space-between">
+            <v-col cols="auto" align-self="center">
               <v-btn class="ma-1" flat @click="emit('back')">
                 <template v-slot:prepend>
                   <v-icon>mdi-arrow-left</v-icon>
@@ -84,8 +84,26 @@
                 Retour à la semaine</v-btn
               >
             </v-col>
-            <v-spacer></v-spacer>
-            <v-col cols="auto">
+            <v-col cols="auto" align-self="center">
+              <v-btn
+                size="small"
+                flat
+                class="mx-2 my-1"
+                icon="mdi-arrow-left"
+                @click="emit('previousDay')"
+              ></v-btn>
+              <b>
+                {{ formatDate(day) }}
+              </b>
+              <v-btn
+                size="small"
+                flat
+                class="mx-2 my-1"
+                icon="mdi-arrow-right"
+                @click="emit('nextDay')"
+              ></v-btn>
+            </v-col>
+            <v-col cols="auto" align-self="center">
               <v-menu>
                 <template v-slot:activator="{ isActive, props: innerProps }">
                   <v-btn v-on="{ isActive }" v-bind="innerProps">
@@ -158,8 +176,10 @@ import { computed } from "vue";
 import {
   DragKind,
   ResourceDrag,
+  addDays,
   controller,
   copy,
+  formatDate,
   horairesItems,
 } from "@/logic/controller";
 import { ref } from "vue";
@@ -168,6 +188,8 @@ import { onActivated } from "vue";
 import MealExtRow from "./MealExtRow.vue";
 import MenuIngredientForm from "./MenuIngredientForm.vue";
 import { useRouter } from "vue-router";
+import { reactive } from "vue";
+import { watch } from "vue";
 
 const props = defineProps<{
   offset: number;
@@ -175,20 +197,30 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (event: "back"): void;
+  (e: "previousDay"): void;
+  (e: "nextDay"): void;
 }>();
 
 onMounted(fetchMeals);
 onActivated(fetchMeals);
+watch(
+  () => props.offset,
+  (newV, oldV) => {
+    if (newV != oldV) fetchMeals();
+  }
+);
 
 const sortedMeals = computed(() => {
-  const out = (data.value.Meals || []).map((m) => m);
+  const out = (data.Meals || []).map((m) => m);
   out.sort((a, b) => a.Meal.Horaire - b.Meal.Horaire);
   return out;
 });
 
+const day = computed(() => addDays(new Date(sejour.value.Start), props.offset));
+
 const sejour = computed(() => controller.activeSejour!.Sejour);
 
-const data = ref<MealsLoadOut>({ Groups: [], Meals: [], Menus: {} });
+const data = reactive<MealsLoadOut>({ Groups: [], Meals: [], Menus: {} });
 
 async function fetchMeals() {
   const res = await controller.MealsLoad({
@@ -196,7 +228,9 @@ async function fetchMeals() {
     day: props.offset,
   });
   if (res === undefined) return;
-  data.value = res;
+  data.Groups = res.Groups;
+  data.Menus = res.Menus;
+  data.Meals = res.Meals;
 }
 
 async function createMeal(horaire: Horaire) {
@@ -207,9 +241,9 @@ async function createMeal(horaire: Horaire) {
   });
   if (res === undefined) return;
   controller.showMessage("Repas ajouté avec succès.");
-  data.value.Meals = (data.value.Meals || []).concat(res);
+  data.Meals = (data.Meals || []).concat(res);
   // register the new empty menu
-  const m = data.value.Menus || {};
+  const m = data.Menus || {};
   m[res.Meal.Menu] = {
     Id: res.Meal.Menu,
     Owner: controller.idUser!,
@@ -217,11 +251,11 @@ async function createMeal(horaire: Horaire) {
     Ingredients: [],
     Receipes: [],
   };
-  data.value.Menus = m;
+  data.Menus = m;
 }
 
 function isMenuEmpty(id: IdMenu) {
-  const menu = data.value.Menus![id];
+  const menu = data.Menus![id];
   return !menu.Ingredients?.length && !menu.Receipes?.length;
 }
 
@@ -232,9 +266,7 @@ async function deleteMeal(meal: MealExt) {
   const res = await controller.MealsDelete({ idMeal: meal.Meal.Id });
   if (res === undefined) return;
   controller.showMessage("Repas supprimé avec succès.");
-  data.value.Meals = (data.value.Meals || []).filter(
-    (m) => m.Meal.Id != meal.Meal.Id
-  );
+  data.Meals = (data.Meals || []).filter((m) => m.Meal.Id != meal.Meal.Id);
 }
 
 const mealToUpdate = ref<Meal | null>(null);
@@ -244,7 +276,7 @@ async function updateMeal() {
   if (res === undefined) return;
 
   controller.showMessage("Repas modifié avec succès.");
-  const m = data.value.Meals?.find((m) => m.Meal.Id == newMeal.Id)!;
+  const m = data.Meals?.find((m) => m.Meal.Id == newMeal.Id)!;
   m.Meal = newMeal;
   mealToUpdate.value = null;
 }
@@ -260,8 +292,8 @@ async function moveGroup(idGroup: IdGroup, from: IdMeal, to: IdMeal) {
   if (res === undefined) return;
   controller.showMessage("Groupe déplacé avec succès.");
 
-  const mFrom = data.value.Meals?.find((m) => m.Meal.Id == from)!;
-  const mTo = data.value.Meals?.find((m) => m.Meal.Id == to)!;
+  const mFrom = data.Meals?.find((m) => m.Meal.Id == from)!;
+  const mTo = data.Meals?.find((m) => m.Meal.Id == to)!;
 
   mFrom.Groups = res[0] || [];
   mTo.Groups = res[1] || [];
@@ -285,7 +317,7 @@ async function addIngredient(id: IdIngredient, target: Meal) {
   });
   if (res === undefined) return;
   controller.showMessage("Menu mis à jour avec succès");
-  data.value.Menus![target.Menu] = res;
+  data.Menus![target.Menu] = res;
 
   startUpdateIngredient(id, target.Menu);
 }
@@ -297,7 +329,7 @@ async function addReceipe(id: IdReceipe, target: Meal) {
   });
   if (res === undefined) return;
   controller.showMessage("Menu mis à jour avec succès");
-  data.value.Menus![target.Menu] = res;
+  data.Menus![target.Menu] = res;
 }
 
 async function addMenu(id: IdMenu, target: Meal) {
@@ -307,9 +339,9 @@ async function addMenu(id: IdMenu, target: Meal) {
   });
   if (res === undefined) return;
   controller.showMessage("Menu remplacé avec succès");
-  data.value.Menus![id] = res;
+  data.Menus![id] = res;
   // redirect the meal to the updated menu
-  const m = data.value.Meals?.find((ml) => ml.Meal.Id == target.Id)!;
+  const m = data.Meals?.find((ml) => ml.Meal.Id == target.Id)!;
   m.Meal.Menu = id;
 }
 
@@ -321,14 +353,14 @@ async function removeItem(id: number, isReceipe: boolean, from: Meal) {
   });
   if (res === undefined) return;
   controller.showMessage("Menu modifié avec succès.");
-  const m = data.value.Menus || {};
+  const m = data.Menus || {};
   m[from.Menu] = res;
-  data.value.Menus = m;
+  data.Menus = m;
 }
 
 const menuIngToUpdate = ref<MenuIngredient | null>(null);
 function startUpdateIngredient(id: IdIngredient, menu: IdMenu) {
-  const ings = (data.value?.Menus || {})[menu].Ingredients || [];
+  const ings = (data?.Menus || {})[menu].Ingredients || [];
 
   menuIngToUpdate.value = ings.find((link) => link.IdIngredient == id)!;
 }
@@ -338,9 +370,9 @@ async function updateIngredient() {
   const res = await controller.MealsUpdateMenuIngredient(newV);
   if (res === undefined) return;
   controller.showMessage("Ingrédient mis à jour avec succès.");
-  const m = data.value.Menus || {};
+  const m = data.Menus || {};
   m[newV.IdMenu] = res;
-  data.value.Menus = m;
+  data.Menus = m;
 
   menuIngToUpdate.value = null; // close dialog
 }

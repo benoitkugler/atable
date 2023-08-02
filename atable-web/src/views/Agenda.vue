@@ -25,7 +25,13 @@
       }
     "
   ></view-week>
-  <view-day v-else :offset="dayOffset" @back="viewKind = 'week'"></view-day>
+  <view-day
+    v-else
+    :offset="dayOffset"
+    @back="viewKind = 'week'"
+    @previous-day="dayOffset = dayOffset - 1"
+    @next-day="dayOffset = dayOffset + 1"
+  ></view-day>
 </template>
 
 <script lang="ts" setup>
