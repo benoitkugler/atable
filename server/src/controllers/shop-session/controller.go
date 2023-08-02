@@ -3,6 +3,7 @@ package shopsession
 import (
 	"errors"
 	"fmt"
+	"log"
 	"sync"
 
 	"github.com/benoitkugler/atable/utils"
@@ -50,7 +51,7 @@ func (ct *Controller) createSession(list ShopList) (CreateSessionOut, error) {
 
 	ct.sessions[id] = s
 
-	fmt.Printf("Creating session %s with %d ingredients\n", id, len(list))
+	log.Printf("Creating session %s with %d ingredients", id, len(list))
 
 	return CreateSessionOut{SessionID: id}, nil
 }
