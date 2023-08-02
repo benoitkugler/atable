@@ -12,6 +12,7 @@ import (
 
 	"github.com/benoitkugler/atable/controllers/library"
 	"github.com/benoitkugler/atable/controllers/sejours"
+	shopsession "github.com/benoitkugler/atable/controllers/shop-session"
 	"github.com/benoitkugler/atable/controllers/users"
 	"github.com/benoitkugler/atable/mailer"
 	"github.com/benoitkugler/atable/pass"
@@ -120,6 +121,7 @@ func main() {
 
 	sc := sejours.NewController(db, host, admin, encKey)
 	lc := library.NewController(db, admin)
+	shopC := shopsession.NewController()
 
 	e := echo.New()
 	e.HideBanner = true
@@ -133,7 +135,7 @@ func main() {
 		devSetup(e, uc)
 	}
 
-	setupRoutes(e, uc, sc, lc)
+	setupRoutes(e, uc, sc, lc, shopC)
 
 	if *dryPtr {
 		// sanityChecks(db, *skipValidation)
@@ -210,7 +212,13 @@ func serveWebApp(c echo.Context) error {
 	return c.File("static/atable-web/index.html")
 }
 
-func setupRoutes(e *echo.Echo, uc *users.Controller, sc *sejours.Controller, lc *library.Controller) {
+func serveShopApp(c echo.Context) error {
+	return c.File("static/shop-session/index.html")
+}
+
+func setupRoutes(e *echo.Echo, uc *users.Controller, sc *sejours.Controller, lc *library.Controller,
+	shopC *shopsession.Controller,
+) {
 	setupWebAPI(e, uc, sc, lc)
 
 	// global static files used by frontend app
@@ -226,4 +234,13 @@ func setupRoutes(e *echo.Echo, uc *users.Controller, sc *sejours.Controller, lc 
 
 	// client API
 	e.GET(sejours.ClientEnpoint, sc.SejoursExportToClient)
+
+	// guest shop static
+	e.GET("/shop-session", serveShopApp, noCache)
+	e.Group("/shop-session/*", middleware.Gzip(), cacheStatic).Static("/*", "static/shop-session")
+
+	// shop API
+	e.PUT("/api/shop-session", shopC.CreateSession)
+	e.GET("/api/shop-session", shopC.GetSession)
+	e.POST("/api/shop-session", shopC.UpdateSession)
 }

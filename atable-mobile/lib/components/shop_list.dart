@@ -31,14 +31,38 @@ class _ShopSessionMasterState extends State<ShopSessionMaster> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(title: const Text("Liste de course"), actions: [
-          IconButton(
-            icon: const Icon(Icons.share),
-            onPressed: _startSharing,
-          )
-        ]),
-        body: _ShopListImpl(shopController));
+    return WillPopScope(
+      onWillPop: () async {
+        final ct = shopController;
+        if (ct is ShopControllerLocal) {
+          if (!ct.list.isStarted) return true;
+        }
+
+        final res = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+                    title: const Text("Confirmation"),
+                    content: const Text(
+                        "Souhaitez-vous vraiment quitter la session de courses ? Sa progression sera perdue."),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        style: TextButton.styleFrom(
+                            foregroundColor: Colors.orange),
+                        child: const Text("Quitter"),
+                      )
+                    ]));
+        return res ?? false;
+      },
+      child: Scaffold(
+          appBar: AppBar(title: const Text("Liste de course"), actions: [
+            IconButton(
+              icon: const Icon(Icons.share),
+              onPressed: _startSharing,
+            )
+          ]),
+          body: _ShopListImpl(shopController)),
+    );
   }
 
   _startSharing() async {
@@ -189,6 +213,7 @@ class _ShopListImpl extends StatefulWidget {
 
 class _ShopListImplState extends State<_ShopListImpl> {
   late final Timer timer;
+  int nbFails = 0;
 
   ShopListW list = ShopListW([]);
 
@@ -233,6 +258,12 @@ class _ShopListImplState extends State<_ShopListImpl> {
         content: Text("Erreur :\n$e"),
         backgroundColor: Colors.red,
       ));
+      // if the session in closed on the server,
+      // do not repeat client calls
+      nbFails += 1;
+      if (nbFails >= 3) {
+        timer.cancel();
+      }
     }
   }
 }

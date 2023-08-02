@@ -4,6 +4,27 @@ import 'predefined.dart';
 import 'stdlib_github.com_benoitkugler_atable_sql_menus.dart';
 import 'stdlib_github.com_benoitkugler_atable_sql_sejours.dart';
 
+// github.com/benoitkugler/atable/controllers/shop-session.CreateSessionOut
+class CreateSessionOut {
+  final String sessionID;
+
+  const CreateSessionOut(this.sessionID);
+
+  @override
+  String toString() {
+    return "CreateSessionOut($sessionID)";
+  }
+}
+
+CreateSessionOut createSessionOutFromJson(dynamic json_) {
+  final json = (json_ as Map<String, dynamic>);
+  return CreateSessionOut(stringFromJson(json['SessionID']));
+}
+
+Map<String, dynamic> createSessionOutToJson(CreateSessionOut item) {
+  return {"SessionID": stringToJson(item.sessionID)};
+}
+
 // github.com/benoitkugler/atable/controllers/shop-session.IngredientUses
 class IngredientUses {
   final Ingredient ingredient;
@@ -119,6 +140,29 @@ ShopList shopListFromJson(dynamic json) {
 
 dynamic shopListToJson(ShopList item) {
   return listIngredientUsesToJson(item);
+}
+
+// github.com/benoitkugler/atable/controllers/shop-session.UpdateSessionIn
+class UpdateSessionIn {
+  final IdIngredient id;
+  final bool checked;
+
+  const UpdateSessionIn(this.id, this.checked);
+
+  @override
+  String toString() {
+    return "UpdateSessionIn($id, $checked)";
+  }
+}
+
+UpdateSessionIn updateSessionInFromJson(dynamic json_) {
+  final json = (json_ as Map<String, dynamic>);
+  return UpdateSessionIn(
+      intFromJson(json['Id']), boolFromJson(json['Checked']));
+}
+
+Map<String, dynamic> updateSessionInToJson(UpdateSessionIn item) {
+  return {"Id": intToJson(item.id), "Checked": boolToJson(item.checked)};
 }
 
 List<IngredientUses> listIngredientUsesFromJson(dynamic json) {

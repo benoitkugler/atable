@@ -86,20 +86,22 @@ func (ct *Controller) exportToClient(idSejour sej.IdSejour) (out TablesM, _ erro
 		// compute the number of people from the groups and bonus
 		var (
 			forNb      = meal.AdditionalPeople
-			groupNames []string
+			mealGroups []string
 		)
 		for _, link := range mealsToGroups[meal.Id] {
 			gr := groups[link.IdGroup]
 			forNb += gr.Size
-			groupNames = append(groupNames, gr.Name)
+			mealGroups = append(mealGroups, gr.Name)
 		}
-		sort.Strings(groupNames)
+		sort.Strings(mealGroups)
 
 		name := sejour.Name
-		if len(groupNames) == 0 || len(groupNames) == len(groups) {
+		if len(mealGroups) == 0 {
 			// do not include group names
+		} else if len(mealGroups) == len(groups) && len(groups) > 1 {
+			name += " (Tous)"
 		} else {
-			name += fmt.Sprintf(" (%s)", strings.Join(groupNames, ", "))
+			name += fmt.Sprintf(" (%s)", strings.Join(mealGroups, ", "))
 		}
 
 		// adjust the date, also encoding the horaire

@@ -379,9 +379,13 @@ func (ct *Controller) searchResource(pattern string, uID us.IdUser) (out Resourc
 	}
 
 	// we are now ready to search
-	pattern = utils.Normalize(pattern)
+	switch pattern {
+	case ":I", ":R", ":M":
+	default:
+		pattern = utils.Normalize(pattern)
+	}
 	for _, ing := range ingredients {
-		if pattern == "" || strings.Contains(utils.Normalize(ing.Name), pattern) {
+		if pattern == ":I" || strings.Contains(utils.Normalize(ing.Name), pattern) {
 			out.Ingredients = append(out.Ingredients, lib.IngredientHeader{
 				ResourceHeader: lib.ResourceHeader{
 					Title:       ing.Name,
@@ -393,7 +397,7 @@ func (ct *Controller) searchResource(pattern string, uID us.IdUser) (out Resourc
 		}
 	}
 	for _, receipe := range receipes {
-		if pattern == "" || strings.Contains(utils.Normalize(receipe.Name), pattern) {
+		if pattern == ":R" || strings.Contains(utils.Normalize(receipe.Name), pattern) {
 			out.Receipes = append(out.Receipes, lib.ReceipeHeader{
 				ResourceHeader: lib.ResourceHeader{
 					Title:       receipe.Name,
@@ -423,7 +427,7 @@ func (ct *Controller) searchResource(pattern string, uID us.IdUser) (out Resourc
 			chunks = append(chunks, platTitle{title: rec.Name, kind: rec.Plat})
 		}
 		title := sortedTitle(chunks)
-		if pattern == "" || strings.Contains(utils.Normalize(title), pattern) { // return the menu
+		if pattern == ":M" || strings.Contains(utils.Normalize(title), pattern) { // return the menu
 			out.Menus = append(out.Menus, lib.ResourceHeader{
 				Title:       title,
 				ID:          int64(menu.Id),

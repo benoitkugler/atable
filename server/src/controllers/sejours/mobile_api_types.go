@@ -6,10 +6,10 @@ import (
 )
 
 type MealM struct {
-	Date   sej.Date
-	Name   string
 	Id     sej.IdMeal
 	IdMenu men.IdMenu
+	Name   string
+	Date   sej.Date
 	For    int `json:"For_"`
 }
 

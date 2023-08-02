@@ -1,7 +1,7 @@
 {
     "_dart": [
         {
-            "Output": "../../atable/lib/logic/types/"
+            "Output": "../../atable-mobile/lib/logic/types/"
         }
     ],
     "sql/users/models.go": [
@@ -49,6 +49,12 @@
         }
     ],
     "controllers/sejours/mobile_api_types.go": [
+        {
+            "Mode": "dart",
+            "Output": ""
+        }
+    ],
+    "controllers/shop-session/types.go": [
         {
             "Mode": "dart",
             "Output": ""

@@ -4,6 +4,7 @@ import 'package:atable/logic/env.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_shop-session.dart';
+import 'package:atable/logic/utils.dart';
 import 'package:http/http.dart' as http;
 
 typedef CQuantites = List<MapEntry<Unite, double>>;
@@ -65,6 +66,8 @@ class ShopListW {
         .toList());
   }
 
+  bool get isStarted => _list.any((element) => element.checked);
+
   List<ShopSection> bySections() {
     final byCategorie = <IngredientKind, List<IngredientUses>>{};
     for (var ing in _list) {
@@ -109,9 +112,9 @@ class ShopControllerShared implements ShopController {
   // PUT : crée une session
   // GET (sessionID) : récupère la session demandée
   // POST (sessionID) : modifie la session demandée
-  static const _apiEndpoint = "/api/shop/session";
+  static const _apiEndpoint = "/api/shop-session";
 
-  static const _guestEndpoint = "/shop";
+  static const _guestEndpoint = "/shop-session";
 
   /// [guestURL] renvoie l'url de la page d'accueil destinée
   /// à un nouvel invité
@@ -128,9 +131,9 @@ class ShopControllerShared implements ShopController {
           'Content-type': 'application/json',
           'Accept': 'application/json',
         });
-    final sessionID =
-        (jsonDecode(resp.body) as Map<String, dynamic>)["sessionID"];
-    return ShopControllerShared(env, sessionID);
+    final json = jsonDecodeResp(resp);
+    final out = createSessionOutFromJson(json);
+    return ShopControllerShared(env, out.sessionID);
   }
 
   @override
@@ -138,13 +141,8 @@ class ShopControllerShared implements ShopController {
     final apiURL =
         env.urlFor(_apiEndpoint, queryParameters: {"sessionID": sessionID});
     final resp = await http.get(apiURL);
-    final json = jsonDecode(resp.body);
-    if (json is Map) {
-      throw json["message"];
-    } else if (json is! List) {
-      throw "Réponse du serveur invalide.";
-    }
-    return ShopListW(shopListFromJson(jsonDecode(resp.body)));
+    final json = jsonDecodeResp(resp);
+    return ShopListW(sessionFromJson(json).list);
   }
 
   @override
@@ -152,13 +150,12 @@ class ShopControllerShared implements ShopController {
     final apiURL =
         env.urlFor(_apiEndpoint, queryParameters: {"sessionID": sessionID});
     final resp = await http.post(apiURL,
-        body: jsonEncode(
-          {"checked": checked, "id": id},
-        ),
+        body: jsonEncode(updateSessionInToJson(UpdateSessionIn(id, checked))),
         headers: {
           'Content-type': 'application/json',
           'Accept': 'application/json',
         });
-    return ShopListW(shopListFromJson(jsonDecode(resp.body)));
+    final json = jsonDecodeResp(resp);
+    return ShopListW(sessionFromJson(json).list);
   }
 }

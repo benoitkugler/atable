@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
 import 'package:diacritic/diacritic.dart';
+import 'package:http/http.dart';
 
 /// [Horaire] est une simplication des horaires de repas
 /// (en pratique, un repas à 12h15 ou 12h20 n'a aucune influence)
@@ -182,3 +185,16 @@ bool _isAlphaNum(int char) {
 
 String normalizeName(String name) => String.fromCharCodes(
     removeDiacritics(name.trim().toLowerCase()).codeUnits.where(_isAlphaNum));
+
+/// jsonDecodeResp calls [jsonDecode] on the response body,
+/// and throws an error if the server returned one.
+dynamic jsonDecodeResp(Response resp) {
+  if (resp.statusCode == 200) return jsonDecode(resp.body);
+
+  final json = jsonDecode(resp.body);
+  if (json is Map) {
+    throw json["message"];
+  } else {
+    throw "Requête invalide (code ${resp.statusCode})";
+  }
+}

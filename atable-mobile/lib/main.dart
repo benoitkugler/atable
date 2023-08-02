@@ -4,6 +4,7 @@ import 'package:atable/components/meal_list.dart';
 import 'package:atable/logic/env.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_sejours.dart';
+import 'package:atable/logic/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -163,8 +164,8 @@ ${hasMeals ? 'Attention, les repas en cours seront effacés.' : ''}
 
   Future<TablesM> _downloadSejour(Uri url) async {
     final resp = await get(url);
-    if (resp.statusCode != 200) throw "Réponse du serveur invalide";
-    return tablesMFromJson(jsonDecode(resp.body));
+    final json = jsonDecodeResp(resp);
+    return tablesMFromJson(json);
   }
 
   @override
