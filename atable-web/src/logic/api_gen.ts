@@ -127,6 +127,11 @@ export interface MealHeader {
   Groups: Group[] | null;
   IsMenuEmpty: boolean;
 }
+// github.com/benoitkugler/atable/controllers/sejours.MealsForGroupOut
+export interface MealsForGroupOut {
+  Menus: { [key: IdMenu]: MenuExt } | null;
+  Meals: Meals;
+}
 // github.com/benoitkugler/atable/controllers/sejours.MealsLoadOut
 export interface MealsLoadOut {
   Groups: Groups;
@@ -333,6 +338,8 @@ export interface MealGroup {
 }
 // github.com/benoitkugler/atable/sql/sejours.MealGroups
 export type MealGroups = MealGroup[] | null;
+// github.com/benoitkugler/atable/sql/sejours.Meals
+export type Meals = { [key: IdMeal]: Meal } | null;
 // github.com/benoitkugler/atable/sql/sejours.Sejour
 export interface Sejour {
   Id: IdSejour;
@@ -674,6 +681,29 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessMealsSearch(data: ResourceSearchOut): void {}
+
+  protected async rawMealsLoadForGroup(params: { idGroup: number }) {
+    const fullUrl = this.baseUrl + "/api/meals/group";
+    const rep: AxiosResponse<MealsForGroupOut> = await Axios.get(fullUrl, {
+      params: { idGroup: String(params["idGroup"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** MealsLoadForGroup wraps rawMealsLoadForGroup and handles the error */
+  async MealsLoadForGroup(params: { idGroup: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawMealsLoadForGroup(params);
+      this.onSuccessMealsLoadForGroup(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessMealsLoadForGroup(data: MealsForGroupOut): void {}
 
   protected async rawMealsLoad(params: { idSejour: number; day: number }) {
     const fullUrl = this.baseUrl + "/api/meals/details";

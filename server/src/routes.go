@@ -27,6 +27,7 @@ func setupWebAPI(e *echo.Echo, tvc *users.Controller, sej *sejours.Controller, l
 	gr.GET("/api/meals", sej.MealsGet)
 	gr.PUT("/api/meals/wizzard", sej.MealsWizzard)
 	gr.GET("/api/meals/search", sej.MealsSearch)
+	gr.GET("/api/meals/group", sej.MealsLoadForGroup)
 	gr.GET("/api/meals/details", sej.MealsLoad)
 	gr.GET("/api/meals/details-one", sej.MealsPreview)
 	gr.PUT("/api/meals/details", sej.MealsCreate)

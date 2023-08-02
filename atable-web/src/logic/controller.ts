@@ -181,10 +181,18 @@ export interface ResourceDrag {
 }
 
 export const platColors: { [key in PlatKind]: string } = {
-  [PlatKind.P_Empty]: "grey-darken-1",
+  [PlatKind.P_Empty]: "grey-darken-2",
   [PlatKind.P_Entree]: "green",
   [PlatKind.P_PlatPrincipal]: "orange-darken-3",
   [PlatKind.P_Dessert]: "pink-lighten-1",
+};
+
+export const horaireColors: { [key in Horaire]: string } = {
+  [Horaire.PetitDejeuner]: "grey-lighten-3",
+  [Horaire.Midi]: "teal-lighten-4",
+  [Horaire.Gouter]: "pink-lighten-4",
+  [Horaire.Diner]: "brown-lighten-3",
+  [Horaire.Cinquieme]: "grey-lighten-1",
 };
 
 export interface MenuItem {

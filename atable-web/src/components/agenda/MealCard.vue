@@ -1,10 +1,9 @@
 <template>
   <v-card
     elevation="0"
-    variant="outlined"
-    :color="props.meal.IsMenuEmpty ? 'grey' : 'secondary'"
+    :color="props.meal.IsMenuEmpty ? 'orange-lighten-4' : undefined"
     rounded
-    class="mx-1 py-1"
+    class="mx-1"
   >
     <v-row no-gutters class="my-0" justify="space-between">
       <v-tooltip content-class="px-1" :eager="false" open-delay="100">
@@ -12,11 +11,14 @@
           <v-col
             v-on="{ isActive }"
             v-bind="innerProps"
-            cols="6"
+            cols="5"
             align-self="center"
-            class="px-0"
+            :class="
+              'text-center px-0  py-1 rounded bg-' +
+              horaireColors[props.meal.Meal.Horaire]
+            "
           >
-            <v-card-subtitle class="mx-1">
+            <v-card-subtitle class="mx-1 px-1">
               {{ formatHoraire(props.meal.Meal.Horaire) }}
             </v-card-subtitle>
           </v-col>
@@ -24,7 +26,7 @@
         <MealPreview :meal="meal"></MealPreview>
       </v-tooltip>
 
-      <v-col cols="6" align-self="center" class="pl-0 pr-1">
+      <v-col cols="7" align-self="center" class="pl-0 pr-1 text-right">
         <group-chip
           :is-mono-group="
             props.sejourGroups.length == 1 && props.meal.Groups?.length == 1
@@ -45,7 +47,7 @@
 
 <script lang="ts" setup>
 import { Group, MealHeader } from "@/logic/api_gen";
-import { formatHoraire } from "@/logic/controller";
+import { formatHoraire, horaireColors } from "@/logic/controller";
 import GroupChip from "./GroupChip.vue";
 import AddPeopleChip from "./AddPeopleChip.vue";
 import MealPreview from "./MealPreview.vue";

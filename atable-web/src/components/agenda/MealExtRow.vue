@@ -54,7 +54,7 @@
             <v-card
               label
               :color="platColors[item.plat]"
-              variant="tonal"
+              :variant="props.menu.IsFavorite ? 'text' : 'tonal'"
               class="my-1 pr-2"
               @click="
                 item.isReceipe
@@ -80,10 +80,10 @@
                 </v-col>
                 <v-col cols="auto" align-self="center">
                   <v-btn
-                    class="my-2 mr-0"
+                    v-if="!props.menu.IsFavorite"
+                    class="my-1 mr-0"
                     variant="plain"
                     icon="mdi-close"
-                    v-if="!props.menu.IsFavorite"
                     size="x-small"
                     @click.stop="emit('removeItem', item.id, item.isReceipe)"
                   ></v-btn>

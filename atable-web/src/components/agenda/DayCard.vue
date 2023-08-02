@@ -2,7 +2,7 @@
   <v-card @click="emit('goTo')" :title="formatDate(props.date)">
     <v-card-text class="pa-0 mb-">
       <v-row no-gutters>
-        <v-col v-if="!meals.length" class="my-2 text-center pb-1">
+        <v-col v-if="!meals.length" class="my-2 text-center">
           <i>Aucun repas.</i>
         </v-col>
         <v-col

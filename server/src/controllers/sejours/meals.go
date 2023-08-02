@@ -518,6 +518,44 @@ func (ct *Controller) loadMeals(idSejour sej.IdSejour, day int, uID us.IdUser) (
 	return out, nil
 }
 
+type MealsForGroupOut struct {
+	Menus map[men.IdMenu]lib.MenuExt
+	Meals sej.Meals
+}
+
+func (ct *Controller) MealsLoadForGroup(c echo.Context) error {
+	id_, err := utils.QueryParamInt64(c, "idGroup")
+	if err != nil {
+		return err
+	}
+
+	out, err := ct.loadMealsForGroup(sej.IdGroup(id_))
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) loadMealsForGroup(idGroup sej.IdGroup) (out MealsForGroupOut, _ error) {
+	links, err := sej.SelectMealGroupsByIdGroups(ct.db, idGroup)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	meals, err := sej.SelectMeals(ct.db, links.IdMeals()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	mt, err := lib.LoadMenus(ct.db, meals.Menus())
+	if err != nil {
+		return out, err
+	}
+
+	out.Menus, _ = mt.Compile()
+	out.Meals = meals
+	return out, nil
+}
+
 // MealsPreview returns a summary of the given [Meal],
 // typically to be displayed on hover.
 func (ct *Controller) MealsPreview(c echo.Context) error {

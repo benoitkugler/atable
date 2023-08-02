@@ -18,19 +18,16 @@
   </v-responsive>
   <view-week
     v-else-if="viewKind == 'week'"
-    @go-to="
-      (of) => {
-        dayOffset = of;
-        viewKind = 'day';
-      }
-    "
+    :view-group-index="viewGroupIndex"
+    @set-group-index="(v) => (viewGroupIndex = v)"
+    @go-to="goToDay"
   ></view-week>
   <view-day
     v-else
     :offset="dayOffset"
-    @back="viewKind = 'week'"
-    @previous-day="dayOffset = dayOffset - 1"
-    @next-day="dayOffset = dayOffset + 1"
+    @back="goToWeek"
+    @previous-day="goToDay(dayOffset - 1)"
+    @next-day="goToDay(dayOffset + 1)"
   ></view-day>
 </template>
 
@@ -38,8 +35,29 @@
 import ViewDay from "@/components/agenda/ViewDay.vue";
 import ViewWeek from "@/components/agenda/ViewWeek.vue";
 import { controller } from "@/logic/controller";
+import { onMounted } from "vue";
+import { computed } from "vue";
 import { ref } from "vue";
+import { useRouter } from "vue-router";
 
-const viewKind = ref<"week" | "day">("week");
-const dayOffset = ref(0);
+const viewKind = computed<"week" | "day">(() =>
+  router.currentRoute.value.query["dayOffset"] ? "day" : "week"
+);
+const dayOffset = computed(
+  () => Number(router.currentRoute.value.query["dayOffset"]) || 0
+);
+const viewGroupIndex = ref(-1);
+
+// for mono group select the group, else the overall view
+onMounted(() => {
+  viewGroupIndex.value = controller.activeSejour?.Groups?.length == 1 ? 0 : -1;
+});
+
+const router = useRouter();
+function goToDay(offset: number) {
+  router.push({ name: "agenda", query: { dayOffset: offset } });
+}
+function goToWeek() {
+  router.push({ name: "agenda" });
+}
 </script>

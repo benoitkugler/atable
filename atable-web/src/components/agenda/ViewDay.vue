@@ -110,7 +110,7 @@
                     <template v-slot:prepend>
                       <v-icon color="success">mdi-plus</v-icon>
                     </template>
-                    Ajouter un repas</v-btn
+                    Ajouter un repas...</v-btn
                   >
                 </template>
                 <v-list>
