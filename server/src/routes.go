@@ -24,12 +24,10 @@ func setupWebAPI(e *echo.Echo, tvc *users.Controller, sej *sejours.Controller, l
 	gr.POST("/api/sejours/groups", sej.SejoursUpdateGroupe)
 	gr.DELETE("/api/sejours/groups", sej.SejoursDeleteGroupe)
 
-	gr.GET("/api/meals", sej.MealsGet)
+	gr.GET("/api/meals", sej.MealsLoadDay)
+	gr.GET("/api/meals-all", sej.MealsLoadAll)
 	gr.PUT("/api/meals/wizzard", sej.MealsWizzard)
 	gr.GET("/api/meals/search", sej.MealsSearch)
-	gr.GET("/api/meals/group", sej.MealsLoadForGroup)
-	gr.GET("/api/meals/details", sej.MealsLoad)
-	gr.GET("/api/meals/details-one", sej.MealsPreview)
 	gr.GET("/api/meals/quantities", sej.MealsPreviewQuantities)
 	gr.PUT("/api/meals/details", sej.MealsCreate)
 	gr.POST("/api/meals/details", sej.MealsUpdate)
@@ -40,6 +38,7 @@ func setupWebAPI(e *echo.Echo, tvc *users.Controller, sej *sejours.Controller, l
 	gr.PUT("/api/meals/receipes", sej.MealsAddReceipe)
 	gr.POST("/api/meals/remove", sej.MealsRemoveItem)
 	gr.POST("/api/meals/menus", sej.MealsSetMenu)
+	gr.POST("/api/meals/swap", sej.MealsSwapMenus)
 
 	gr.GET("/api/library/all-ingredients", lib.LibraryLoadIngredients)
 	gr.PUT("/api/library/all-ingredients", lib.LibraryCreateIngredient)

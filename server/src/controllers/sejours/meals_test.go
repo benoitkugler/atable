@@ -18,9 +18,9 @@ func TestMeals(t *testing.T) {
 	sejour, err := ct.createSejour(user.Id)
 	tu.AssertNoErr(t, err)
 
-	out, err := ct.getMeals(sejour.Sejour.Id, user.Id)
+	out, err := ct.loadMeals(sejour.Sejour.Id, optionnalInt{}, user.Id)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(out) == 0)
+	tu.Assert(t, len(out.Meals) == 0)
 }
 
 func TestAssitantMeals(t *testing.T) {
@@ -45,10 +45,10 @@ func TestAssitantMeals(t *testing.T) {
 	}, user.Id)
 	tu.AssertNoErr(t, err)
 
-	meals, err := ct.getMeals(sejour.Sejour.Id, user.Id)
+	meals, err := ct.loadMeals(sejour.Sejour.Id, optionnalInt{}, user.Id)
 	tu.AssertNoErr(t, err)
-	fmt.Println(len(meals), 8+1+8+1+4+1+5+5)
-	tu.Assert(t, len(meals) == 8+1+8+1+4+1+5+5)
+	fmt.Println(len(meals.Meals), 8+1+8+1+4+1+5+5)
+	tu.Assert(t, len(meals.Meals) == 8+1+8+1+4+1+5+5)
 }
 
 func TestSearch(t *testing.T) {
@@ -75,9 +75,9 @@ func TestSQLMeals(t *testing.T) {
 	_, err = ct.createGroup(sejour.Sejour.Id, user.Id)
 	tu.AssertNoErr(t, err)
 
-	out, err := ct.loadMeals(sejour.Sejour.Id, 0, user.Id)
+	out, err := ct.loadMeals(sejour.Sejour.Id, optionnalInt{v: 0, valid: true}, user.Id)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(out.Meals) == 0 && len(out.Groups) == 2)
+	tu.Assert(t, len(out.Meals) == 0)
 
 	m, err := ct.createMeal(MealCreateIn{IdSejour: sejour.Sejour.Id, Day: 0, Horaire: sej.PetitDejeuner}, user.Id)
 	tu.AssertNoErr(t, err)
@@ -91,17 +91,24 @@ func TestSQLMeals(t *testing.T) {
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(m.Groups) == 2)
 
-	m, err = ct.createMeal(MealCreateIn{IdSejour: sejour.Sejour.Id, Day: 1, Horaire: sej.Diner}, user.Id)
+	m1, err := ct.createMeal(MealCreateIn{IdSejour: sejour.Sejour.Id, Day: 1, Horaire: sej.Diner}, user.Id)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(m.Groups) == 2)
+	tu.Assert(t, len(m1.Groups) == 2)
 
-	m, err = ct.createMeal(MealCreateIn{IdSejour: sejour.Sejour.Id, Day: -1, Horaire: sej.Diner}, user.Id)
+	m2, err := ct.createMeal(MealCreateIn{IdSejour: sejour.Sejour.Id, Day: -1, Horaire: sej.Diner}, user.Id)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(m.Groups) == 2)
+	tu.Assert(t, len(m2.Groups) == 2)
 
-	out, err = ct.loadMeals(sejour.Sejour.Id, 0, user.Id)
+	out, err = ct.loadMeals(sejour.Sejour.Id, optionnalInt{v: 0, valid: true}, user.Id)
 	tu.AssertNoErr(t, err)
-	tu.Assert(t, len(out.Meals) == 3 && len(out.Groups) == 2)
+	tu.Assert(t, len(out.Meals) == 3)
+
+	out, err = ct.loadMeals(sejour.Sejour.Id, optionnalInt{}, user.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(out.Meals) == 5)
+
+	err = ct.swapMenus(SwapMenusIn{IdMeal1: m1.Meal.Id, IdMeal2: m2.Meal.Id}, user.Id)
+	tu.AssertNoErr(t, err)
 
 	err = ct.deleteMeal(m.Meal.Id, user.Id)
 	tu.AssertNoErr(t, err)

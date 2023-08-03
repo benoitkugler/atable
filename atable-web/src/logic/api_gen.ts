@@ -129,20 +129,8 @@ export interface MealExt {
   Meal: Meal;
   Groups: MealGroups;
 }
-// github.com/benoitkugler/atable/controllers/sejours.MealHeader
-export interface MealHeader {
-  Meal: Meal;
-  Groups: Group[] | null;
-  IsMenuEmpty: boolean;
-}
-// github.com/benoitkugler/atable/controllers/sejours.MealsForGroupOut
-export interface MealsForGroupOut {
-  Menus: { [key: IdMenu]: MenuExt } | null;
-  Meals: Meals;
-}
 // github.com/benoitkugler/atable/controllers/sejours.MealsLoadOut
 export interface MealsLoadOut {
-  Groups: Groups;
   Menus: { [key: IdMenu]: MenuExt } | null;
   Meals: MealExt[] | null;
 }
@@ -179,6 +167,11 @@ export interface SejourExt {
 export interface SetMenuIn {
   IdMeal: IdMeal;
   IdMenu: IdMenu;
+}
+// github.com/benoitkugler/atable/controllers/sejours.SwapMenusIn
+export interface SwapMenusIn {
+  IdMeal1: IdMeal;
+  IdMeal2: IdMeal;
 }
 // github.com/benoitkugler/atable/controllers/users.AskInscriptionIn
 export interface AskInscriptionIn {
@@ -318,8 +311,6 @@ export interface Group {
   Color: string;
   Size: number;
 }
-// github.com/benoitkugler/atable/sql/sejours.Groups
-export type Groups = { [key: IdGroup]: Group } | null;
 // github.com/benoitkugler/atable/sql/sejours.Horaire
 export enum Horaire {
   PetitDejeuner = 0,
@@ -359,8 +350,6 @@ export interface MealGroup {
 }
 // github.com/benoitkugler/atable/sql/sejours.MealGroups
 export type MealGroups = MealGroup[] | null;
-// github.com/benoitkugler/atable/sql/sejours.Meals
-export type Meals = { [key: IdMeal]: Meal } | null;
 // github.com/benoitkugler/atable/sql/sejours.Sejour
 export interface Sejour {
   Id: IdSejour;
@@ -633,36 +622,60 @@ export abstract class AbstractAPI {
 
   protected onSuccessSejoursDeleteGroupe(): void {}
 
-  protected async rawMealsGet(params: { "id-sejour": number }) {
+  protected async rawMealsLoadDay(params: { idSejour: number; day: number }) {
     const fullUrl = this.baseUrl + "/api/meals";
-    const rep: AxiosResponse<MealHeader[] | null> = await Axios.get(fullUrl, {
-      params: { "id-sejour": String(params["id-sejour"]) },
+    const rep: AxiosResponse<MealsLoadOut> = await Axios.get(fullUrl, {
+      params: {
+        idSejour: String(params["idSejour"]),
+        day: String(params["day"]),
+      },
       headers: this.getHeaders(),
     });
     return rep.data;
   }
 
-  /** MealsGet wraps rawMealsGet and handles the error */
-  async MealsGet(params: { "id-sejour": number }) {
+  /** MealsLoadDay wraps rawMealsLoadDay and handles the error */
+  async MealsLoadDay(params: { idSejour: number; day: number }) {
     this.startRequest();
     try {
-      const out = await this.rawMealsGet(params);
-      this.onSuccessMealsGet(out);
+      const out = await this.rawMealsLoadDay(params);
+      this.onSuccessMealsLoadDay(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessMealsGet(data: MealHeader[] | null): void {}
+  protected onSuccessMealsLoadDay(data: MealsLoadOut): void {}
+
+  protected async rawMealsLoadAll(params: { idSejour: number }) {
+    const fullUrl = this.baseUrl + "/api/meals-all";
+    const rep: AxiosResponse<MealsLoadOut> = await Axios.get(fullUrl, {
+      params: { idSejour: String(params["idSejour"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** MealsLoadAll wraps rawMealsLoadAll and handles the error */
+  async MealsLoadAll(params: { idSejour: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawMealsLoadAll(params);
+      this.onSuccessMealsLoadAll(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessMealsLoadAll(data: MealsLoadOut): void {}
 
   protected async rawMealsWizzard(params: AssistantMealsIn) {
     const fullUrl = this.baseUrl + "/api/meals/wizzard";
-    const rep: AxiosResponse<MealHeader[] | null> = await Axios.put(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
+    const rep: AxiosResponse<MealsLoadOut> = await Axios.put(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
     return rep.data;
   }
 
@@ -678,7 +691,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected onSuccessMealsWizzard(data: MealHeader[] | null): void {}
+  protected onSuccessMealsWizzard(data: MealsLoadOut): void {}
 
   protected async rawMealsSearch(params: { search: string }) {
     const fullUrl = this.baseUrl + "/api/meals/search";
@@ -702,78 +715,6 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessMealsSearch(data: ResourceSearchOut): void {}
-
-  protected async rawMealsLoadForGroup(params: { idGroup: number }) {
-    const fullUrl = this.baseUrl + "/api/meals/group";
-    const rep: AxiosResponse<MealsForGroupOut> = await Axios.get(fullUrl, {
-      params: { idGroup: String(params["idGroup"]) },
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** MealsLoadForGroup wraps rawMealsLoadForGroup and handles the error */
-  async MealsLoadForGroup(params: { idGroup: number }) {
-    this.startRequest();
-    try {
-      const out = await this.rawMealsLoadForGroup(params);
-      this.onSuccessMealsLoadForGroup(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessMealsLoadForGroup(data: MealsForGroupOut): void {}
-
-  protected async rawMealsLoad(params: { idSejour: number; day: number }) {
-    const fullUrl = this.baseUrl + "/api/meals/details";
-    const rep: AxiosResponse<MealsLoadOut> = await Axios.get(fullUrl, {
-      params: {
-        idSejour: String(params["idSejour"]),
-        day: String(params["day"]),
-      },
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** MealsLoad wraps rawMealsLoad and handles the error */
-  async MealsLoad(params: { idSejour: number; day: number }) {
-    this.startRequest();
-    try {
-      const out = await this.rawMealsLoad(params);
-      this.onSuccessMealsLoad(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessMealsLoad(data: MealsLoadOut): void {}
-
-  protected async rawMealsPreview(params: { idMeal: number }) {
-    const fullUrl = this.baseUrl + "/api/meals/details-one";
-    const rep: AxiosResponse<MenuExt> = await Axios.get(fullUrl, {
-      params: { idMeal: String(params["idMeal"]) },
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** MealsPreview wraps rawMealsPreview and handles the error */
-  async MealsPreview(params: { idMeal: number }) {
-    this.startRequest();
-    try {
-      const out = await this.rawMealsPreview(params);
-      this.onSuccessMealsPreview(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessMealsPreview(data: MenuExt): void {}
 
   protected async rawMealsPreviewQuantities(params: { idMeal: number }) {
     const fullUrl = this.baseUrl + "/api/meals/quantities";
@@ -994,6 +935,26 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessMealsSetMenu(data: MenuExt): void {}
+
+  protected async rawMealsSwapMenus(params: SwapMenusIn) {
+    const fullUrl = this.baseUrl + "/api/meals/swap";
+    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+    return true;
+  }
+
+  /** MealsSwapMenus wraps rawMealsSwapMenus and handles the error */
+  async MealsSwapMenus(params: SwapMenusIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawMealsSwapMenus(params);
+      this.onSuccessMealsSwapMenus();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessMealsSwapMenus(): void {}
 
   protected async rawLibraryLoadIngredients() {
     const fullUrl = this.baseUrl + "/api/library/all-ingredients";

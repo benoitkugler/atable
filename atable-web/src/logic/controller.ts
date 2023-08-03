@@ -1,8 +1,10 @@
 import { devLogMeta } from "@/env";
 import {
   AbstractAPI,
+  Group,
   Horaire,
   HoraireLabels,
+  IdGroup,
   IdUser,
   IngredientKind,
   Ingredients,
@@ -273,4 +275,8 @@ export function resourcesToList(ingredients: Ingredients, receipes: Receipes) {
 
   out.sort((a, b) => a.Title.localeCompare(b.Title));
   return out;
+}
+
+export function groupMap(groups: Group[] | null) {
+  return new Map<IdGroup, Group>((groups || []).map((gr) => [gr.Id, gr]));
 }

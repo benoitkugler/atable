@@ -2,7 +2,6 @@
   <v-chip
     :color="props.isMonoGroup ? undefined : props.group.Color"
     class="mx-0"
-    :size="props.small ? 'small' : undefined"
     :variant="props.isHovering ? 'elevated' : undefined"
     >{{ sigle }}</v-chip
   >
@@ -23,6 +22,8 @@ const sigle = computed(() => {
   if (props.isMonoGroup) return "Tous";
   const name = props.group.Name;
   if (name == "") return "...";
-  return name.substring(0, 1).toUpperCase() + name.substring(1, 2);
+  return props.small
+    ? name.substring(0, 1).toUpperCase() + name.substring(1, 2)
+    : name;
 });
 </script>

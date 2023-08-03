@@ -25,11 +25,10 @@
                   :draggable="true"
                   @dragstart="(e) => onGroupDragStart(e, group.IdGroup)"
                   :is-mono-group="
-                    Object.keys(props.groups || {}).length == 1 &&
-                    props.meal.Groups?.length == 1
+                    props.groups.size == 1 && props.meal.Groups?.length == 1
                   "
-                  :small="false"
-                  :group="props.groups![group.IdGroup]"
+                  :small="true"
+                  :group="props.groups.get(group.IdGroup)!"
                 ></GroupChip>
               </template>
             </v-hover>
@@ -151,11 +150,12 @@
 <script lang="ts" setup>
 import {
   UniteLabels,
-  type Groups,
   type IdIngredient,
   type IdReceipe,
   type MealExt,
   type MenuExt,
+  type IdGroup,
+  type Group,
 } from "@/logic/api_gen";
 import {
   ResourceDrag,
@@ -170,7 +170,7 @@ import { computed } from "vue";
 
 const props = defineProps<{
   meal: MealExt;
-  groups: Groups;
+  groups: Map<IdGroup, Group>;
   menu: MenuExt;
 }>();
 

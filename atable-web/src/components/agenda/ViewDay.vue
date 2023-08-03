@@ -165,7 +165,7 @@
               :key="meal.Meal.Id"
               :meal="meal"
               :menu="(data.Menus || {})[meal.Meal.Menu]"
-              :groups="data.Groups || {}"
+              :groups="groups"
               @delete="
                 isMenuEmpty(meal.Meal.Menu)
                   ? deleteMeal(meal)
@@ -208,6 +208,7 @@ import {
   type Quantity,
   IngredientKindLabels,
   UniteLabels,
+  Group,
 } from "@/logic/api_gen";
 import ResourceSearch from "./ResourceSearch.vue";
 import { computed } from "vue";
@@ -218,6 +219,7 @@ import {
   controller,
   copy,
   formatDate,
+  groupMap,
   horairesItems,
 } from "@/logic/controller";
 import { ref } from "vue";
@@ -254,26 +256,27 @@ const sortedMeals = computed(() => {
   return out;
 });
 
-const day = computed(() => addDays(new Date(sejour.value.Start), props.offset));
+const day = computed(() =>
+  addDays(new Date(sejour.value.Sejour.Start), props.offset)
+);
 
-const sejour = computed(() => controller.activeSejour!.Sejour);
-
-const data = reactive<MealsLoadOut>({ Groups: [], Meals: [], Menus: {} });
+const sejour = computed(() => controller.activeSejour!);
+const groups = computed(() => groupMap(sejour.value.Groups));
+const data = reactive<MealsLoadOut>({ Meals: [], Menus: {} });
 
 async function fetchMeals() {
-  const res = await controller.MealsLoad({
-    idSejour: sejour.value.Id,
+  const res = await controller.MealsLoadDay({
+    idSejour: sejour.value.Sejour.Id,
     day: props.offset,
   });
   if (res === undefined) return;
-  data.Groups = res.Groups;
   data.Menus = res.Menus;
   data.Meals = res.Meals;
 }
 
 async function createMeal(horaire: Horaire) {
   const res = await controller.MealsCreate({
-    IdSejour: sejour.value.Id,
+    IdSejour: sejour.value.Sejour.Id,
     Day: props.offset,
     Horaire: horaire,
   });

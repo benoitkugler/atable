@@ -14,86 +14,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// SejoursGetRepas loads the [Meals] setup on the given sejour,
-// which should be diplayed in an agenda.
-func (ct *Controller) MealsGet(c echo.Context) error {
-	uID := users.JWTUser(c)
-
-	id_, err := utils.QueryParamInt64(c, "id-sejour")
-	if err != nil {
-		return err
-	}
-
-	out, err := ct.getMeals(sej.IdSejour(id_), uID)
-	if err != nil {
-		return err
-	}
-
-	return c.JSON(200, out)
-}
-
-type MealHeader struct {
-	Meal        sej.Meal
-	Groups      []sej.Group // the groups affected (may be empty)
-	IsMenuEmpty bool
-}
-
-func (ct *Controller) getMeals(idSejour sej.IdSejour, uID us.IdUser) ([]MealHeader, error) {
-	sejour, err := ct.checkSejourOwner(idSejour, uID)
-	if err != nil {
-		return nil, err
-	}
-
-	// load the meals
-	meals, err := sej.SelectMealsBySejours(ct.db, sejour.Id)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	// load the underlying [Menu]s and their content
-	idMenus := meals.Menus()
-
-	link1, err := men.SelectMenuReceipesByIdMenus(ct.db, idMenus...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	link2, err := men.SelectMenuIngredientsByIdMenus(ct.db, idMenus...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	receipes, ingredients := link1.ByIdMenu(), link2.ByIdMenu()
-
-	// load the groups affected to the meals
-	links, err := sej.SelectMealGroupsByIdMeals(ct.db, meals.IDs()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-	groupsByMeal := links.ByIdMeal()
-
-	groups, err := sej.SelectGroups(ct.db, links.IdGroups()...)
-	if err != nil {
-		return nil, utils.SQLError(err)
-	}
-
-	out := make([]MealHeader, 0, len(meals))
-	for _, meal := range meals {
-		// resolve groups
-		var groupL []sej.Group
-		for _, gr := range groupsByMeal[meal.Id] {
-			groupL = append(groupL, groups[gr.IdGroup])
-		}
-		sort.Slice(groupL, func(i, j int) bool { return groupL[i].Id < groupL[j].Id })
-
-		out = append(out, MealHeader{
-			Meal:        meal,
-			Groups:      groupL,
-			IsMenuEmpty: len(receipes[meal.Menu])+len(ingredients[meal.Menu]) == 0,
-		})
-	}
-
-	return out, nil
-}
-
 type AssistantMealsIn struct {
 	IdSejour           sej.IdSejour
 	DaysNumber         int
@@ -119,7 +39,7 @@ func (ct *Controller) MealsWizzard(c echo.Context) error {
 		return err
 	}
 
-	out, err := ct.getMeals(args.IdSejour, uID)
+	out, err := ct.loadMeals(args.IdSejour, optionnalInt{}, uID)
 	if err != nil {
 		return err
 	}
@@ -449,9 +369,14 @@ func (ct *Controller) searchResource(pattern string, uID us.IdUser) (out Resourc
 	return out, nil
 }
 
-// MealsLoad loads the complete content of the meals
-// for the given sejour and day
-func (ct *Controller) MealsLoad(c echo.Context) error {
+type optionnalInt struct {
+	v     int
+	valid bool
+}
+
+// MealsLoadDay loads the complete content of the meals
+// for the given sejour and day.
+func (ct *Controller) MealsLoadDay(c echo.Context) error {
 	uID := users.JWTUser(c)
 	idSejour_, err := utils.QueryParamInt64(c, "idSejour")
 	if err != nil {
@@ -461,7 +386,22 @@ func (ct *Controller) MealsLoad(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	out, err := ct.loadMeals(sej.IdSejour(idSejour_), int(day), uID)
+	out, err := ct.loadMeals(sej.IdSejour(idSejour_), optionnalInt{v: int(day), valid: true}, uID)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+// MealsLoadAll loads the complete content of the meals
+// for the given sejour, and all days
+func (ct *Controller) MealsLoadAll(c echo.Context) error {
+	uID := users.JWTUser(c)
+	idSejour_, err := utils.QueryParamInt64(c, "idSejour")
+	if err != nil {
+		return err
+	}
+	out, err := ct.loadMeals(sej.IdSejour(idSejour_), optionnalInt{}, uID)
 	if err != nil {
 		return err
 	}
@@ -474,12 +414,12 @@ type MealExt struct {
 }
 
 type MealsLoadOut struct {
-	Groups sej.Groups
-	Menus  map[men.IdMenu]lib.MenuExt
-	Meals  []MealExt
+	Menus map[men.IdMenu]lib.MenuExt
+	Meals []MealExt
 }
 
-func (ct *Controller) loadMeals(idSejour sej.IdSejour, day int, uID us.IdUser) (out MealsLoadOut, err error) {
+// day restrict to one day
+func (ct *Controller) loadMeals(idSejour sej.IdSejour, day optionnalInt, uID us.IdUser) (out MealsLoadOut, err error) {
 	_, err = ct.checkSejourOwner(idSejour, uID)
 	if err != nil {
 		return out, err
@@ -489,18 +429,15 @@ func (ct *Controller) loadMeals(idSejour sej.IdSejour, day int, uID us.IdUser) (
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
-	allMeals.RestrictByDay(day)
+	if day.valid {
+		allMeals.RestrictByDay(day.v)
+	}
 
 	links, err := sej.SelectMealGroupsByIdMeals(ct.db, allMeals.IDs()...)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
 	mealToGroups := links.ByIdMeal()
-
-	out.Groups, err = sej.SelectGroupsBySejours(ct.db, idSejour)
-	if err != nil {
-		return out, utils.SQLError(err)
-	}
 
 	mt, err := lib.LoadMenus(ct.db, allMeals.Menus())
 	if err != nil {
@@ -518,65 +455,6 @@ func (ct *Controller) loadMeals(idSejour sej.IdSejour, day int, uID us.IdUser) (
 	}
 
 	return out, nil
-}
-
-type MealsForGroupOut struct {
-	Menus map[men.IdMenu]lib.MenuExt
-	Meals sej.Meals
-}
-
-func (ct *Controller) MealsLoadForGroup(c echo.Context) error {
-	id_, err := utils.QueryParamInt64(c, "idGroup")
-	if err != nil {
-		return err
-	}
-
-	out, err := ct.loadMealsForGroup(sej.IdGroup(id_))
-	if err != nil {
-		return err
-	}
-
-	return c.JSON(200, out)
-}
-
-func (ct *Controller) loadMealsForGroup(idGroup sej.IdGroup) (out MealsForGroupOut, _ error) {
-	links, err := sej.SelectMealGroupsByIdGroups(ct.db, idGroup)
-	if err != nil {
-		return out, utils.SQLError(err)
-	}
-	meals, err := sej.SelectMeals(ct.db, links.IdMeals()...)
-	if err != nil {
-		return out, utils.SQLError(err)
-	}
-	mt, err := lib.LoadMenus(ct.db, meals.Menus())
-	if err != nil {
-		return out, err
-	}
-
-	out.Menus, _ = mt.Compile()
-	out.Meals = meals
-	return out, nil
-}
-
-// MealsPreview returns a summary of the given [Meal],
-// typically to be displayed on hover.
-func (ct *Controller) MealsPreview(c echo.Context) error {
-	id_, err := utils.QueryParamInt64(c, "idMeal")
-	if err != nil {
-		return err
-	}
-
-	meal, err := sej.SelectMeal(ct.db, sej.IdMeal(id_))
-	if err != nil {
-		return utils.SQLError(err)
-	}
-
-	out, err := lib.LoadMenu(ct.db, meal.Menu)
-	if err != nil {
-		return err
-	}
-
-	return c.JSON(200, out)
 }
 
 type MealCreateIn struct {
@@ -1113,6 +991,66 @@ func (ct *Controller) removeItemFromMenu(args RemoveItemIn, uID us.IdUser) (out 
 
 	out, err = lib.LoadMenu(ct.db, menu.Id)
 	return out, err
+}
+
+type SwapMenusIn struct {
+	IdMeal1, IdMeal2 sej.IdMeal
+}
+
+func (ct *Controller) MealsSwapMenus(c echo.Context) error {
+	uID := users.JWTUser(c)
+
+	var args SwapMenusIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	err := ct.swapMenus(args, uID)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
+
+func (ct *Controller) swapMenus(args SwapMenusIn, uID us.IdUser) error {
+	meal1, err := sej.SelectMeal(ct.db, args.IdMeal1)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	_, err = ct.checkSejourOwner(meal1.Sejour, uID)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	meal2, err := sej.SelectMeal(ct.db, args.IdMeal2)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	_, err = ct.checkSejourOwner(meal2.Sejour, uID)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	meal1.Menu, meal2.Menu = meal2.Menu, meal1.Menu
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	_, err = meal1.Update(tx)
+	if err != nil {
+		_ = tx.Rollback()
+		return utils.SQLError(err)
+	}
+	_, err = meal2.Update(tx)
+	if err != nil {
+		_ = tx.Rollback()
+		return utils.SQLError(err)
+	}
+	err = tx.Commit()
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return nil
 }
 
 type PreviewQuantitiesOut struct {
