@@ -34,7 +34,7 @@
                   hide-details
                   @blur="saveName"
                   @focus="$event.target.select()"
-                  :disabled="isReadonly"
+                  :readonly="isReadonly"
                 >
                 </v-text-field>
               </v-col>
@@ -44,7 +44,7 @@
                 <plat-select
                   v-model="inner.Receipe.Plat"
                   @update:model-value="save"
-                  :disabled="isReadonly"
+                  :readonly="isReadonly"
                 ></plat-select>
               </v-col>
             </v-row>
@@ -57,9 +57,23 @@
                   label="Description (optionnelle)"
                   hide-details
                   @blur="save"
-                  :disabled="isReadonly"
+                  :readonly="isReadonly"
                 >
                 </v-textarea>
+              </v-col>
+            </v-row>
+
+            <v-row v-if="!isReadonly">
+              <v-col>
+                <v-checkbox
+                  label="Publier"
+                  density="compact"
+                  hint="Rendre la recette visible aux autres utilisateurs, en lecture seule."
+                  persistent-hint
+                  v-model="inner.Receipe.IsPublished"
+                  @update:model-value="save"
+                >
+                </v-checkbox>
               </v-col>
             </v-row>
           </v-form>
@@ -108,12 +122,16 @@
                       @update="(qu) => updateIngredient(ingredient.Id, qu)"
                     ></QuantityChip>
                   </v-col>
-                  <v-col cols="auto" align-self="center" class="pl-4">
+                  <v-col
+                    cols="auto"
+                    align-self="center"
+                    class="pl-4"
+                    v-if="!isReadonly"
+                  >
                     <v-btn
                       icon
                       size="x-small"
                       @click="deleteIngredient(ingredient.Id)"
-                      :disabled="isReadonly"
                     >
                       <v-icon color="red">mdi-delete</v-icon>
                     </v-btn>
@@ -205,7 +223,7 @@ function saveName() {
 }
 
 async function save() {
-  if (inner.value == null) return;
+  if (inner.value == null || isReadonly) return;
   const res = await controller.LibraryUpdateReceipe(inner.value.Receipe);
   if (res === undefined) return;
 

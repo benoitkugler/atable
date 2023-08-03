@@ -149,6 +149,7 @@ func scanOneMenu(row scanner) (Menu, error) {
 		&item.Id,
 		&item.Owner,
 		&item.IsFavorite,
+		&item.IsPublished,
 	)
 	return item, err
 }
@@ -217,22 +218,22 @@ func ScanMenus(rs *sql.Rows) (Menus, error) {
 // Insert one Menu in the database and returns the item with id filled.
 func (item Menu) Insert(tx DB) (out Menu, err error) {
 	row := tx.QueryRow(`INSERT INTO menus (
-		owner, isfavorite
+		owner, isfavorite, ispublished
 		) VALUES (
-		$1, $2
+		$1, $2, $3
 		) RETURNING *;
-		`, item.Owner, item.IsFavorite)
+		`, item.Owner, item.IsFavorite, item.IsPublished)
 	return ScanMenu(row)
 }
 
 // Update Menu in the database and returns the new version.
 func (item Menu) Update(tx DB) (out Menu, err error) {
 	row := tx.QueryRow(`UPDATE menus SET (
-		owner, isfavorite
+		owner, isfavorite, ispublished
 		) = (
-		$1, $2
-		) WHERE id = $3 RETURNING *;
-		`, item.Owner, item.IsFavorite, item.Id)
+		$1, $2, $3
+		) WHERE id = $4 RETURNING *;
+		`, item.Owner, item.IsFavorite, item.IsPublished, item.Id)
 	return ScanMenu(row)
 }
 
@@ -668,6 +669,7 @@ func scanOneReceipe(row scanner) (Receipe, error) {
 		&item.Plat,
 		&item.Name,
 		&item.Description,
+		&item.IsPublished,
 	)
 	return item, err
 }
@@ -736,22 +738,22 @@ func ScanReceipes(rs *sql.Rows) (Receipes, error) {
 // Insert one Receipe in the database and returns the item with id filled.
 func (item Receipe) Insert(tx DB) (out Receipe, err error) {
 	row := tx.QueryRow(`INSERT INTO receipes (
-		owner, plat, name, description
+		owner, plat, name, description, ispublished
 		) VALUES (
-		$1, $2, $3, $4
+		$1, $2, $3, $4, $5
 		) RETURNING *;
-		`, item.Owner, item.Plat, item.Name, item.Description)
+		`, item.Owner, item.Plat, item.Name, item.Description, item.IsPublished)
 	return ScanReceipe(row)
 }
 
 // Update Receipe in the database and returns the new version.
 func (item Receipe) Update(tx DB) (out Receipe, err error) {
 	row := tx.QueryRow(`UPDATE receipes SET (
-		owner, plat, name, description
+		owner, plat, name, description, ispublished
 		) = (
-		$1, $2, $3, $4
-		) WHERE id = $5 RETURNING *;
-		`, item.Owner, item.Plat, item.Name, item.Description, item.Id)
+		$1, $2, $3, $4, $5
+		) WHERE id = $6 RETURNING *;
+		`, item.Owner, item.Plat, item.Name, item.Description, item.IsPublished, item.Id)
 	return ScanReceipe(row)
 }
 

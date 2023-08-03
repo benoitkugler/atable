@@ -349,14 +349,16 @@ func (ct *Controller) searchResource(pattern string, uID us.IdUser) (out Resourc
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
-	receipes, err := men.SelectReceipesByOwners(tx, uID, ct.admin.Id)
+	receipes, err := men.SelectAllReceipes(tx)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
-	menus, err := men.SelectMenusByOwners(tx, uID, ct.admin.Id)
+	menus, err := men.SelectAllMenus(tx)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
+	receipes.RestrictVisibleBy(uID)
+	menus.RestrictVisibleBy(uID)
 
 	// load the menu content so we can search in it
 	links1, err := men.SelectMenuIngredientsByIdMenus(tx, menus.IDs()...)
@@ -987,8 +989,8 @@ func (ct *Controller) setMenu(args SetMenuIn, uID us.IdUser) (out lib.MenuExt, _
 		return out, utils.SQLError(err)
 	}
 
-	// admin or personnal
-	if menu.Owner != uID && menu.Owner != ct.admin.Id {
+	// personnal or published
+	if menu.Owner != uID && !menu.IsPublished {
 		return out, errAccessForbidden
 	}
 

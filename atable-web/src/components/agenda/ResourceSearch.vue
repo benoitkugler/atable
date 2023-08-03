@@ -106,5 +106,11 @@ function dragStart(event: DragEvent, item: ResourceHeader, kind: DragKind) {
   const payload: ResourceDrag = { item, kind };
   event.dataTransfer?.setData("json/add-resource", JSON.stringify(payload));
   event.dataTransfer!.dropEffect = "copy";
+  // special case menu
+  if (kind == DragKind.menu) {
+    console.log("setnin menu");
+
+    event.dataTransfer?.setData("drag-menu", "true");
+  }
 }
 </script>

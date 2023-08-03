@@ -78,10 +78,11 @@ func (ct *Controller) LibraryLoadIngredients(c echo.Context) error {
 func (ct *Controller) LibraryLoadReceipes(c echo.Context) error {
 	uID := users.JWTUser(c)
 
-	out, err := men.SelectReceipesByOwners(ct.db, uID, ct.admin.Id)
+	out, err := men.SelectAllReceipes(ct.db)
 	if err != nil {
 		return utils.SQLError(err)
 	}
+	out.RestrictVisibleBy(uID)
 
 	return c.JSON(200, out)
 }
@@ -202,6 +203,7 @@ func (ct *Controller) updateReceipe(args men.Receipe, uID us.IdUser) error {
 	receipe.Name = args.Name
 	receipe.Description = args.Description
 	receipe.Plat = args.Plat
+	receipe.IsPublished = args.IsPublished
 	_, err = receipe.Update(ct.db)
 	if err != nil {
 		return utils.SQLError(err)
@@ -336,6 +338,36 @@ func (ct *Controller) LibraryLoadMenu(c echo.Context) error {
 	}
 
 	return c.JSON(200, out)
+}
+
+func (ct *Controller) LibraryUpdateMenu(c echo.Context) error {
+	uID := users.JWTUser(c)
+
+	var args men.Menu
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	err := ct.updateMenu(args, uID)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
+
+func (ct *Controller) updateMenu(args men.Menu, uID us.IdUser) error {
+	menu, err := ct.checkMenuOwner(args.Id, uID)
+	if err != nil {
+		return err
+	}
+
+	menu.IsPublished = args.IsPublished
+	_, err = menu.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return nil
 }
 
 type AddMenuIngredientIn struct {
@@ -530,7 +562,7 @@ func (ct *Controller) deleteMenuReceipe(idR men.IdMenu, idG men.IdReceipe, uID u
 type ResourceHeader struct {
 	Title       string
 	ID          int64
-	IsPersonnal bool // if false, it is owned by the admin account
+	IsPersonnal bool // if false, it is owned by an other user
 }
 
 type ReceipeHeader struct {
@@ -559,7 +591,7 @@ type ReceipeExt struct {
 }
 
 type MenuExt struct {
-	men.Menu
+	Menu        men.Menu
 	Ingredients []MenuIngredientExt
 	Receipes    []men.Receipe
 }

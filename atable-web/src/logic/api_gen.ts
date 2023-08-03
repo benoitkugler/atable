@@ -50,9 +50,7 @@ export interface IngredientQuantity {
 }
 // github.com/benoitkugler/atable/controllers/library.MenuExt
 export interface MenuExt {
-  Id: IdMenu;
-  Owner: IdUser;
-  IsFavorite: boolean;
+  Menu: Menu;
   Ingredients: MenuIngredientExt[] | null;
   Receipes: Receipe[] | null;
 }
@@ -241,6 +239,13 @@ export const IngredientKindLabels: { [key in IngredientKind]: string } = {
 
 // github.com/benoitkugler/atable/sql/menus.Ingredients
 export type Ingredients = { [key: IdIngredient]: Ingredient } | null;
+// github.com/benoitkugler/atable/sql/menus.Menu
+export interface Menu {
+  Id: IdMenu;
+  Owner: IdUser;
+  IsFavorite: boolean;
+  IsPublished: boolean;
+}
 // github.com/benoitkugler/atable/sql/menus.MenuIngredient
 export interface MenuIngredient {
   IdMenu: IdMenu;
@@ -276,6 +281,7 @@ export interface Receipe {
   Plat: PlatKind;
   Name: string;
   Description: string;
+  IsPublished: boolean;
 }
 // github.com/benoitkugler/atable/sql/menus.ReceipeIngredient
 export interface ReceipeIngredient {
@@ -1149,6 +1155,26 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessLibraryCreateMenu(data: ResourceHeader): void {}
+
+  protected async rawLibraryUpdateMenu(params: Menu) {
+    const fullUrl = this.baseUrl + "/api/library/menus";
+    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+    return true;
+  }
+
+  /** LibraryUpdateMenu wraps rawLibraryUpdateMenu and handles the error */
+  async LibraryUpdateMenu(params: Menu) {
+    this.startRequest();
+    try {
+      const out = await this.rawLibraryUpdateMenu(params);
+      this.onSuccessLibraryUpdateMenu();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessLibraryUpdateMenu(): void {}
 
   protected async rawLibraryLoadReceipe(params: { idReceipe: number }) {
     const fullUrl = this.baseUrl + "/api/library/receipes";

@@ -283,9 +283,12 @@ async function createMeal(horaire: Horaire) {
   // register the new empty menu
   const m = data.Menus || {};
   m[res.Meal.Menu] = {
-    Id: res.Meal.Menu,
-    Owner: controller.idUser!,
-    IsFavorite: false,
+    Menu: {
+      Id: res.Meal.Menu,
+      Owner: controller.idUser!,
+      IsFavorite: false,
+      IsPublished: false,
+    },
     Ingredients: [],
     Receipes: [],
   };
@@ -344,7 +347,7 @@ function addResource(payload: ResourceDrag, target: Meal) {
     case DragKind.receipe:
       return addReceipe(payload.item.ID, target);
     case DragKind.menu:
-      return addMenu(payload.item.ID, target);
+      return setMenu(payload.item.ID, target);
   }
 }
 
@@ -370,7 +373,7 @@ async function addReceipe(id: IdReceipe, target: Meal) {
   data.Menus![target.Menu] = res;
 }
 
-async function addMenu(id: IdMenu, target: Meal) {
+async function setMenu(id: IdMenu, target: Meal) {
   const res = await controller.MealsSetMenu({
     IdMeal: target.Id,
     IdMenu: id,

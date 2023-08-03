@@ -71,26 +71,28 @@ class Menu {
   final IdMenu id;
   final IdUser owner;
   final bool isFavorite;
+  final bool isPublished;
 
-  const Menu(this.id, this.owner, this.isFavorite);
+  const Menu(this.id, this.owner, this.isFavorite, this.isPublished);
 
   @override
   String toString() {
-    return "Menu($id, $owner, $isFavorite)";
+    return "Menu($id, $owner, $isFavorite, $isPublished)";
   }
 }
 
 Menu menuFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return Menu(intFromJson(json['Id']), intFromJson(json['Owner']),
-      boolFromJson(json['IsFavorite']));
+      boolFromJson(json['IsFavorite']), boolFromJson(json['IsPublished']));
 }
 
 Map<String, dynamic> menuToJson(Menu item) {
   return {
     "Id": intToJson(item.id),
     "Owner": intToJson(item.owner),
-    "IsFavorite": boolToJson(item.isFavorite)
+    "IsFavorite": boolToJson(item.isFavorite),
+    "IsPublished": boolToJson(item.isPublished)
   };
 }
 
@@ -228,12 +230,14 @@ class Receipe {
   final PlatKind plat;
   final String name;
   final String description;
+  final bool isPublished;
 
-  const Receipe(this.id, this.owner, this.plat, this.name, this.description);
+  const Receipe(this.id, this.owner, this.plat, this.name, this.description,
+      this.isPublished);
 
   @override
   String toString() {
-    return "Receipe($id, $owner, $plat, $name, $description)";
+    return "Receipe($id, $owner, $plat, $name, $description, $isPublished)";
   }
 }
 
@@ -244,7 +248,8 @@ Receipe receipeFromJson(dynamic json_) {
       intFromJson(json['Owner']),
       platKindFromJson(json['Plat']),
       stringFromJson(json['Name']),
-      stringFromJson(json['Description']));
+      stringFromJson(json['Description']),
+      boolFromJson(json['IsPublished']));
 }
 
 Map<String, dynamic> receipeToJson(Receipe item) {
@@ -253,7 +258,8 @@ Map<String, dynamic> receipeToJson(Receipe item) {
     "Owner": intToJson(item.owner),
     "Plat": platKindToJson(item.plat),
     "Name": stringToJson(item.name),
-    "Description": stringToJson(item.description)
+    "Description": stringToJson(item.description),
+    "IsPublished": boolToJson(item.isPublished)
   };
 }
 

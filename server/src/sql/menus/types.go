@@ -1,5 +1,7 @@
 package menus
 
+import "github.com/benoitkugler/atable/sql/users"
+
 type IngredientKind uint8
 
 const (
@@ -56,4 +58,26 @@ func (rs IdReceipeSet) ToMenuLinks(idMenu IdMenu) MenuReceipes {
 		links = append(links, MenuReceipe{IdMenu: idMenu, IdReceipe: rec})
 	}
 	return links
+}
+
+// RestrictVisibleBy narrows the map to the items
+// accessible by the given user
+func (rm Receipes) RestrictVisibleBy(user users.IdUser) {
+	for id, rec := range rm {
+		if rec.Owner == user || rec.IsPublished {
+			continue
+		}
+		delete(rm, id)
+	}
+}
+
+// RestrictVisibleBy narrows the map to the items
+// accessible by the given user
+func (rm Menus) RestrictVisibleBy(user users.IdUser) {
+	for id, rec := range rm {
+		if rec.Owner == user || rec.IsPublished {
+			continue
+		}
+		delete(rm, id)
+	}
 }

@@ -8,7 +8,8 @@ CREATE TABLE ingredients (
 CREATE TABLE menus (
     Id serial PRIMARY KEY,
     Owner integer NOT NULL,
-    IsFavorite boolean NOT NULL
+    IsFavorite boolean NOT NULL,
+    IsPublished boolean NOT NULL
 );
 
 CREATE TABLE menu_ingredients (
@@ -28,7 +29,8 @@ CREATE TABLE receipes (
     Owner integer NOT NULL,
     Plat integer CHECK (Plat IN (0, 1, 2, 3)) NOT NULL,
     Name text NOT NULL,
-    Description text NOT NULL
+    Description text NOT NULL,
+    IsPublished boolean NOT NULL
 );
 
 CREATE TABLE receipe_ingredients (
@@ -55,6 +57,10 @@ ALTER TABLE receipe_ingredients
 
 ALTER TABLE receipe_ingredients
     ADD FOREIGN KEY (IdIngredient) REFERENCES ingredients;
+
+ALTER TABLE menus
+    ADD CHECK (IsPublished = FALSE
+        OR IsFavorite = TRUE);
 
 ALTER TABLE menus
     ADD FOREIGN KEY (OWNER) REFERENCES users ON DELETE CASCADE;

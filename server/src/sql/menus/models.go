@@ -32,6 +32,7 @@ type Receipe struct {
 	Plat        PlatKind
 	Name        string
 	Description string // notice, optional
+	IsPublished bool   // If true, other users may use it (as readonly)
 }
 
 // ReceipeIngredient is a link object.
@@ -51,12 +52,18 @@ type ReceipeIngredient struct {
 // and are typically accessed via a [sejours.Meal] entry.
 //
 // [Menu]s are owned by users, and might be shared accross several [sejours.Meal]s.
+//
+// gomacro:SQL ADD CHECK(IsPublished = false OR IsFavorite = true)
 type Menu struct {
 	Id    IdMenu
 	Owner users.IdUser `gomacro-sql-on-delete:"CASCADE"`
 	// If IsFavorite is true, the menu is not deleted
 	// when no more [sejours.Meal]s are using it.
 	IsFavorite bool
+
+	// If true, other users may use it (as readonly)
+	// It implies IsFavorite
+	IsPublished bool
 }
 
 // MenuIngredient is a link item

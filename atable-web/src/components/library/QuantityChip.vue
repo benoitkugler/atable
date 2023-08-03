@@ -4,7 +4,7 @@
       <v-chip
         v-on="{ isActive }"
         v-bind="innerProps"
-        color="secondary"
+        :color="props.disabled ? 'black' : 'secondary'"
         elevation="1"
         :disabled="props.disabled"
       >

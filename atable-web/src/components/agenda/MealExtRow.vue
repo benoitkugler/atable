@@ -2,7 +2,7 @@
   <v-list-item
     rounded
     class="bg-grey-lighten-5 my-2"
-    @[!props.menu.IsFavorite&&`dragover`]="onDragover"
+    @dragover="onDragover"
     @dragleave="acceptDrop = false"
     @drop="onDrop"
     :elevation="acceptDrop ? 2 : 0"
@@ -54,14 +54,14 @@
             <v-card
               label
               :color="platColors[item.plat]"
-              :variant="props.menu.IsFavorite ? 'text' : 'tonal'"
+              :variant="props.menu.Menu.IsFavorite ? 'text' : 'tonal'"
               class="my-1 pr-2"
               @click="
                 item.isReceipe
                   ? emit('goToReceipe', item.id)
                   : emit('updateMenuIngredient', item.id)
               "
-              :disabled="props.menu.IsFavorite"
+              :disabled="props.menu.Menu.IsFavorite"
             >
               <v-row no-gutters>
                 <v-col align-self="center" class="px-2 py-1">
@@ -80,7 +80,7 @@
                 </v-col>
                 <v-col cols="auto" align-self="center">
                   <v-btn
-                    v-if="!props.menu.IsFavorite"
+                    v-if="!props.menu.Menu.IsFavorite"
                     class="my-1 mr-0"
                     variant="plain"
                     icon="mdi-close"
@@ -94,7 +94,7 @@
         </v-row>
       </v-col>
 
-      <v-col cols="auto" v-if="props.menu.IsFavorite" align-self="center">
+      <v-col cols="auto" v-if="props.menu.Menu.IsFavorite" align-self="center">
         <v-chip
           prepend-icon="mdi-heart"
           color="secondary"
@@ -197,8 +197,12 @@ function onGroupDragStart(event: DragEvent, idGroup: number) {
 const acceptDrop = ref(false);
 
 function onDragover(event: DragEvent) {
-  event.preventDefault();
-  acceptDrop.value = true;
+  const isMenu = event.dataTransfer?.types.includes("drag-menu");
+  if (!props.menu.Menu.IsFavorite || isMenu) {
+    // accept the drop
+    event.preventDefault();
+    acceptDrop.value = true;
+  }
 }
 
 function onDrop(event: DragEvent) {

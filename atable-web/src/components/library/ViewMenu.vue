@@ -20,6 +20,18 @@
 
     <v-card-text v-if="inner != null">
       <v-row>
+        <v-col cols="3" v-if="!isReadonly">
+          <v-checkbox
+            label="Publier"
+            density="compact"
+            hint="Rendre le menu visible aux autres utilisateurs, en lecture seule."
+            persistent-hint
+            v-model="inner.Menu.IsPublished"
+            @update:model-value="save"
+          >
+          </v-checkbox>
+        </v-col>
+
         <v-col>
           <v-card
             title="Recettes et ingrédients"
@@ -109,14 +121,13 @@
                         @update="(qu) => updateIngredient(item, qu)"
                       ></QuantityChip>
                     </v-col>
-                    <v-col cols="auto" align-self="center" class="pl-4">
-                      <v-btn
-                        icon
-                        color="white"
-                        size="x-small"
-                        @click="deleteResource(item)"
-                        :disabled="isReadonly"
-                      >
+                    <v-col
+                      cols="auto"
+                      align-self="center"
+                      class="pl-4"
+                      v-if="!isReadonly"
+                    >
+                      <v-btn icon size="x-small" @click="deleteResource(item)">
                         <v-icon color="red">mdi-delete</v-icon>
                       </v-btn>
                     </v-col>
@@ -171,7 +182,7 @@ onMounted(fetch);
 const inner = ref<MenuExt | null>(null);
 const DB = ref<MenuResource[]>([]);
 
-const isReadonly = computed(() => inner.value?.Owner != controller.idUser);
+const isReadonly = computed(() => inner.value?.Menu.Owner != controller.idUser);
 
 const sortedItems = computed(() =>
   inner.value == null ? [] : sortMenuContent(inner.value)
@@ -196,6 +207,14 @@ async function fetch() {
   if (recs === undefined) return;
 
   DB.value = resourcesToList(ings, recs);
+}
+
+async function save() {
+  if (inner.value == null) return;
+  const res = await controller.LibraryUpdateMenu(inner.value.Menu);
+  if (res === undefined) return;
+
+  controller.showMessage("Menu modifié avec succès.");
 }
 
 async function addResource(item: MenuResource) {

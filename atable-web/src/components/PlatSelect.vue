@@ -7,7 +7,7 @@
     :items="items"
     :model-value="props.modelValue"
     @update:model-value="(v) => emit('update:model-value', v)"
-    :disabled="disabled"
+    :readonly="readonly"
   ></v-select>
 </template>
 
@@ -16,7 +16,7 @@ import { PlatKind, PlatKindLabels } from "@/logic/api_gen";
 
 const props = defineProps<{
   modelValue: PlatKind;
-  disabled?: boolean;
+  readonly?: boolean;
 }>();
 
 const emit = defineEmits<{

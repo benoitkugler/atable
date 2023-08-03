@@ -21,7 +21,7 @@
         <template v-slot:append>
           <v-tooltip
             v-if="!item.IsPersonnal"
-            text="Ce menu vient de la base officielle."
+            text="Ce menu appartient à un autre utilisateur."
           >
             <template v-slot:activator="{ isActive, props }">
               <v-icon color="grey-lighten-1" v-on="{ isActive }" v-bind="props"
@@ -54,7 +54,7 @@
         <template v-slot:append>
           <v-tooltip
             v-if="!item.IsPersonnal"
-            text="Cette recette vient de la base officielle."
+            text="Cette recette appartient à un autre utilisateur."
           >
             <template v-slot:activator="{ isActive, props }">
               <v-icon color="grey-lighten-1" v-on="{ isActive }" v-bind="props"

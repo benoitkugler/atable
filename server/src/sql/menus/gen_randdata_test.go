@@ -40,6 +40,7 @@ func randMenu() Menu {
 	s.Id = randIdMenu()
 	s.Owner = randuse_IdUser()
 	s.IsFavorite = randbool()
+	s.IsPublished = randbool()
 
 	return s
 }
@@ -84,6 +85,7 @@ func randReceipe() Receipe {
 	s.Plat = randPlatKind()
 	s.Name = randstring()
 	s.Description = randstring()
+	s.IsPublished = randbool()
 
 	return s
 }
