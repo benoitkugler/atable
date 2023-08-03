@@ -43,6 +43,11 @@ export interface IngredientI {
   Quantity: number;
   Unite: Unite;
 }
+// github.com/benoitkugler/atable/controllers/library.IngredientQuantity
+export interface IngredientQuantity {
+  Ingredient: Ingredient;
+  Quantities: Quantity[] | null;
+}
 // github.com/benoitkugler/atable/controllers/library.MenuExt
 export interface MenuExt {
   Id: IdMenu;
@@ -58,6 +63,11 @@ export interface MenuIngredientExt {
   Quantity: QuantityR;
   Plat: PlatKind;
   Ingredient: Ingredient;
+}
+// github.com/benoitkugler/atable/controllers/library.Quantity
+export interface Quantity {
+  Unite: Unite;
+  Val: number;
 }
 // github.com/benoitkugler/atable/controllers/library.ReceipeExt
 export interface ReceipeExt {
@@ -143,6 +153,11 @@ export interface MoveGroupIn {
   Group: IdGroup;
   From: IdMeal;
   To: IdMeal;
+}
+// github.com/benoitkugler/atable/controllers/sejours.PreviewQuantitiesOut
+export interface PreviewQuantitiesOut {
+  NbPeople: number;
+  Quantities: IngredientQuantity[] | null;
 }
 // github.com/benoitkugler/atable/controllers/sejours.RemoveItemIn
 export interface RemoveItemIn {
@@ -753,6 +768,29 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessMealsPreview(data: MenuExt): void {}
+
+  protected async rawMealsPreviewQuantities(params: { idMeal: number }) {
+    const fullUrl = this.baseUrl + "/api/meals/quantities";
+    const rep: AxiosResponse<PreviewQuantitiesOut> = await Axios.get(fullUrl, {
+      params: { idMeal: String(params["idMeal"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** MealsPreviewQuantities wraps rawMealsPreviewQuantities and handles the error */
+  async MealsPreviewQuantities(params: { idMeal: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawMealsPreviewQuantities(params);
+      this.onSuccessMealsPreviewQuantities(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessMealsPreviewQuantities(data: PreviewQuantitiesOut): void {}
 
   protected async rawMealsCreate(params: MealCreateIn) {
     const fullUrl = this.baseUrl + "/api/meals/details";

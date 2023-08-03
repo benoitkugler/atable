@@ -125,7 +125,7 @@
             </v-list-item>
             <v-divider></v-divider>
             <v-list-item>
-              <v-btn flat>
+              <v-btn flat @click="emit('previewQuantities')">
                 <template v-slot:prepend>
                   <v-icon>mdi-food-variant</v-icon>
                 </template>
@@ -183,6 +183,7 @@ const emit = defineEmits<{
   (event: "updateMenuIngredient", id: IdIngredient): void;
   (event: "goToMenu"): void;
   (event: "goToReceipe", id: IdReceipe): void;
+  (event: "previewQuantities"): void;
 }>();
 
 function onGroupDragStart(event: DragEvent, idGroup: number) {

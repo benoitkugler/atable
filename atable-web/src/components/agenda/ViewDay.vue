@@ -72,6 +72,39 @@
 
     <!--  -->
 
+    <v-dialog
+      max-width="700px"
+      :model-value="previewQuantities != null"
+      @update:model-value="previewQuantities = null"
+    >
+      <v-card
+        v-if="previewQuantities != null"
+        title="Quantités nécessaires"
+        :subtitle="`${previewQuantities.NbPeople} personnes`"
+      >
+        <v-card-text>
+          <v-list>
+            <v-list-item
+              v-for="ingredient in previewQuantities.Quantities"
+              :key="ingredient.Ingredient.Id"
+            >
+              <template v-slot:append>
+                {{ formatQuantities(ingredient.Quantities || []) }}
+              </template>
+              <v-list-item-title>{{
+                ingredient.Ingredient.Name
+              }}</v-list-item-title>
+              <v-list-item-subtitle>{{
+                IngredientKindLabels[ingredient.Ingredient.Kind]
+              }}</v-list-item-subtitle>
+            </v-list-item>
+          </v-list>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <!--  -->
+
     <v-card-text class="fill-height">
       <v-row class="fill-height">
         <v-col>
@@ -145,6 +178,7 @@
               @update-menu-ingredient="
                 (id) => startUpdateIngredient(id, meal.Meal.Menu)
               "
+              @preview-quantities="() => showPreviewQuantities(meal.Meal.Id)"
               @go-to-menu="goToMenu(meal.Meal.Menu)"
               @go-to-receipe="goToReceipe"
             ></meal-ext-row>
@@ -170,6 +204,10 @@ import {
   type MealExt,
   type MealsLoadOut,
   type MenuIngredient,
+  type PreviewQuantitiesOut,
+  type Quantity,
+  IngredientKindLabels,
+  UniteLabels,
 } from "@/logic/api_gen";
 import ResourceSearch from "./ResourceSearch.vue";
 import { computed } from "vue";
@@ -375,6 +413,21 @@ async function updateIngredient() {
   data.Menus = m;
 
   menuIngToUpdate.value = null; // close dialog
+}
+
+const previewQuantities = ref<PreviewQuantitiesOut | null>(null);
+async function showPreviewQuantities(idMeal: IdMeal) {
+  const res = await controller.MealsPreviewQuantities({ idMeal });
+  if (res === undefined) return;
+  const l = res.Quantities || [];
+  l.sort((a, b) => a.Ingredient.Name.localeCompare(b.Ingredient.Name));
+  previewQuantities.value = { NbPeople: res.NbPeople, Quantities: l };
+}
+
+function formatQuantities(qus: Quantity[]) {
+  return qus
+    .map((item) => `${item.Val} ${UniteLabels[item.Unite]}`)
+    .join(" et ");
 }
 
 const router = useRouter();

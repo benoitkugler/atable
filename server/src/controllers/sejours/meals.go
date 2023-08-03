@@ -1112,3 +1112,53 @@ func (ct *Controller) removeItemFromMenu(args RemoveItemIn, uID us.IdUser) (out 
 	out, err = lib.LoadMenu(ct.db, menu.Id)
 	return out, err
 }
+
+type PreviewQuantitiesOut struct {
+	NbPeople   int
+	Quantities []lib.IngredientQuantity
+}
+
+func (ct *Controller) MealsPreviewQuantities(c echo.Context) error {
+	idMeal, err := utils.QueryParamInt64(c, "idMeal")
+	if err != nil {
+		return err
+	}
+	out, err := ct.previewQuantities(sej.IdMeal(idMeal))
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) previewQuantities(idMeal sej.IdMeal) (out PreviewQuantitiesOut, _ error) {
+	meal, err := sej.SelectMeal(ct.db, idMeal)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	// resolve the number of people
+	links, err := sej.SelectMealGroupsByIdMeals(ct.db, idMeal)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	groups, err := sej.SelectGroups(ct.db, links.IdGroups()...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	forNb := meal.AdditionalPeople
+	for _, link := range links {
+		gr := groups[link.IdGroup]
+		forNb += gr.Size
+	}
+
+	// resolve the menus
+	loader, err := lib.LoadMenus(ct.db, []men.IdMenu{meal.Menu})
+	if err != nil {
+		return out, err
+	}
+	mm, rm := loader.Compile()
+	menu := mm[meal.Menu]
+
+	out.NbPeople = forNb
+	out.Quantities = menu.QuantitiesFor(forNb, loader.Ingredients, rm)
+	return out, nil
+}

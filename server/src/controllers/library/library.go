@@ -677,3 +677,62 @@ func (mt MenuTables) Compile() (map[men.IdMenu]MenuExt, map[men.IdReceipe]Receip
 	}
 	return menusMap, receipeMap
 }
+
+type IngredientOrigin struct {
+	men.IdMenu
+	men.IdReceipe // optional
+}
+
+type Quantity struct {
+	Unite men.Unite
+	Val   float64
+}
+
+// normalize applies the trivial conversions
+func (qu Quantity) normalize() Quantity {
+	if qu.Unite == men.U_G {
+		return Quantity{Unite: men.U_Kg, Val: qu.Val / 1000}
+	} else if qu.Unite == men.U_CL {
+		return Quantity{Unite: men.U_L, Val: qu.Val / 100}
+	}
+	return qu
+}
+
+type IngredientQuantity struct {
+	Ingredient men.Ingredient
+	Quantities []Quantity
+}
+
+func (me MenuExt) QuantitiesFor(nbPeople int, ingredients men.Ingredients, receipes map[men.IdReceipe]ReceipeExt) []IngredientQuantity {
+	quantities := make(map[men.IdIngredient][]Quantity)
+	for _, ing := range me.Ingredients {
+		quantities[ing.IdIngredient] = append(quantities[ing.IdIngredient], Quantity{
+			Unite: ing.Quantity.Unite,
+			Val:   ing.Quantity.ResolveFor(nbPeople),
+		})
+	}
+	for _, rec := range me.Receipes {
+		rec := receipes[rec.Id]
+		for _, ing := range rec.Ingredients {
+			quantities[ing.Id] = append(quantities[ing.Id], Quantity{
+				Unite: ing.Quantity.Unite,
+				Val:   ing.Quantity.ResolveFor(nbPeople),
+			})
+		}
+	}
+
+	out := make([]IngredientQuantity, 0, len(quantities))
+	for idIngredient, l := range quantities {
+		byQuantity := map[men.Unite]float64{}
+		for _, use := range l {
+			use = use.normalize()
+			byQuantity[use.Unite] = byQuantity[use.Unite] + use.Val
+		}
+		var uniqueQuantities []Quantity
+		for u, v := range byQuantity {
+			uniqueQuantities = append(uniqueQuantities, Quantity{u, v})
+		}
+		out = append(out, IngredientQuantity{ingredients[idIngredient], uniqueQuantities})
+	}
+	return out
+}

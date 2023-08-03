@@ -4,7 +4,6 @@ import {
   Horaire,
   HoraireLabels,
   IdUser,
-  Ingredient,
   IngredientKind,
   Ingredients,
   MenuExt,

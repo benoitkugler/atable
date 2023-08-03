@@ -44,6 +44,12 @@ type QuantityR struct {
 	For   int `json:"For_"` // the number of person [Value] refers to.
 }
 
+// ResolveFor return the (absolute) quantity required for
+// the given number of people.
+func (qt QuantityR) ResolveFor(for_ int) float64 {
+	return qt.Val * float64(for_) / float64(qt.For)
+}
+
 func (rs IdReceipeSet) ToMenuLinks(idMenu IdMenu) MenuReceipes {
 	links := make(MenuReceipes, 0, len(rs))
 	for rec := range rs {
