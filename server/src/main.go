@@ -212,6 +212,10 @@ func serveWebApp(c echo.Context) error {
 	return c.File("static/atable-web/index.html")
 }
 
+func servePrivacy(c echo.Context) error {
+	return c.File("static/privacy.html")
+}
+
 func serveShopApp(c echo.Context) error {
 	return c.File("static/shop-session/index.html")
 }
@@ -246,4 +250,6 @@ func setupRoutes(e *echo.Echo, uc *users.Controller, sc *sejours.Controller, lc 
 	e.PUT("/api/shop-session", shopC.CreateSession)
 	e.GET("/api/shop-session", shopC.GetSession)
 	e.POST("/api/shop-session", shopC.UpdateSession)
+
+	e.GET("/privacy", servePrivacy)
 }
