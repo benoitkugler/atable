@@ -223,7 +223,7 @@ function saveName() {
 }
 
 async function save() {
-  if (inner.value == null || isReadonly) return;
+  if (inner.value == null || isReadonly.value) return;
   const res = await controller.LibraryUpdateReceipe(inner.value.Receipe);
   if (res === undefined) return;
 

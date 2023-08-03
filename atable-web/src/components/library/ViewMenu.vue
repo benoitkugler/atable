@@ -210,7 +210,7 @@ async function fetch() {
 }
 
 async function save() {
-  if (inner.value == null) return;
+  if (inner.value == null || isReadonly.value) return;
   const res = await controller.LibraryUpdateMenu(inner.value.Menu);
   if (res === undefined) return;
 
