@@ -26,8 +26,8 @@ Future main() async {
     expect(got2, [ing1.toString(), ing2.toString()]); // Check content
 
     // nouveau menu
-    final menu1 =
-        await db.db.insert("menus", const Menu(-1, 0, false).toSQLMap(true));
+    final menu1 = await db.db
+        .insert("menus", const Menu(-1, 0, false, false).toSQLMap(true));
     final meal1 = await db.db
         .insert("meals", MealM(0, menu1, "", DateTime.now(), 7).toSQLMap(true));
 
@@ -48,8 +48,8 @@ Future main() async {
     final allMeals = await db.getMeals();
     expect(allMeals.length, 0);
 
-    final menu2 =
-        await db.db.insert("menus", const Menu(0, 0, false).toSQLMap(true));
+    final menu2 = await db.db
+        .insert("menus", const Menu(0, 0, false, false).toSQLMap(true));
     await db.db.insert(
         "meals", MealM(0, menu2, "", DateTime.now(), 50).toSQLMap(true));
 
@@ -65,7 +65,7 @@ Future main() async {
 
     final receipe1 = await db.db.insert(
         "receipes",
-        const Receipe(-1, 0, PlatKind.entree, "", "Cuisson : 20min")
+        const Receipe(-1, 0, PlatKind.entree, "", "Cuisson : 20min", false)
             .toSQLMap(true));
 
     await db.insertReceipeIngredient(ReceipeIngredient(

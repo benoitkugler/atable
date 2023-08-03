@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:atable/components/meal_list.dart';
 import 'package:atable/logic/env.dart';
 import 'package:atable/logic/sql.dart';
@@ -11,8 +9,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart';
 
-// const env = Env(BuildMode.prod);
-const env = Env(BuildMode.dev);
+const env = Env(BuildMode.prod);
+// const env = Env(BuildMode.dev);
 
 void main() async {
   runApp(MaterialApp.router(

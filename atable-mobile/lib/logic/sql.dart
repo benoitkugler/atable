@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_sejours.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_shop-session.dart';
@@ -110,6 +109,7 @@ extension R on Receipe {
       PlatKind.values[map["plat"]],
       map["name"],
       map["description"],
+      false,
     );
   }
 
@@ -131,14 +131,15 @@ extension R on Receipe {
     PlatKind? plat,
     String? name,
     String? description,
+    bool? isPublished,
   }) {
     return Receipe(
-      id ?? this.id,
-      owner ?? this.owner,
-      plat ?? this.plat,
-      name ?? this.name,
-      description ?? this.description,
-    );
+        id ?? this.id,
+        owner ?? this.owner,
+        plat ?? this.plat,
+        name ?? this.name,
+        description ?? this.description,
+        isPublished ?? this.isPublished);
   }
 }
 
@@ -175,7 +176,7 @@ extension RI on ReceipeIngredient {
 
 extension M on Menu {
   static Menu fromSQLMap(Map<String, dynamic> map) {
-    return Menu(map["id"], map["owner"], false);
+    return Menu(map["id"], map["owner"], false, false);
   }
 
   Map<String, dynamic> toSQLMap(bool ignoreID) {
