@@ -8,6 +8,48 @@
       <ImportCsvMain @import-done="onImportCSV"></ImportCsvMain>
     </v-dialog>
 
+    <v-dialog
+      :model-value="menuToDelete != null"
+      @update:model-value="menuToDelete = null"
+      max-width="600px"
+    >
+      <v-card title="Confirmer la suppression">
+        <v-card-text v-if="menuToDelete != null">
+          Confirmer vous la suppression du menu
+          <i> {{ menuToDelete.Title }} </i> ?
+          <br />
+          <br />
+
+          Cette opération est irréversible.
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="red" flat @click="deleteMenu"> Supprimer </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog
+      :model-value="receipeToDelete != null"
+      @update:model-value="receipeToDelete = null"
+      max-width="600px"
+    >
+      <v-card title="Confirmer la suppression">
+        <v-card-text v-if="receipeToDelete != null">
+          Confirmer vous la suppression de la recette
+          <i> {{ receipeToDelete.Title }} </i> ?
+          <br />
+          <br />
+
+          Cette opération est irréversible.
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="red" flat @click="deleteReceipe"> Supprimer </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <template v-slot:append>
       <v-menu>
         <template v-slot:activator="{ isActive, props }">
@@ -64,6 +106,8 @@
               :resources="currentPage"
               @update-menu="(m) => emit('updateMenu', m)"
               @update-receipe="(m) => emit('updateReceipe', m)"
+              @delete-menu="(m) => (menuToDelete = m)"
+              @delete-receipe="(m) => (receipeToDelete = m)"
             ></list-page>
           </v-list>
         </v-col>
@@ -156,6 +200,20 @@ async function createMenu() {
   emit("updateMenu", res);
 }
 
+const menuToDelete = ref<ResourceHeader | null>(null);
+async function deleteMenu() {
+  const toDelete = menuToDelete.value!.ID;
+  const res = await controller.LibraryDeleteMenu({
+    idMenu: toDelete,
+  });
+  menuToDelete.value = null;
+  if (res === undefined) return;
+  controller.showMessage("Menu supprimé avec succès.");
+  resources.value.Menus = (resources.value.Menus || []).filter(
+    (m) => m.ID != toDelete
+  );
+}
+
 async function createReceipe() {
   const res = await controller.LibraryCreateReceipe();
   if (res === undefined) return;
@@ -163,6 +221,20 @@ async function createReceipe() {
 
   // start edit
   emit("updateReceipe", res);
+}
+
+const receipeToDelete = ref<ReceipeHeader | null>(null);
+async function deleteReceipe() {
+  const toDelete = receipeToDelete.value!.ID;
+  const res = await controller.LibraryDeleteReceipe({
+    idReceipe: toDelete,
+  });
+  receipeToDelete.value = null;
+  if (res === undefined) return;
+  controller.showMessage("Recette supprimée avec succès.");
+  resources.value.Receipes = (resources.value.Receipes || []).filter(
+    (m) => m.ID != toDelete
+  );
 }
 
 const showImportCSV = ref(false);

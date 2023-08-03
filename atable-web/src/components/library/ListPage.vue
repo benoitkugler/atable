@@ -19,12 +19,21 @@
         @click="emit('updateMenu', item)"
       >
         <template v-slot:append>
-          <v-tooltip
-            v-if="!item.IsPersonnal"
-            text="Ce menu appartient à un autre utilisateur."
+          <v-btn
+            icon
+            v-if="item.IsPersonnal"
+            size="x-small"
+            @click.stop="emit('deleteMenu', item)"
           >
+            <v-icon color="red">mdi-delete</v-icon>
+          </v-btn>
+          <v-tooltip v-else text="Ce menu appartient à un autre utilisateur.">
             <template v-slot:activator="{ isActive, props }">
-              <v-icon color="grey-lighten-1" v-on="{ isActive }" v-bind="props"
+              <v-icon
+                color="grey-lighten-1"
+                v-on="{ isActive }"
+                v-bind="props"
+                class="mr-1"
                 >mdi-lock</v-icon
               >
             </template>
@@ -52,12 +61,24 @@
         @click="emit('updateReceipe', item)"
       >
         <template v-slot:append>
+          <v-btn
+            icon
+            v-if="item.IsPersonnal"
+            size="x-small"
+            @click.stop="emit('deleteReceipe', item)"
+          >
+            <v-icon color="red">mdi-delete</v-icon>
+          </v-btn>
           <v-tooltip
-            v-if="!item.IsPersonnal"
+            v-else
             text="Cette recette appartient à un autre utilisateur."
           >
             <template v-slot:activator="{ isActive, props }">
-              <v-icon color="grey-lighten-1" v-on="{ isActive }" v-bind="props"
+              <v-icon
+                color="grey-lighten-1"
+                v-on="{ isActive }"
+                v-bind="props"
+                class="mr-1"
                 >mdi-lock</v-icon
               >
             </template>
@@ -90,6 +111,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "updateMenu", m: ResourceHeader): void;
   (e: "updateReceipe", m: ReceipeHeader): void;
+  (e: "deleteMenu", m: ResourceHeader): void;
+  (e: "deleteReceipe", m: ReceipeHeader): void;
 }>();
 
 const pageSize = computed(

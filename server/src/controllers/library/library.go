@@ -8,6 +8,7 @@ import (
 
 	"github.com/benoitkugler/atable/controllers/users"
 	men "github.com/benoitkugler/atable/sql/menus"
+	"github.com/benoitkugler/atable/sql/sejours"
 	us "github.com/benoitkugler/atable/sql/users"
 	"github.com/benoitkugler/atable/utils"
 	"github.com/labstack/echo/v4"
@@ -211,6 +212,47 @@ func (ct *Controller) updateReceipe(args men.Receipe, uID us.IdUser) error {
 	return nil
 }
 
+// LibraryDeleteReceipe delete the receipe, unless it is used in menu
+func (ct *Controller) LibraryDeleteReceipe(c echo.Context) error {
+	uID := users.JWTUser(c)
+
+	id, err := utils.QueryParamInt64(c, "idReceipe")
+	if err != nil {
+		return err
+	}
+
+	err = ct.deleteReceipe(men.IdReceipe(id), uID)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
+
+func (ct *Controller) deleteReceipe(id men.IdReceipe, uID us.IdUser) error {
+	_, err := ct.checkReceipeOwner(id, uID)
+	if err != nil {
+		return err
+	}
+
+	links, err := men.SelectMenuReceipesByIdReceipes(ct.db, id)
+	if err != nil {
+		return err
+	}
+
+	nbMenus := len(links)
+	if nbMenus != 0 {
+		return fmt.Errorf("La recette est utilisé dans %d menus.", nbMenus)
+	}
+
+	// we can safely delete the receipe
+	_, err = men.DeleteReceipeById(ct.db, id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return nil
+}
+
 type AddReceipeIngredientIn struct {
 	men.IdReceipe
 	men.IdIngredient
@@ -364,6 +406,47 @@ func (ct *Controller) updateMenu(args men.Menu, uID us.IdUser) error {
 
 	menu.IsPublished = args.IsPublished
 	_, err = menu.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return nil
+}
+
+// LibraryDeleteMenu delete the menu, unless it is used in meals
+func (ct *Controller) LibraryDeleteMenu(c echo.Context) error {
+	uID := users.JWTUser(c)
+
+	id, err := utils.QueryParamInt64(c, "idMenu")
+	if err != nil {
+		return err
+	}
+
+	err = ct.deleteMenu(men.IdMenu(id), uID)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
+
+func (ct *Controller) deleteMenu(id men.IdMenu, uID us.IdUser) error {
+	_, err := ct.checkMenuOwner(id, uID)
+	if err != nil {
+		return err
+	}
+
+	links, err := sejours.SelectMealsByMenus(ct.db, id)
+	if err != nil {
+		return err
+	}
+
+	nbMeals := len(links)
+	if nbMeals != 0 {
+		return fmt.Errorf("Le menu est utilisé dans %d repas.", nbMeals)
+	}
+
+	// we can safely delete the menu
+	_, err = men.DeleteMenuById(ct.db, id)
 	if err != nil {
 		return utils.SQLError(err)
 	}

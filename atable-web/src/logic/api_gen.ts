@@ -1176,6 +1176,29 @@ export abstract class AbstractAPI {
 
   protected onSuccessLibraryUpdateMenu(): void {}
 
+  protected async rawLibraryDeleteMenu(params: { idMenu: number }) {
+    const fullUrl = this.baseUrl + "/api/library/menus";
+    await Axios.delete(fullUrl, {
+      params: { idMenu: String(params["idMenu"]) },
+      headers: this.getHeaders(),
+    });
+    return true;
+  }
+
+  /** LibraryDeleteMenu wraps rawLibraryDeleteMenu and handles the error */
+  async LibraryDeleteMenu(params: { idMenu: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawLibraryDeleteMenu(params);
+      this.onSuccessLibraryDeleteMenu();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessLibraryDeleteMenu(): void {}
+
   protected async rawLibraryLoadReceipe(params: { idReceipe: number }) {
     const fullUrl = this.baseUrl + "/api/library/receipes";
     const rep: AxiosResponse<ReceipeExt> = await Axios.get(fullUrl, {
@@ -1240,6 +1263,29 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessLibraryUpdateReceipe(): void {}
+
+  protected async rawLibraryDeleteReceipe(params: { idReceipe: number }) {
+    const fullUrl = this.baseUrl + "/api/library/receipes";
+    await Axios.delete(fullUrl, {
+      params: { idReceipe: String(params["idReceipe"]) },
+      headers: this.getHeaders(),
+    });
+    return true;
+  }
+
+  /** LibraryDeleteReceipe wraps rawLibraryDeleteReceipe and handles the error */
+  async LibraryDeleteReceipe(params: { idReceipe: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawLibraryDeleteReceipe(params);
+      this.onSuccessLibraryDeleteReceipe();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessLibraryDeleteReceipe(): void {}
 
   protected async rawLibraryAddReceipeIngredient(
     params: AddReceipeIngredientIn,
