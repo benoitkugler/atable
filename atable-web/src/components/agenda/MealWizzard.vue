@@ -113,7 +113,7 @@
 </template>
 
 <script lang="ts" setup>
-import { AssistantMealsIn, Groups, SejourExt } from "@/logic/api_gen";
+import { AssistantMealsIn, SejourExt } from "@/logic/api_gen";
 import { addDays, formatDate } from "@/logic/controller";
 import { computed } from "vue";
 import { watch } from "vue";
