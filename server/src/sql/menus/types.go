@@ -49,6 +49,9 @@ type QuantityR struct {
 // ResolveFor return the (absolute) quantity required for
 // the given number of people.
 func (qt QuantityR) ResolveFor(for_ int) float64 {
+	if for_ == qt.For {
+		return qt.Val // avoid spurious float errors
+	}
 	return qt.Val * float64(for_) / float64(qt.For)
 }
 

@@ -1,12 +1,14 @@
 package library
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/csv"
 	"errors"
 	"fmt"
 	"io"
 	"math"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -35,6 +37,13 @@ type ReceipeI struct {
 	Ingredients []IngredientI
 }
 
+var platStrings = [...]string{
+	"",
+	"dessert",
+	"platPrincipal",
+	"entree",
+}
+
 // return a default value on invalid input
 func parsePlatKind(s string) men.PlatKind {
 	switch s {
@@ -47,6 +56,14 @@ func parsePlatKind(s string) men.PlatKind {
 	default:
 		return men.P_Empty
 	}
+}
+
+var uniteStrings = [...]string{
+	"pièces",
+	"kg",
+	"gr",
+	"L",
+	"cL",
 }
 
 func parseUnite(word string, quantite float64) (float64, men.Unite) {
@@ -427,4 +444,67 @@ func (ct *Controller) importCSV2(args ImportReceipes2In, uID us.IdUser) ([]Recei
 	}
 
 	return newReceipes, err
+}
+
+// ---------------------------------- Export ----------------------------------
+
+// LibraryExportReceipes returns a CSV file containing the user receipes.
+func (ct *Controller) LibraryExportReceipes(c echo.Context) error {
+	uID := users.JWTUser(c)
+
+	out, err := ct.exportReceipes(uID)
+	if err != nil {
+		return err
+	}
+
+	return c.Blob(200, "text/csv", out)
+}
+
+func (ct *Controller) exportReceipes(uID us.IdUser) ([]byte, error) {
+	receipes, err := men.SelectReceipesByOwners(ct.db, uID)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	data, err := loadReceipes(ct.db, receipes.IDs(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	_, receipesM := data.Compile()
+	sorted := make([]ReceipeExt, len(receipesM))
+	for _, rec := range receipesM {
+		sorted = append(sorted, rec)
+	}
+	sort.Slice(sorted, func(i, j int) bool { return sorted[i].Receipe.Name < sorted[j].Receipe.Name })
+
+	return exportReceipesToCSV(sorted)
+}
+
+func exportReceipesToCSV(receipes []ReceipeExt) ([]byte, error) {
+	lines := [][]string{
+		{"Recettes", "", ""},
+		{"", "", ""},
+	}
+	for _, receipe := range receipes {
+		name, plat := receipe.Receipe.Name, platStrings[receipe.Receipe.Plat]
+		if len(receipe.Ingredients) == 0 {
+			continue // ignore empty receipes
+		}
+		// adjust for
+		for_ := receipe.Ingredients[0].Quantity.For
+
+		lines = append(lines, []string{name, plat, strconv.Itoa(for_)}) // receipe header
+
+		for _, ing := range receipe.Ingredients {
+			val := ing.Quantity.ResolveFor(for_)
+			lines = append(lines, []string{ing.Name, fmt.Sprintf("%g", val), uniteStrings[ing.Quantity.Unite]})
+		}
+		lines = append(lines, []string{"", "", ""})
+	}
+
+	var buf bytes.Buffer
+	wr := csv.NewWriter(&buf)
+	err := wr.WriteAll(lines)
+	return buf.Bytes(), err
 }

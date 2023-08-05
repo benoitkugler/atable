@@ -238,6 +238,8 @@ func setupRoutes(e *echo.Echo, uc *users.Controller, sc *sejours.Controller, lc 
 		e.GET(route, serveWebApp, noCache)
 	}
 	e.Group("/*", middleware.Gzip(), cacheStatic).Static("/*", "static/atable-web")
+	// special route for direct file download
+	e.GET("/api/library/receipes/export", lc.LibraryExportReceipes, uc.JWTMiddlewareForQuery())
 
 	// client API
 	e.GET(sejours.ClientEnpoint, sc.SejoursExportToClient)

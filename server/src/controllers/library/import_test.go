@@ -1,6 +1,7 @@
 package library
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"reflect"
@@ -34,14 +35,22 @@ func TestImportCSVApi(t *testing.T) {
 	tu.Assert(t, len(out.Receipes) == 31)
 
 	// simlated re-mapping by user
-	out.Map["Aubergines"] = menus.Ingredient{Id: -1, Name: "New name !"}
-	out.Map["Echalottes"] = menus.Ingredient{Id: -1, Name: "New name !"} // same name
+	out.Map["Aubergines"] = menus.Ingredient{Id: -1, Name: "Mes aubergines"}
+	out.Map["Echalottes"] = menus.Ingredient{Id: -1, Name: "Mes aubergines"} // same name
 
 	receipes, err := ct.importCSV2(out, 1)
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(receipes) == len(out.Receipes))
 
 	fmt.Println(receipes[0].Receipe.Description)
+
+	csvBytes, err := ct.exportReceipes(1)
+	tu.AssertNoErr(t, err)
+	err = os.WriteFile("test/receipes_samples_out.csv", csvBytes, os.ModePerm)
+	tu.AssertNoErr(t, err)
+
+	_, err = newCSVImporter(bytes.NewReader(csvBytes)) // make sure the output format is compatible
+	tu.AssertNoErr(t, err)
 }
 
 func Test_words(t *testing.T) {

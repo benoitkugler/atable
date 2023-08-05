@@ -68,12 +68,37 @@
         </v-list>
       </v-menu>
       <v-divider vertical></v-divider>
-      <v-btn class="mx-2" @click="showImportCSV = true">
-        <template v-slot:prepend>
-          <v-icon>mdi-file-table-outline</v-icon>
+
+      <v-menu>
+        <template v-slot:activator="{ isActive, props }">
+          <v-btn
+            class="mx-2"
+            icon
+            v-on="{ isActive }"
+            v-bind="props"
+            size="small"
+          >
+            <v-icon>mdi-swap-vertical</v-icon>
+          </v-btn>
         </template>
-        Importer...</v-btn
-      >
+        <v-list density="compact">
+          <v-list-item
+            title="Importer des recettes"
+            subtitle="au format .CSV"
+            @click="showImportCSV = true"
+            prepend-icon="mdi-file-import-outline"
+          >
+          </v-list-item>
+          <v-list-item
+            title="Exporter mes recettes"
+            subtitle="personnelles, au format .CSV"
+            link
+            :href="controller.receipesExportURL()"
+            prepend-icon="mdi-file-export-outline"
+          >
+          </v-list-item>
+        </v-list>
+      </v-menu>
     </template>
 
     <v-card-text>

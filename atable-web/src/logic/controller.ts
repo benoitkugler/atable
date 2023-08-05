@@ -59,6 +59,12 @@ class Controller extends AbstractAPI {
     return this.baseUrl + endpoint;
   }
 
+  receipesExportURL() {
+    return (
+      this.baseUrl + `/api/library/receipes/export?token=${this.authToken}`
+    );
+  }
+
   startRequest(): void {}
 
   handleError(error: any): void {
