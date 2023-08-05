@@ -1084,11 +1084,7 @@ func (ct *Controller) previewQuantities(idMeal sej.IdMeal) (out PreviewQuantitie
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
-	forNb := meal.AdditionalPeople
-	for _, link := range links {
-		gr := groups[link.IdGroup]
-		forNb += gr.Size
-	}
+	forNb := ResolveSize(links, groups, meal.AdditionalPeople)
 
 	// resolve the menus
 	loader, err := lib.LoadMenus(ct.db, []men.IdMenu{meal.Menu})
@@ -1101,4 +1097,13 @@ func (ct *Controller) previewQuantities(idMeal sej.IdMeal) (out PreviewQuantitie
 	out.NbPeople = forNb
 	out.Quantities = menu.QuantitiesFor(forNb, loader.Ingredients, rm)
 	return out, nil
+}
+
+func ResolveSize(links sej.MealGroups, groups sej.Groups, additionnalPeople int) int {
+	forNb := additionnalPeople
+	for _, link := range links {
+		gr := groups[link.IdGroup]
+		forNb += gr.Size
+	}
+	return forNb
 }

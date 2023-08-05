@@ -99,6 +99,26 @@ export interface ResourceHeader {
   ID: number;
   IsPersonnal: boolean;
 }
+// github.com/benoitkugler/atable/controllers/order.CompileIngredientsIn
+export interface CompileIngredientsIn {
+  IdSejour: IdSejour;
+  DayOffsets: number[] | null;
+}
+// github.com/benoitkugler/atable/controllers/order.CompileIngredientsOut
+export interface CompileIngredientsOut {
+  Meals: Meals;
+  Ingredients: IngredientQuantities[] | null;
+}
+// github.com/benoitkugler/atable/controllers/order.IngredientQuantities
+export interface IngredientQuantities {
+  Ingredient: Ingredient;
+  Quantities: QuantityMeal[] | null;
+}
+// github.com/benoitkugler/atable/controllers/order.QuantityMeal
+export interface QuantityMeal {
+  Quantity: Quantity;
+  Origin: IdMeal;
+}
 // github.com/benoitkugler/atable/controllers/sejours.AddIngredientIn
 export interface AddIngredientIn {
   IdMenu: IdMenu;
@@ -350,6 +370,8 @@ export interface MealGroup {
 }
 // github.com/benoitkugler/atable/sql/sejours.MealGroups
 export type MealGroups = MealGroup[] | null;
+// github.com/benoitkugler/atable/sql/sejours.Meals
+export type Meals = { [key: IdMeal]: Meal } | null;
 // github.com/benoitkugler/atable/sql/sejours.Sejour
 export interface Sejour {
   Id: IdSejour;
@@ -1457,4 +1479,53 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessLibraryDeleteMenuReceipe(): void {}
+
+  protected async rawOrderGetDays(params: { idSejour: number }) {
+    const fullUrl = this.baseUrl + "/api/order/days";
+    const rep: AxiosResponse<number[] | null> = await Axios.get(fullUrl, {
+      params: { idSejour: String(params["idSejour"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** OrderGetDays wraps rawOrderGetDays and handles the error */
+  async OrderGetDays(params: { idSejour: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawOrderGetDays(params);
+      this.onSuccessOrderGetDays(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessOrderGetDays(data: number[] | null): void {}
+
+  protected async rawOrderCompileIngredients(params: CompileIngredientsIn) {
+    const fullUrl = this.baseUrl + "/api/order/ingredients";
+    const rep: AxiosResponse<CompileIngredientsOut> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() },
+    );
+    return rep.data;
+  }
+
+  /** OrderCompileIngredients wraps rawOrderCompileIngredients and handles the error */
+  async OrderCompileIngredients(params: CompileIngredientsIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawOrderCompileIngredients(params);
+      this.onSuccessOrderCompileIngredients(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessOrderCompileIngredients(
+    data: CompileIngredientsOut,
+  ): void {}
 }

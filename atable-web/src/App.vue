@@ -38,6 +38,19 @@
             </v-list-item>
           </template>
         </v-tooltip>
+        <v-tooltip text="Ingrédients requis et commandes.">
+          <template v-slot:activator="{ isActive, props }">
+            <v-list-item
+              v-on="{ isActive }"
+              v-bind="props"
+              color="secondary"
+              title="Commandes"
+              prepend-icon="mdi-cart"
+              :to="{ name: 'order' }"
+            >
+            </v-list-item>
+          </template>
+        </v-tooltip>
         <v-tooltip text="Bibliothèque de menus et recettes">
           <template v-slot:activator="{ isActive, props }">
             <v-list-item
@@ -114,6 +127,11 @@ const title = computed(() => {
       const sejour = controller.activeSejour;
       if (sejour == null) return "Organisation d'un séjour";
       return `Organisation du séjour courant : ${sejour.Sejour.Name}`;
+    }
+    case "order": {
+      const sejour = controller.activeSejour;
+      if (sejour == null) return "Bilan des ingrédients et commandes";
+      return `Bilan des ingrédients et commandes pour le séjour courant : ${sejour.Sejour.Name}`;
     }
     case "library":
       return "Bibliothèque de menus favoris et recettes";

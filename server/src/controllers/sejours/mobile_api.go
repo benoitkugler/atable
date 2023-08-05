@@ -82,15 +82,13 @@ func (ct *Controller) exportToClient(idSejour sej.IdSejour) (out TablesM, _ erro
 	// convert to the simplified mobile version
 	out.Meals = make([]MealM, 0, len(meals))
 	for _, meal := range meals {
-		// build the name from the sejour and groups,
 		// compute the number of people from the groups and bonus
-		var (
-			forNb      = meal.AdditionalPeople
-			mealGroups []string
-		)
+		forNb := ResolveSize(mealsToGroups[meal.Id], groups, meal.AdditionalPeople)
+
+		// build the name from the sejour and groups
+		var mealGroups []string
 		for _, link := range mealsToGroups[meal.Id] {
 			gr := groups[link.IdGroup]
-			forNb += gr.Size
 			mealGroups = append(mealGroups, gr.Name)
 		}
 		sort.Strings(mealGroups)

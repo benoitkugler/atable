@@ -10,10 +10,14 @@ import {
   Ingredients,
   MenuExt,
   PlatKind,
+  QuantityMeal,
+  Quantity,
   QuantityR,
   Receipes,
   ResourceHeader,
   SejourExt,
+  Unite,
+  UniteLabels,
 } from "./api_gen";
 
 function arrayBufferToString(buffer: ArrayBuffer) {
@@ -285,4 +289,41 @@ export function resourcesToList(ingredients: Ingredients, receipes: Receipes) {
 
 export function groupMap(groups: Group[] | null) {
   return new Map<IdGroup, Group>((groups || []).map((gr) => [gr.Id, gr]));
+}
+
+export function aggregateQuantities(quantities: QuantityMeal[]): string {
+  const byUnit = new Map<Unite, number>();
+  quantities.forEach((qu) => {
+    const uniq = uniquifyQuantity(qu.Quantity);
+    byUnit.set(uniq.Unite, (byUnit.get(uniq.Unite) || 0) + uniq.Val);
+  });
+
+  const items: Quantity[] = Array.from(byUnit.entries()).map((l) => ({
+    Unite: l[0],
+    Val: l[1],
+  }));
+  items.sort((a, b) => a.Unite - b.Unite);
+  return items.map(formatQuantity).join(" et ");
+}
+
+function uniquifyQuantity(qu: Quantity): Quantity {
+  if (qu.Unite == Unite.U_Kg) {
+    return { Unite: Unite.U_G, Val: qu.Val * 1000 };
+  } else if (qu.Unite == Unite.U_L) {
+    return { Unite: Unite.U_CL, Val: qu.Val * 100 };
+  }
+  return qu;
+}
+
+export function formatQuantity(qu: Quantity): string {
+  if (qu.Unite == Unite.U_Kg && qu.Val < 1) {
+    qu = { Unite: Unite.U_G, Val: qu.Val * 1000 };
+  } else if (qu.Unite == Unite.U_G && qu.Val > 1000) {
+    qu = { Unite: Unite.U_Kg, Val: qu.Val / 1000 };
+  } else if (qu.Unite == Unite.U_L && qu.Val < 1) {
+    qu = { Unite: Unite.U_CL, Val: qu.Val * 100 };
+  } else if (qu.Unite == Unite.U_CL && qu.Val > 100) {
+    qu = { Unite: Unite.U_L, Val: qu.Val / 100 };
+  }
+  return `${qu.Val} ${UniteLabels[qu.Unite]}`;
 }

@@ -794,11 +794,6 @@ func (mt MenuTables) Compile() (map[men.IdMenu]MenuExt, map[men.IdReceipe]Receip
 	return menusMap, receipeMap
 }
 
-type IngredientOrigin struct {
-	men.IdMenu
-	men.IdReceipe // optional
-}
-
 type Quantity struct {
 	Unite men.Unite
 	Val   float64

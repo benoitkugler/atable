@@ -2,13 +2,16 @@ package main
 
 import (
 	"github.com/benoitkugler/atable/controllers/library"
+	"github.com/benoitkugler/atable/controllers/order"
 	"github.com/benoitkugler/atable/controllers/sejours"
 	"github.com/benoitkugler/atable/controllers/users"
 
 	"github.com/labstack/echo/v4"
 )
 
-func setupWebAPI(e *echo.Echo, tvc *users.Controller, sej *sejours.Controller, lib *library.Controller) {
+func setupWebAPI(e *echo.Echo, tvc *users.Controller, sej *sejours.Controller, lib *library.Controller,
+	ord *order.Controller,
+) {
 	e.POST("/api/inscription", tvc.AskInscription)
 	e.GET(users.ValidateInscriptionEndPoint, tvc.ValidateInscription)
 	e.POST("/api/loggin", tvc.Loggin)
@@ -64,4 +67,7 @@ func setupWebAPI(e *echo.Echo, tvc *users.Controller, sej *sejours.Controller, l
 	gr.DELETE("/api/library/menus/ingredients", lib.LibraryDeleteMenuIngredient)
 	gr.PUT("/api/library/menus/receipes", lib.LibraryAddMenuReceipe)
 	gr.DELETE("/api/library/menus/receipes", lib.LibraryDeleteMenuReceipe)
+
+	gr.GET("/api/order/days", ord.OrderGetDays)
+	gr.POST("/api/order/ingredients", ord.OrderCompileIngredients)
 }

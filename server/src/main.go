@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/benoitkugler/atable/controllers/library"
+	"github.com/benoitkugler/atable/controllers/order"
 	"github.com/benoitkugler/atable/controllers/sejours"
 	shopsession "github.com/benoitkugler/atable/controllers/shop-session"
 	"github.com/benoitkugler/atable/controllers/users"
@@ -122,6 +123,7 @@ func main() {
 	sc := sejours.NewController(db, host, admin, encKey)
 	lc := library.NewController(db, admin)
 	shopC := shopsession.NewController()
+	oc := order.NewController(db)
 
 	e := echo.New()
 	e.HideBanner = true
@@ -135,7 +137,7 @@ func main() {
 		devSetup(e, uc)
 	}
 
-	setupRoutes(e, uc, sc, lc, shopC)
+	setupRoutes(e, uc, sc, lc, shopC, oc)
 
 	if *dryPtr {
 		// sanityChecks(db, *skipValidation)
@@ -221,9 +223,9 @@ func serveShopApp(c echo.Context) error {
 }
 
 func setupRoutes(e *echo.Echo, uc *users.Controller, sc *sejours.Controller, lc *library.Controller,
-	shopC *shopsession.Controller,
+	shopC *shopsession.Controller, oc *order.Controller,
 ) {
-	setupWebAPI(e, uc, sc, lc)
+	setupWebAPI(e, uc, sc, lc, oc)
 
 	// global static files used by frontend app
 	e.Group("/static", middleware.Gzip(), cacheStatic).Static("/*", "static")

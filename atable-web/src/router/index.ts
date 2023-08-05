@@ -4,6 +4,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import Sejours from "@/views/Sejours.vue";
 import Agenda from "@/views/Agenda.vue";
 import Library from "@/views/Library.vue";
+import Order from "@/views/Order.vue";
 
 const routes = [
   {
@@ -15,6 +16,11 @@ const routes = [
     path: "/agenda",
     name: "agenda",
     component: Agenda,
+  },
+  {
+    path: "/order",
+    name: "order",
+    component: Order,
   },
   {
     path: "/library",
