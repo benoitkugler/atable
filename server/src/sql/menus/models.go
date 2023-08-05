@@ -58,7 +58,8 @@ type Menu struct {
 	Id    IdMenu
 	Owner users.IdUser `gomacro-sql-on-delete:"CASCADE"`
 	// If IsFavorite is true, the menu is not deleted
-	// when no more [sejours.Meal]s are using it.
+	// when no more [sejours.Meal]s are using it,
+	// and is accessible in the library.
 	IsFavorite bool
 
 	// If true, other users may use it (as readonly)

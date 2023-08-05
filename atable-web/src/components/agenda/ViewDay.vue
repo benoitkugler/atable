@@ -178,6 +178,9 @@
               @update-menu-ingredient="
                 (id) => startUpdateIngredient(id, meal.Meal.Menu)
               "
+              @mark-favorite="
+                markMenuFavorite((data.Menus || {})[meal.Meal.Menu])
+              "
               @preview-quantities="() => showPreviewQuantities(meal.Meal.Id)"
               @go-to-menu="goToMenu(meal.Meal.Menu)"
               @go-to-receipe="goToReceipe"
@@ -208,7 +211,7 @@ import {
   type Quantity,
   IngredientKindLabels,
   UniteLabels,
-  Group,
+  MenuExt,
 } from "@/logic/api_gen";
 import ResourceSearch from "./ResourceSearch.vue";
 import { computed } from "vue";
@@ -419,6 +422,16 @@ async function updateIngredient() {
   data.Menus = m;
 
   menuIngToUpdate.value = null; // close dialog
+}
+
+async function markMenuFavorite(menu: MenuExt) {
+  const payload = menu.Menu;
+  payload.IsFavorite = true;
+  const res = controller.LibraryUpdateMenu(payload);
+  if (res === undefined) return;
+
+  controller.showMessage("Menu enregistré dans la bibliothèque.");
+  data.Menus![payload.Id].Menu = payload;
 }
 
 const previewQuantities = ref<PreviewQuantitiesOut | null>(null);

@@ -133,6 +133,18 @@
             </v-list-item>
             <v-divider></v-divider>
             <v-list-item>
+              <v-btn
+                flat
+                @click="emit('markFavorite')"
+                :disabled="props.menu.Menu.IsFavorite"
+              >
+                <template v-slot:prepend>
+                  <v-icon>mdi-heart</v-icon>
+                </template>
+                Enregistrer comme favori
+              </v-btn>
+            </v-list-item>
+            <v-list-item>
               <v-btn flat @click="emit('delete')">
                 <template v-slot:prepend>
                   <v-icon color="red">mdi-delete</v-icon>
@@ -181,6 +193,7 @@ const emit = defineEmits<{
   (event: "addResource", payload: ResourceDrag): void;
   (event: "removeItem", id: number, isReceipe: boolean): void;
   (event: "updateMenuIngredient", id: IdIngredient): void;
+  (event: "markFavorite"): void;
   (event: "goToMenu"): void;
   (event: "goToReceipe", id: IdReceipe): void;
   (event: "previewQuantities"): void;

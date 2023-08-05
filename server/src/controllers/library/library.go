@@ -405,6 +405,7 @@ func (ct *Controller) updateMenu(args men.Menu, uID us.IdUser) error {
 	}
 
 	menu.IsPublished = args.IsPublished
+	menu.IsFavorite = args.IsFavorite
 	_, err = menu.Update(ct.db)
 	if err != nil {
 		return utils.SQLError(err)
