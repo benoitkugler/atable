@@ -284,7 +284,7 @@ func (ct *Controller) addReceipeIngredient(args AddReceipeIngredientIn, uID us.I
 	if err != nil {
 		return ReceipeIngredientExt{}, utils.SQLError(err)
 	}
-	quantity := men.QuantityR{Val: 1, Unite: men.U_Piece, For: 10}
+	quantity := men.QuantityR{Val: 10, Unite: men.U_Piece, For: 10}
 	link := men.ReceipeIngredient{
 		IdReceipe:    args.IdReceipe,
 		IdIngredient: args.IdIngredient,
@@ -485,7 +485,7 @@ func (ct *Controller) addMenuIngredient(args AddMenuIngredientIn, uID us.IdUser)
 	if err != nil {
 		return MenuIngredientExt{}, utils.SQLError(err)
 	}
-	quantity := men.QuantityR{Val: 1, Unite: men.U_Piece, For: 10}
+	quantity := men.QuantityR{Val: 10, Unite: men.U_Piece, For: 10}
 	link := men.MenuIngredient{
 		IdMenu:       args.IdMenu,
 		IdIngredient: args.IdIngredient,

@@ -810,7 +810,7 @@ func (ct *Controller) addIngredient(args AddIngredientIn, uID us.IdUser) (out li
 	err = men.InsertManyMenuIngredients(tx, men.MenuIngredient{
 		IdMenu:       menu.Id,
 		IdIngredient: args.IdIngredient,
-		Quantity:     men.QuantityR{Val: 1, For: 10, Unite: men.U_Piece},
+		Quantity:     men.QuantityR{Val: 10, For: 10, Unite: men.U_Piece},
 		Plat:         men.P_Empty,
 	})
 	if err != nil {
