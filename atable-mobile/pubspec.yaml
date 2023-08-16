@@ -125,6 +125,7 @@ flutter_native_splash:
   # png file and should be sized for 4x pixel density.
   image: icon.png
 
+# flutter pub run flutter_launcher_icons
 flutter_icons:
   image_path: icon.png
   android: true
