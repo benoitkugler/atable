@@ -14,7 +14,7 @@ const env = Env(BuildMode.prod);
 
 void main() async {
   runApp(MaterialApp.router(
-    title: 'A table !',
+    title: 'Mesapi',
     theme: ThemeData(
       primarySwatch: Colors.blue,
     ),
