@@ -28,6 +28,8 @@ INSERT INTO ingredients (name, kind)
     --
     ('Popcorn', 0),
     --
+    ('Glace', 0),
+    --
     ('Pommes', 1),
     --
     ('Abricots', 1),
