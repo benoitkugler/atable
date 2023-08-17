@@ -85,7 +85,7 @@
         <td
           v-for="i in 7"
           :key="i"
-          :class="'rounded bg-' + horaireColors[horaire.value]"
+          :class="'rounded bg-' + colorForCell(horaire.value, i - 1)"
         >
           <HoraireCell
             :meals="mealsForCell(horaire.value, i - 1)"
@@ -176,6 +176,11 @@ function mealsForCell(horaire: Horaire, col: number) {
   );
   out.sort((a, b) => a.Meal.Id - b.Meal.Id);
   return out;
+}
+
+function colorForCell(horaire: Horaire, col: number) {
+  if (!mealsForCell(horaire, col).length) return "white";
+  return horaireColors[horaire];
 }
 
 function dayForCol(col: number) {

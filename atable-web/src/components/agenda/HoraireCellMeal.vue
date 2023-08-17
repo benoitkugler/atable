@@ -10,7 +10,11 @@
     @dragleave="isDraggingOver = false"
     @drop="(ev) => onDrop(ev)"
   >
-    <v-tooltip location="bottom" content-class="ma-0 pa-0">
+    <v-tooltip
+      location="bottom"
+      content-class="ma-0 pa-0"
+      :disabled="props.groups.size <= 1"
+    >
       <template v-slot:activator="{ isActive, props: innerProps }">
         <div v-on="{ isActive }" v-bind="innerProps">
           <!-- visually optimize common cases -->

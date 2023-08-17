@@ -199,11 +199,11 @@ export const platColors: { [key in PlatKind]: string } = {
 };
 
 export const horaireColors: { [key in Horaire]: string } = {
-  [Horaire.PetitDejeuner]: "grey-lighten-3",
+  [Horaire.PetitDejeuner]: "teal-lighten-5",
   [Horaire.Midi]: "teal-lighten-4",
   [Horaire.Gouter]: "pink-lighten-4",
-  [Horaire.Diner]: "brown-lighten-3",
-  [Horaire.Cinquieme]: "grey-lighten-1",
+  [Horaire.Diner]: "orange-lighten-3",
+  [Horaire.Cinquieme]: "purple-lighten-4",
 };
 
 export interface MenuItem {

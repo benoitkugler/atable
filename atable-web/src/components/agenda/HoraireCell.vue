@@ -1,7 +1,6 @@
 <template>
   <div class="ma-1 text-center">
-    <small v-if="!props.meals.length"> Aucun repas. </small>
-    <v-row v-else no-gutters justify="space-evenly">
+    <v-row no-gutters justify="space-evenly">
       <template v-for="(meal, index) in props.meals" :key="index">
         <v-col cols="auto" v-if="index != 0" class="bg-black">
           <div style="width: 1px"></div>
