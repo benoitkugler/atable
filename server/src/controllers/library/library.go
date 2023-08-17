@@ -256,6 +256,7 @@ func (ct *Controller) deleteReceipe(id men.IdReceipe, uID us.IdUser) error {
 type AddReceipeIngredientIn struct {
 	men.IdReceipe
 	men.IdIngredient
+	InitialFor int // 0 to let the server decide
 }
 
 func (ct *Controller) LibraryAddReceipeIngredient(c echo.Context) error {
@@ -284,7 +285,11 @@ func (ct *Controller) addReceipeIngredient(args AddReceipeIngredientIn, uID us.I
 	if err != nil {
 		return ReceipeIngredientExt{}, utils.SQLError(err)
 	}
-	quantity := men.QuantityR{Val: 10, Unite: men.U_Piece, For: 10}
+	for_ := args.InitialFor
+	if for_ == 0 {
+		for_ = 10
+	}
+	quantity := men.QuantityR{Val: 10, Unite: men.U_Piece, For: for_}
 	link := men.ReceipeIngredient{
 		IdReceipe:    args.IdReceipe,
 		IdIngredient: args.IdIngredient,

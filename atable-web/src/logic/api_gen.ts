@@ -24,6 +24,7 @@ export interface AddMenuReceipeIn {
 export interface AddReceipeIngredientIn {
   IdReceipe: IdReceipe;
   IdIngredient: IdIngredient;
+  InitialFor: number;
 }
 // github.com/benoitkugler/atable/controllers/library.ImportReceipes1Out
 export interface ImportReceipes1Out {

@@ -236,9 +236,11 @@ async function addIngredient(idIngredient: IdIngredient) {
   )
     return;
 
+  const for_ = hasSameForPeople.value;
   const res = await controller.LibraryAddReceipeIngredient({
     IdReceipe: props.receipe,
     IdIngredient: idIngredient,
+    InitialFor: for_ == null ? 0 : for_,
   });
   if (res == undefined) return;
 
