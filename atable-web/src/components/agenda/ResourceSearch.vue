@@ -4,8 +4,8 @@
       <v-text-field
         class="mt-1"
         variant="outlined"
-        density="comfortable"
-        label="Rechercher un menu, une recette ou un ingrédient"
+        density="compact"
+        label="Rechercher une ressource"
         v-model="pattern"
         @update:model-value="debounce.onType(pattern)"
         placeholder="Entrez au moins 2 charactères..."
@@ -19,7 +19,11 @@
 
             <v-row no-gutters justify="center" class="mt-2">
               <v-col cols="auto">
-                <v-btn class="my-2" @click="emit('createIngredient', pattern)">
+                <v-btn
+                  class="my-2"
+                  @click="emit('createIngredient', pattern)"
+                  size="small"
+                >
                   Ajouter un ingrédient
                   <template v-slot:prepend>
                     <v-icon color="green">mdi-plus</v-icon>
@@ -29,7 +33,7 @@
             </v-row>
             <v-row no-gutters justify="center">
               <v-col cols="auto">
-                <v-btn class="my-2" @click="emit('goToLibrary')">
+                <v-btn class="my-2" @click="emit('goToLibrary')" size="small">
                   Aller à la bibliothèque
                   <template v-slot:prepend>
                     <v-icon>mdi-notebook-heart-outline</v-icon>

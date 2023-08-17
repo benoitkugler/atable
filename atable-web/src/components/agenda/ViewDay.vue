@@ -80,7 +80,7 @@
       <IngredientEditor
         v-if="ingToCreate != null"
         :ingredient="ingToCreate"
-        @update="createIngredient"
+        @update="(ing) => createIngredient(ing)"
       ></IngredientEditor>
     </v-dialog>
     <!--  -->
@@ -474,9 +474,7 @@ const ingToCreate = ref<Ingredient | null>(null);
 function showCreateIngredient(name: string) {
   ingToCreate.value = { Name: name, Id: -1, Kind: IngredientKind.I_Empty };
 }
-async function createIngredient() {
-  const ing = ingToCreate.value;
-  if (ing == null) return;
+async function createIngredient(ing: Ingredient) {
   ingToCreate.value = null;
   const res = await controller.LibraryCreateIngredient(ing);
   if (res === undefined) return;
