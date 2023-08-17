@@ -53,7 +53,7 @@ import { Ingredient, IngredientKind } from "@/logic/api_gen";
 import { MenuResource, upperFirst } from "@/logic/controller";
 import { nextTick } from "vue";
 import { ref } from "vue";
-import IngredientEditor from "./IngredientEditor.vue";
+import IngredientEditor from "@/components/IngredientEditor.vue";
 
 const props = defineProps<{
   items: MenuResource[];

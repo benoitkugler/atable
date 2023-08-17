@@ -33,7 +33,7 @@
 import type { Ingredient } from "@/logic/api_gen";
 import { copy } from "@/logic/controller";
 import { ref } from "vue";
-import IngredientKindSelect from "../IngredientKindSelect.vue";
+import IngredientKindSelect from "./IngredientKindSelect.vue";
 
 const props = defineProps<{
   ingredient: Ingredient;

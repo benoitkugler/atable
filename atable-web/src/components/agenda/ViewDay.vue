@@ -74,6 +74,19 @@
 
     <v-dialog
       max-width="700px"
+      :model-value="ingToCreate != null"
+      @update:model-value="ingToCreate = null"
+    >
+      <IngredientEditor
+        v-if="ingToCreate != null"
+        :ingredient="ingToCreate"
+        @update="createIngredient"
+      ></IngredientEditor>
+    </v-dialog>
+    <!--  -->
+
+    <v-dialog
+      max-width="700px"
       :model-value="previewQuantities != null"
       @update:model-value="previewQuantities = null"
     >
@@ -188,7 +201,11 @@
           </v-list>
         </v-col>
         <v-col cols="3">
-          <resource-search></resource-search>
+          <resource-search
+            @go-to-library="goToLibrary"
+            @create-ingredient="showCreateIngredient"
+            ref="resourceSearch"
+          ></resource-search>
         </v-col>
       </v-row>
     </v-card-text>
@@ -212,8 +229,11 @@ import {
   IngredientKindLabels,
   UniteLabels,
   MenuExt,
+  type Ingredient,
+  IngredientKind,
 } from "@/logic/api_gen";
 import ResourceSearch from "./ResourceSearch.vue";
+import IngredientEditor from "@/components/IngredientEditor.vue";
 import { computed } from "vue";
 import {
   DragKind,
@@ -449,11 +469,29 @@ function formatQuantities(qus: Quantity[]) {
     .join(" et ");
 }
 
+const resourceSearch = ref<InstanceType<typeof ResourceSearch> | null>(null);
+const ingToCreate = ref<Ingredient | null>(null);
+function showCreateIngredient(name: string) {
+  ingToCreate.value = { Name: name, Id: -1, Kind: IngredientKind.I_Empty };
+}
+async function createIngredient() {
+  const ing = ingToCreate.value;
+  if (ing == null) return;
+  ingToCreate.value = null;
+  const res = await controller.LibraryCreateIngredient(ing);
+  if (res === undefined) return;
+  controller.showMessage("Ingrédient ajouté avec succès.");
+  resourceSearch.value?.refreshSearch();
+}
+
 const router = useRouter();
 function goToMenu(menu: IdMenu) {
   router.push({ name: "library", query: { "id-menu": menu } });
 }
 function goToReceipe(rec: IdReceipe) {
   router.push({ name: "library", query: { "id-receipe": rec } });
+}
+function goToLibrary() {
+  router.push({ name: "library" });
 }
 </script>

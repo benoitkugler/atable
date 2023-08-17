@@ -13,9 +13,32 @@
         persistent-hint
       ></v-text-field>
       <v-list class="overflow-y-auto my-2" max-height="70vh">
-        <i v-if="pattern.length >= 2 && isResEmpty">
-          Aucun résultat ne correspond à votre recherche.
-        </i>
+        <v-card v-if="pattern.length >= 2 && isResEmpty" color="grey-lighten-3">
+          <v-card-text>
+            Aucun résultat ne correspond à votre recherche.
+
+            <v-row no-gutters justify="center" class="mt-2">
+              <v-col cols="auto">
+                <v-btn class="my-2" @click="emit('createIngredient', pattern)">
+                  Ajouter un ingrédient
+                  <template v-slot:prepend>
+                    <v-icon color="green">mdi-plus</v-icon>
+                  </template>
+                </v-btn>
+              </v-col>
+            </v-row>
+            <v-row no-gutters justify="center">
+              <v-col cols="auto">
+                <v-btn class="my-2" @click="emit('goToLibrary')">
+                  Aller à la bibliothèque
+                  <template v-slot:prepend>
+                    <v-icon>mdi-notebook-heart-outline</v-icon>
+                  </template>
+                </v-btn>
+              </v-col>
+            </v-row>
+          </v-card-text>
+        </v-card>
         <!-- Menus -->
         <template v-if="resources.Menus?.length">
           <v-list-subheader>Menus favoris</v-list-subheader>
@@ -76,11 +99,19 @@ import ResourceResult from "./ResourceResult.vue";
 
 // const props = defineProps<{}>();
 
-// const emit = defineEmits<{
-//   (event: "select", item: ResourceHeader): void;
-// }>();
+const emit = defineEmits<{
+  (event: "goToLibrary"): void;
+  (event: "createIngredient", name: string): void;
+}>();
 
 const pattern = ref("");
+
+defineExpose({ refreshSearch });
+
+/** `refreshSearch` immediately launches the search with the current input */
+function refreshSearch() {
+  search(pattern.value);
+}
 
 const resources = ref<ResourceSearchOut>({
   Ingredients: [],
@@ -108,8 +139,6 @@ function dragStart(event: DragEvent, item: ResourceHeader, kind: DragKind) {
   event.dataTransfer!.dropEffect = "copy";
   // special case menu
   if (kind == DragKind.menu) {
-    console.log("setnin menu");
-
     event.dataTransfer?.setData("drag-menu", "true");
   }
 }
