@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"sort"
 	"strings"
+	"time"
 
 	lib "github.com/benoitkugler/atable/controllers/library"
 	"github.com/benoitkugler/atable/controllers/users"
@@ -62,7 +63,7 @@ func createMeal(tx *sql.Tx, idSejour sej.IdSejour,
 	horaire sej.Horaire, jourOffset int, idsGroupes sej.IdGroupSet, uID us.IdUser,
 ) error {
 	// create a [Menu]...
-	menu, err := men.Menu{Owner: uID}.Insert(tx)
+	menu, err := men.Menu{Owner: uID, Updated: men.Time(time.Now())}.Insert(tx)
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -492,7 +493,7 @@ func (ct *Controller) createMeal(args MealCreateIn, uID us.IdUser) (MealExt, err
 		return MealExt{}, utils.SQLError(err)
 	}
 	// create the underlying menu
-	menu, err := men.Menu{Owner: uID}.Insert(tx)
+	menu, err := men.Menu{Owner: uID, Updated: men.Time(time.Now())}.Insert(tx)
 	if err != nil {
 		_ = tx.Rollback()
 		return MealExt{}, utils.SQLError(err)
@@ -803,21 +804,12 @@ func (ct *Controller) addIngredient(args AddIngredientIn, uID us.IdUser) (out li
 		return out, errAccessForbidden
 	}
 
-	tx, err := ct.db.Begin()
-	if err != nil {
-		return out, utils.SQLError(err)
-	}
-	err = men.InsertManyMenuIngredients(tx, men.MenuIngredient{
+	err = men.InsertMenuIngredient(ct.db, men.MenuIngredient{
 		IdMenu:       menu.Id,
 		IdIngredient: args.IdIngredient,
 		Quantity:     men.QuantityR{Val: 10, For: 10, Unite: men.U_Piece},
 		Plat:         men.P_Empty,
 	})
-	if err != nil {
-		_ = tx.Rollback()
-		return out, utils.SQLError(err)
-	}
-	err = tx.Commit()
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
@@ -917,34 +909,12 @@ func (ct *Controller) MealsUpdateMenuIngredient(c echo.Context) error {
 }
 
 func (ct *Controller) updateMenuIngredient(args men.MenuIngredient, uID us.IdUser) (out lib.MenuExt, _ error) {
-	menu, err := men.SelectMenu(ct.db, args.IdMenu)
+	err := lib.UpdateMenuIngredient(ct.db, args, uID)
 	if err != nil {
-		return out, utils.SQLError(err)
-	}
-	if menu.Owner != uID {
-		return out, errAccessForbidden
+		return out, err
 	}
 
-	tx, err := ct.db.Begin()
-	if err != nil {
-		return out, utils.SQLError(err)
-	}
-	_, err = men.DeleteMenuIngredientsByIdMenuAndIdIngredient(tx, args.IdMenu, args.IdIngredient)
-	if err != nil {
-		_ = tx.Rollback()
-		return out, utils.SQLError(err)
-	}
-	err = men.InsertManyMenuIngredients(tx, args)
-	if err != nil {
-		_ = tx.Rollback()
-		return out, utils.SQLError(err)
-	}
-	err = tx.Commit()
-	if err != nil {
-		return out, utils.SQLError(err)
-	}
-
-	return lib.LoadMenu(ct.db, menu.Id)
+	return lib.LoadMenu(ct.db, args.IdMenu)
 }
 
 type RemoveItemIn struct {

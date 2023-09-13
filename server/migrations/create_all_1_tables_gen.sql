@@ -9,13 +9,16 @@ CREATE TABLE users (
 CREATE TABLE ingredients (
     Id serial PRIMARY KEY,
     Name text NOT NULL,
-    Kind integer CHECK (Kind IN (0, 1, 2, 3, 4, 5, 6)) NOT NULL
+    Kind integer CHECK (Kind IN (0, 1, 2, 3, 4, 5, 6)) NOT NULL,
+    Owner integer NOT NULL
 );
 
 CREATE TABLE menus (
     Id serial PRIMARY KEY,
     Owner integer NOT NULL,
-    IsFavorite boolean NOT NULL
+    IsFavorite boolean NOT NULL,
+    IsPublished boolean NOT NULL,
+    Updated timestamp(0) with time zone NOT NULL
 );
 
 CREATE TABLE menu_ingredients (
@@ -35,7 +38,9 @@ CREATE TABLE receipes (
     Owner integer NOT NULL,
     Plat integer CHECK (Plat IN (0, 1, 2, 3)) NOT NULL,
     Name text NOT NULL,
-    Description text NOT NULL
+    Description text NOT NULL,
+    IsPublished boolean NOT NULL,
+    Updated timestamp(0) with time zone NOT NULL
 );
 
 CREATE TABLE receipe_ingredients (

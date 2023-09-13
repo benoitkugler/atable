@@ -17,26 +17,28 @@ class Ingredient {
   final IdIngredient id;
   final String name;
   final IngredientKind kind;
+  final IdUser owner;
 
-  const Ingredient(this.id, this.name, this.kind);
+  const Ingredient(this.id, this.name, this.kind, this.owner);
 
   @override
   String toString() {
-    return "Ingredient($id, $name, $kind)";
+    return "Ingredient($id, $name, $kind, $owner)";
   }
 }
 
 Ingredient ingredientFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
   return Ingredient(intFromJson(json['Id']), stringFromJson(json['Name']),
-      ingredientKindFromJson(json['Kind']));
+      ingredientKindFromJson(json['Kind']), intFromJson(json['Owner']));
 }
 
 Map<String, dynamic> ingredientToJson(Ingredient item) {
   return {
     "Id": intToJson(item.id),
     "Name": stringToJson(item.name),
-    "Kind": ingredientKindToJson(item.kind)
+    "Kind": ingredientKindToJson(item.kind),
+    "Owner": intToJson(item.owner)
   };
 }
 
@@ -72,19 +74,25 @@ class Menu {
   final IdUser owner;
   final bool isFavorite;
   final bool isPublished;
+  final Time updated;
 
-  const Menu(this.id, this.owner, this.isFavorite, this.isPublished);
+  const Menu(
+      this.id, this.owner, this.isFavorite, this.isPublished, this.updated);
 
   @override
   String toString() {
-    return "Menu($id, $owner, $isFavorite, $isPublished)";
+    return "Menu($id, $owner, $isFavorite, $isPublished, $updated)";
   }
 }
 
 Menu menuFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return Menu(intFromJson(json['Id']), intFromJson(json['Owner']),
-      boolFromJson(json['IsFavorite']), boolFromJson(json['IsPublished']));
+  return Menu(
+      intFromJson(json['Id']),
+      intFromJson(json['Owner']),
+      boolFromJson(json['IsFavorite']),
+      boolFromJson(json['IsPublished']),
+      dateTimeFromJson(json['Updated']));
 }
 
 Map<String, dynamic> menuToJson(Menu item) {
@@ -92,7 +100,8 @@ Map<String, dynamic> menuToJson(Menu item) {
     "Id": intToJson(item.id),
     "Owner": intToJson(item.owner),
     "IsFavorite": boolToJson(item.isFavorite),
-    "IsPublished": boolToJson(item.isPublished)
+    "IsPublished": boolToJson(item.isPublished),
+    "Updated": dateTimeToJson(item.updated)
   };
 }
 
@@ -231,13 +240,14 @@ class Receipe {
   final String name;
   final String description;
   final bool isPublished;
+  final Time updated;
 
   const Receipe(this.id, this.owner, this.plat, this.name, this.description,
-      this.isPublished);
+      this.isPublished, this.updated);
 
   @override
   String toString() {
-    return "Receipe($id, $owner, $plat, $name, $description, $isPublished)";
+    return "Receipe($id, $owner, $plat, $name, $description, $isPublished, $updated)";
   }
 }
 
@@ -249,7 +259,8 @@ Receipe receipeFromJson(dynamic json_) {
       platKindFromJson(json['Plat']),
       stringFromJson(json['Name']),
       stringFromJson(json['Description']),
-      boolFromJson(json['IsPublished']));
+      boolFromJson(json['IsPublished']),
+      dateTimeFromJson(json['Updated']));
 }
 
 Map<String, dynamic> receipeToJson(Receipe item) {
@@ -259,7 +270,8 @@ Map<String, dynamic> receipeToJson(Receipe item) {
     "Plat": platKindToJson(item.plat),
     "Name": stringToJson(item.name),
     "Description": stringToJson(item.description),
-    "IsPublished": boolToJson(item.isPublished)
+    "IsPublished": boolToJson(item.isPublished),
+    "Updated": dateTimeToJson(item.updated)
   };
 }
 
@@ -301,6 +313,9 @@ ReceipeIngredients receipeIngredientsFromJson(dynamic json) {
 dynamic receipeIngredientsToJson(ReceipeIngredients item) {
   return listReceipeIngredientToJson(item);
 }
+
+// github.com/benoitkugler/atable/sql/menus.Time
+typedef Time = DateTime;
 
 // github.com/benoitkugler/atable/sql/menus.Unite
 enum Unite { piece, kg, g, l, cL }

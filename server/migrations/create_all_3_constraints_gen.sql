@@ -4,6 +4,9 @@ ALTER TABLE users
 ALTER TABLE ingredients
     ADD UNIQUE (Name);
 
+ALTER TABLE ingredients
+    ADD FOREIGN KEY (OWNER) REFERENCES users ON DELETE CASCADE;
+
 ALTER TABLE receipes
     ADD UNIQUE (OWNER, Name);
 
@@ -18,6 +21,10 @@ ALTER TABLE receipe_ingredients
 
 ALTER TABLE receipe_ingredients
     ADD FOREIGN KEY (IdIngredient) REFERENCES ingredients;
+
+ALTER TABLE menus
+    ADD CHECK (IsPublished = FALSE
+        OR IsFavorite = TRUE);
 
 ALTER TABLE menus
     ADD FOREIGN KEY (OWNER) REFERENCES users ON DELETE CASCADE;

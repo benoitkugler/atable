@@ -10,6 +10,13 @@ class DateTag {
 // AAAA-MM-YY date format
 export type Date_ = string & DateTag;
 
+class TimeTag {
+  private _ = "T" as const;
+}
+
+// ISO date-time string
+export type Time = string & TimeTag;
+
 // github.com/benoitkugler/atable/controllers/library.AddMenuIngredientIn
 export interface AddMenuIngredientIn {
   IdMenu: IdMenu;
@@ -92,6 +99,7 @@ export interface ReceipeIngredientExt {
   Id: IdIngredient;
   Name: string;
   Kind: IngredientKind;
+  Owner: IdUser;
   Quantity: QuantityR;
 }
 // github.com/benoitkugler/atable/controllers/library.ResourceHeader
@@ -229,6 +237,7 @@ export interface Ingredient {
   Id: IdIngredient;
   Name: string;
   Kind: IngredientKind;
+  Owner: IdUser;
 }
 // github.com/benoitkugler/atable/sql/menus.IngredientKind
 export enum IngredientKind {
@@ -259,6 +268,7 @@ export interface Menu {
   Owner: IdUser;
   IsFavorite: boolean;
   IsPublished: boolean;
+  Updated: Time;
 }
 // github.com/benoitkugler/atable/sql/menus.MenuIngredient
 export interface MenuIngredient {
@@ -296,6 +306,7 @@ export interface Receipe {
   Name: string;
   Description: string;
   IsPublished: boolean;
+  Updated: Time;
 }
 // github.com/benoitkugler/atable/sql/menus.ReceipeIngredient
 export interface ReceipeIngredient {

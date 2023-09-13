@@ -18,10 +18,10 @@ func setup(t *testing.T) (db tu.TestDB, _ users.User, _ menus.Menu) {
 	user, err := users.User{IsAdmin: true, Mail: "test@free.fr", Password: "a"}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ing1, err := menus.Ingredient{Name: "Ing1"}.Insert(db)
+	ing1, err := menus.Ingredient{Name: "Ing1", Owner: user.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ing2, err := menus.Ingredient{Name: "Ing2"}.Insert(db)
+	ing2, err := menus.Ingredient{Name: "Ing2", Owner: user.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	rec, err := menus.Receipe{Owner: user.Id, Name: "Receipe1"}.Insert(db)

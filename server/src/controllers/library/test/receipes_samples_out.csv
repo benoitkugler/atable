@@ -17,7 +17,7 @@ Courgettes,300,gr
 Tomates,300,gr
 Farine,250,gr
 Levure (sachet),1.5,pièces
-Huile,5,cL
+Huile d'olive,5,cL
 Fromage râpé,150,gr
 Oeufs,5,pièces
 Lait,20,cL
@@ -53,7 +53,7 @@ Sucre,200,gr
 Farine,200,gr
 Oeufs,3,pièces
 Levure (sachet),1,pièces
-Huile,10,cL
+Huile d'olive,10,cL
 ,,
 Hot dog,platPrincipal,10
 Saucisses,1,kg
@@ -68,7 +68,7 @@ Carottes,200,gr
 Pulpe de tomate,500,gr
 Tomates,500,gr
 Ail (gousse),2,pièces
-Viande hachée,800,gr
+Viande hachée (boeuf),800,gr
 Fromage râpé,250,gr
 Sauce béchamel,1,L
 ,,
@@ -84,7 +84,7 @@ Farine,240,gr
 Moussaka,platPrincipal,10
 Mes aubergines,2,kg
 Tomates,1,kg
-Viande hachée,1,kg
+Viande hachée (boeuf),1,kg
 Oignons,3,pièces
 Fromage râpé,200,gr
 Crème fraîche,1,L
@@ -247,7 +247,7 @@ Beurre,40,gr
 Spagheti bolognaise,platPrincipal,10
 Spaghetis,1,kg
 Fromage râpé,400,gr
-Viande hachée,1,kg
+Viande hachée (boeuf),1,kg
 Oignons,5,pièces
 Pulpe de tomate,500,gr
 Tomates,500,gr

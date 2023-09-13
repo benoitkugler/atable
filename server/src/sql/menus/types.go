@@ -1,6 +1,10 @@
 package menus
 
-import "github.com/benoitkugler/atable/sql/users"
+import (
+	"time"
+
+	"github.com/benoitkugler/atable/sql/users"
+)
 
 type IngredientKind uint8
 
@@ -84,3 +88,10 @@ func (rm Menus) RestrictVisibleBy(user users.IdUser) {
 		delete(rm, id)
 	}
 }
+
+type Time time.Time
+
+func (d Time) T() time.Time { return time.Time(d) }
+
+func (d Time) MarshalJSON() ([]byte, error)     { return time.Time(d).MarshalJSON() }
+func (d *Time) UnmarshalJSON(data []byte) error { return (*time.Time)(d).UnmarshalJSON(data) }

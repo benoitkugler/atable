@@ -383,6 +383,7 @@ func (ct *Controller) importCSV2(args ImportReceipes2In, uID us.IdUser) ([]Recei
 		for key, ingredient := range args.Map {
 			if ingredient.Id == -1 {
 				ingredient.Name = utils.UpperFirst(ingredient.Name) // enfore common format
+				ingredient.Owner = uID
 				if ing, has := newIngredientsByName[ingredient.Name]; has {
 					ingredient = ing
 				} else {
@@ -400,10 +401,10 @@ func (ct *Controller) importCSV2(args ImportReceipes2In, uID us.IdUser) ([]Recei
 		// add the receipes and their links
 		for _, receipe := range args.Receipes {
 			rec, err := men.Receipe{
-				Owner:       uID,
-				Plat:        receipe.Plat,
-				Name:        receipe.Name,
-				Description: fmt.Sprintf("Importée le %s", time.Now().Format("02/01/06")),
+				Owner:   uID,
+				Plat:    receipe.Plat,
+				Name:    receipe.Name,
+				Updated: men.Time(time.Now()),
 			}.Insert(tx)
 			if err != nil {
 				return utils.SQLError(err)

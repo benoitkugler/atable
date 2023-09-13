@@ -416,6 +416,19 @@ func ScanMealGroups(rs *sql.Rows) (MealGroups, error) {
 	return structs, nil
 }
 
+func InsertMealGroup(db DB, item MealGroup) error {
+	_, err := db.Exec(`INSERT INTO meal_groups (
+			idmeal, idgroup
+			) VALUES (
+			$1, $2
+			);
+			`, item.IdMeal, item.IdGroup)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Insert the links MealGroup in the database.
 // It is a no-op if 'items' is empty.
 func InsertManyMealGroups(tx *sql.Tx, items ...MealGroup) error {

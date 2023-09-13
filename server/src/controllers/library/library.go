@@ -26,8 +26,10 @@ func NewController(db *sql.DB, admin us.User) *Controller {
 }
 
 // handle commit / rollback
-func (ct *Controller) inTx(fn func(tx *sql.Tx) error) error {
-	tx, err := ct.db.Begin()
+func (ct *Controller) inTx(fn func(tx *sql.Tx) error) error { return inTx(ct.db, fn) }
+
+func inTx(db *sql.DB, fn func(tx *sql.Tx) error) error {
+	tx, err := db.Begin()
 	if err != nil {
 		return utils.SQLError(err)
 	}
@@ -55,7 +57,11 @@ func (ct *Controller) checkReceipeOwner(idReceipe men.IdReceipe, uID us.IdUser) 
 }
 
 func (ct *Controller) checkMenuOwner(idMenu men.IdMenu, uID us.IdUser) (men.Menu, error) {
-	menu, err := men.SelectMenu(ct.db, idMenu)
+	return checkMenuOwner(ct.db, idMenu, uID)
+}
+
+func checkMenuOwner(db men.DB, idMenu men.IdMenu, uID us.IdUser) (men.Menu, error) {
+	menu, err := men.SelectMenu(db, idMenu)
 	if err != nil {
 		return menu, utils.SQLError(err)
 	}
@@ -89,11 +95,14 @@ func (ct *Controller) LibraryLoadReceipes(c echo.Context) error {
 }
 
 func (ct *Controller) LibraryCreateIngredient(c echo.Context) error {
+	uID := users.JWTUser(c)
+
 	var args men.Ingredient
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
+	args.Owner = uID
 	args.Name = utils.UpperFirst(args.Name)
 	ing, err := args.Insert(ct.db)
 	if err != nil {
@@ -116,7 +125,7 @@ func (ct *Controller) LibraryCreateMenu(c echo.Context) error {
 }
 
 func (ct *Controller) createMenu(uID us.IdUser) (out ResourceHeader, _ error) {
-	menu, err := men.Menu{Owner: uID, IsFavorite: true}.Insert(ct.db)
+	menu, err := men.Menu{Owner: uID, IsFavorite: true, Updated: men.Time(time.Now())}.Insert(ct.db)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
@@ -140,7 +149,11 @@ func (ct *Controller) LibraryCreateReceipe(c echo.Context) error {
 }
 
 func (ct *Controller) createReceipe(uID us.IdUser) (out ReceipeHeader, _ error) {
-	rec, err := men.Receipe{Owner: uID, Name: fmt.Sprintf("Recette %d", time.Now().UnixMilli())}.Insert(ct.db)
+	rec, err := men.Receipe{
+		Owner:   uID,
+		Name:    fmt.Sprintf("Recette %d", time.Now().UnixMilli()),
+		Updated: men.Time(time.Now()),
+	}.Insert(ct.db)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
@@ -205,6 +218,7 @@ func (ct *Controller) updateReceipe(args men.Receipe, uID us.IdUser) error {
 	receipe.Description = args.Description
 	receipe.Plat = args.Plat
 	receipe.IsPublished = args.IsPublished
+	receipe.Updated = men.Time(time.Now())
 	_, err = receipe.Update(ct.db)
 	if err != nil {
 		return utils.SQLError(err)
@@ -276,7 +290,7 @@ func (ct *Controller) LibraryAddReceipeIngredient(c echo.Context) error {
 }
 
 func (ct *Controller) addReceipeIngredient(args AddReceipeIngredientIn, uID us.IdUser) (ReceipeIngredientExt, error) {
-	_, err := ct.checkReceipeOwner(args.IdReceipe, uID)
+	receipe, err := ct.checkReceipeOwner(args.IdReceipe, uID)
 	if err != nil {
 		return ReceipeIngredientExt{}, err
 	}
@@ -296,7 +310,18 @@ func (ct *Controller) addReceipeIngredient(args AddReceipeIngredientIn, uID us.I
 		Quantity:     quantity,
 	}
 
-	err = ct.inTx(func(tx *sql.Tx) error { return men.InsertManyReceipeIngredients(tx, link) })
+	err = ct.inTx(func(tx *sql.Tx) error {
+		err := men.InsertReceipeIngredient(tx, link)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+		receipe.Updated = men.Time(time.Now())
+		_, err = receipe.Update(tx)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+		return nil
+	})
 
 	return ReceipeIngredientExt{Ingredient: ing, Quantity: quantity}, err
 }
@@ -318,7 +343,7 @@ func (ct *Controller) LibraryUpdateReceipeIngredient(c echo.Context) error {
 }
 
 func (ct *Controller) updateReceipeIngredient(link men.ReceipeIngredient, uID us.IdUser) error {
-	_, err := ct.checkReceipeOwner(link.IdReceipe, uID)
+	receipe, err := ct.checkReceipeOwner(link.IdReceipe, uID)
 	if err != nil {
 		return err
 	}
@@ -328,7 +353,12 @@ func (ct *Controller) updateReceipeIngredient(link men.ReceipeIngredient, uID us
 		if err != nil {
 			return utils.SQLError(err)
 		}
-		err = men.InsertManyReceipeIngredients(tx, link)
+		err = men.InsertReceipeIngredient(tx, link)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+		receipe.Updated = men.Time(time.Now())
+		_, err = receipe.Update(tx)
 		if err != nil {
 			return utils.SQLError(err)
 		}
@@ -358,17 +388,25 @@ func (ct *Controller) LibraryDeleteReceipeIngredient(c echo.Context) error {
 }
 
 func (ct *Controller) deleteReceipeIngredient(idR men.IdReceipe, idG men.IdIngredient, uID us.IdUser) error {
-	_, err := ct.checkReceipeOwner(idR, uID)
+	receipe, err := ct.checkReceipeOwner(idR, uID)
 	if err != nil {
 		return err
 	}
 
-	_, err = men.DeleteReceipeIngredientsByIdReceipeAndIdIngredient(ct.db, idR, idG)
-	if err != nil {
-		return utils.SQLError(err)
-	}
+	err = ct.inTx(func(tx *sql.Tx) error {
+		_, err = men.DeleteReceipeIngredientsByIdReceipeAndIdIngredient(tx, idR, idG)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+		receipe.Updated = men.Time(time.Now())
+		_, err = receipe.Update(tx)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+		return nil
+	})
 
-	return nil
+	return err
 }
 
 // LibraryLoadMenu load the full content of the given Menu
@@ -411,6 +449,7 @@ func (ct *Controller) updateMenu(args men.Menu, uID us.IdUser) error {
 
 	menu.IsPublished = args.IsPublished
 	menu.IsFavorite = args.IsFavorite
+	menu.Updated = men.Time(time.Now())
 	_, err = menu.Update(ct.db)
 	if err != nil {
 		return utils.SQLError(err)
@@ -481,7 +520,7 @@ func (ct *Controller) LibraryAddMenuIngredient(c echo.Context) error {
 }
 
 func (ct *Controller) addMenuIngredient(args AddMenuIngredientIn, uID us.IdUser) (MenuIngredientExt, error) {
-	_, err := ct.checkMenuOwner(args.IdMenu, uID)
+	menu, err := ct.checkMenuOwner(args.IdMenu, uID)
 	if err != nil {
 		return MenuIngredientExt{}, err
 	}
@@ -498,7 +537,18 @@ func (ct *Controller) addMenuIngredient(args AddMenuIngredientIn, uID us.IdUser)
 		Plat:         men.P_Empty,
 	}
 
-	err = ct.inTx(func(tx *sql.Tx) error { return men.InsertManyMenuIngredients(tx, link) })
+	err = ct.inTx(func(tx *sql.Tx) error {
+		err = men.InsertMenuIngredient(tx, link)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+		menu.Updated = men.Time(time.Now())
+		_, err = menu.Update(tx)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+		return nil
+	})
 
 	return MenuIngredientExt{Ingredient: ing, MenuIngredient: link}, err
 }
@@ -525,7 +575,7 @@ func (ct *Controller) LibraryAddMenuReceipe(c echo.Context) error {
 }
 
 func (ct *Controller) addMenuReceipe(args AddMenuReceipeIn, uID us.IdUser) (men.Receipe, error) {
-	_, err := ct.checkMenuOwner(args.IdMenu, uID)
+	menu, err := ct.checkMenuOwner(args.IdMenu, uID)
 	if err != nil {
 		return men.Receipe{}, err
 	}
@@ -540,7 +590,18 @@ func (ct *Controller) addMenuReceipe(args AddMenuReceipeIn, uID us.IdUser) (men.
 		IdReceipe: args.IdReceipe,
 	}
 
-	err = ct.inTx(func(tx *sql.Tx) error { return men.InsertManyMenuReceipes(tx, link) })
+	err = ct.inTx(func(tx *sql.Tx) error {
+		err = men.InsertMenuReceipe(tx, link)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+		menu.Updated = men.Time(time.Now())
+		_, err = menu.Update(tx)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+		return nil
+	})
 
 	return rec, err
 }
@@ -562,17 +623,26 @@ func (ct *Controller) LibraryUpdateMenuIngredient(c echo.Context) error {
 }
 
 func (ct *Controller) updateMenuIngredient(link men.MenuIngredient, uID us.IdUser) error {
-	_, err := ct.checkMenuOwner(link.IdMenu, uID)
+	return UpdateMenuIngredient(ct.db, link, uID)
+}
+
+func UpdateMenuIngredient(db *sql.DB, link men.MenuIngredient, uID us.IdUser) error {
+	menu, err := checkMenuOwner(db, link.IdMenu, uID)
 	if err != nil {
 		return err
 	}
 
-	err = ct.inTx(func(tx *sql.Tx) error {
+	err = inTx(db, func(tx *sql.Tx) error {
 		_, err = men.DeleteMenuIngredientsByIdMenuAndIdIngredient(tx, link.IdMenu, link.IdIngredient)
 		if err != nil {
 			return utils.SQLError(err)
 		}
-		err = men.InsertManyMenuIngredients(tx, link)
+		err = men.InsertMenuIngredient(tx, link)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+		menu.Updated = men.Time(time.Now())
+		_, err = menu.Update(tx)
 		if err != nil {
 			return utils.SQLError(err)
 		}
@@ -602,17 +672,25 @@ func (ct *Controller) LibraryDeleteMenuIngredient(c echo.Context) error {
 }
 
 func (ct *Controller) deleteMenuIngredient(idR men.IdMenu, idG men.IdIngredient, uID us.IdUser) error {
-	_, err := ct.checkMenuOwner(idR, uID)
+	menu, err := ct.checkMenuOwner(idR, uID)
 	if err != nil {
 		return err
 	}
 
-	_, err = men.DeleteMenuIngredientsByIdMenuAndIdIngredient(ct.db, idR, idG)
-	if err != nil {
-		return utils.SQLError(err)
-	}
+	err = ct.inTx(func(tx *sql.Tx) error {
+		_, err = men.DeleteMenuIngredientsByIdMenuAndIdIngredient(tx, idR, idG)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+		menu.Updated = men.Time(time.Now())
+		_, err = menu.Update(tx)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+		return nil
+	})
 
-	return nil
+	return err
 }
 
 func (ct *Controller) LibraryDeleteMenuReceipe(c echo.Context) error {
@@ -635,17 +713,25 @@ func (ct *Controller) LibraryDeleteMenuReceipe(c echo.Context) error {
 }
 
 func (ct *Controller) deleteMenuReceipe(idR men.IdMenu, idG men.IdReceipe, uID us.IdUser) error {
-	_, err := ct.checkMenuOwner(idR, uID)
+	menu, err := ct.checkMenuOwner(idR, uID)
 	if err != nil {
 		return err
 	}
 
-	_, err = men.DeleteMenuReceipesByIdMenuAndIdReceipe(ct.db, idR, idG)
-	if err != nil {
-		return utils.SQLError(err)
-	}
+	err = ct.inTx(func(tx *sql.Tx) error {
+		_, err = men.DeleteMenuReceipesByIdMenuAndIdReceipe(tx, idR, idG)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+		menu.Updated = men.Time(time.Now())
+		_, err = menu.Update(tx)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+		return nil
+	})
 
-	return nil
+	return err
 }
 
 type ResourceHeader struct {

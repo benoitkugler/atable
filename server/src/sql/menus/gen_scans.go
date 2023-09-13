@@ -7,6 +7,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/benoitkugler/atable/sql/users"
 	"github.com/lib/pq"
@@ -31,6 +32,7 @@ func scanOneIngredient(row scanner) (Ingredient, error) {
 		&item.Id,
 		&item.Name,
 		&item.Kind,
+		&item.Owner,
 	)
 	return item, err
 }
@@ -99,22 +101,22 @@ func ScanIngredients(rs *sql.Rows) (Ingredients, error) {
 // Insert one Ingredient in the database and returns the item with id filled.
 func (item Ingredient) Insert(tx DB) (out Ingredient, err error) {
 	row := tx.QueryRow(`INSERT INTO ingredients (
-		name, kind
+		name, kind, owner
 		) VALUES (
-		$1, $2
+		$1, $2, $3
 		) RETURNING *;
-		`, item.Name, item.Kind)
+		`, item.Name, item.Kind, item.Owner)
 	return ScanIngredient(row)
 }
 
 // Update Ingredient in the database and returns the new version.
 func (item Ingredient) Update(tx DB) (out Ingredient, err error) {
 	row := tx.QueryRow(`UPDATE ingredients SET (
-		name, kind
+		name, kind, owner
 		) = (
-		$1, $2
-		) WHERE id = $3 RETURNING *;
-		`, item.Name, item.Kind, item.Id)
+		$1, $2, $3
+		) WHERE id = $4 RETURNING *;
+		`, item.Name, item.Kind, item.Owner, item.Id)
 	return ScanIngredient(row)
 }
 
@@ -127,6 +129,47 @@ func DeleteIngredientById(tx DB, id IdIngredient) (Ingredient, error) {
 // Deletes the Ingredient in the database and returns the ids.
 func DeleteIngredientsByIDs(tx DB, ids ...IdIngredient) ([]IdIngredient, error) {
 	rows, err := tx.Query("DELETE FROM ingredients WHERE id = ANY($1) RETURNING id", IdIngredientArrayToPQ(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdIngredientArray(rows)
+}
+
+// ByOwner returns a map with 'Owner' as keys.
+func (items Ingredients) ByOwner() map[users.IdUser]Ingredients {
+	out := make(map[users.IdUser]Ingredients)
+	for _, target := range items {
+		dict := out[target.Owner]
+		if dict == nil {
+			dict = make(Ingredients)
+		}
+		dict[target.Id] = target
+		out[target.Owner] = dict
+	}
+	return out
+}
+
+// Owners returns the list of ids of Owner
+// contained in this table.
+// They are not garanteed to be distinct.
+func (items Ingredients) Owners() []users.IdUser {
+	out := make([]users.IdUser, 0, len(items))
+	for _, target := range items {
+		out = append(out, target.Owner)
+	}
+	return out
+}
+
+func SelectIngredientsByOwners(tx DB, owners_ ...users.IdUser) (Ingredients, error) {
+	rows, err := tx.Query("SELECT * FROM ingredients WHERE owner = ANY($1)", users.IdUserArrayToPQ(owners_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIngredients(rows)
+}
+
+func DeleteIngredientsByOwners(tx DB, owners_ ...users.IdUser) ([]IdIngredient, error) {
+	rows, err := tx.Query("DELETE FROM ingredients WHERE owner = ANY($1) RETURNING id", users.IdUserArrayToPQ(owners_))
 	if err != nil {
 		return nil, err
 	}
@@ -150,6 +193,7 @@ func scanOneMenu(row scanner) (Menu, error) {
 		&item.Owner,
 		&item.IsFavorite,
 		&item.IsPublished,
+		&item.Updated,
 	)
 	return item, err
 }
@@ -218,22 +262,22 @@ func ScanMenus(rs *sql.Rows) (Menus, error) {
 // Insert one Menu in the database and returns the item with id filled.
 func (item Menu) Insert(tx DB) (out Menu, err error) {
 	row := tx.QueryRow(`INSERT INTO menus (
-		owner, isfavorite, ispublished
+		owner, isfavorite, ispublished, updated
 		) VALUES (
-		$1, $2, $3
+		$1, $2, $3, $4
 		) RETURNING *;
-		`, item.Owner, item.IsFavorite, item.IsPublished)
+		`, item.Owner, item.IsFavorite, item.IsPublished, item.Updated)
 	return ScanMenu(row)
 }
 
 // Update Menu in the database and returns the new version.
 func (item Menu) Update(tx DB) (out Menu, err error) {
 	row := tx.QueryRow(`UPDATE menus SET (
-		owner, isfavorite, ispublished
+		owner, isfavorite, ispublished, updated
 		) = (
-		$1, $2, $3
-		) WHERE id = $4 RETURNING *;
-		`, item.Owner, item.IsFavorite, item.IsPublished, item.Id)
+		$1, $2, $3, $4
+		) WHERE id = $5 RETURNING *;
+		`, item.Owner, item.IsFavorite, item.IsPublished, item.Updated, item.Id)
 	return ScanMenu(row)
 }
 
@@ -340,6 +384,19 @@ func ScanMenuIngredients(rs *sql.Rows) (MenuIngredients, error) {
 		return nil, err
 	}
 	return structs, nil
+}
+
+func InsertMenuIngredient(db DB, item MenuIngredient) error {
+	_, err := db.Exec(`INSERT INTO menu_ingredients (
+			idmenu, idingredient, quantity, plat
+			) VALUES (
+			$1, $2, $3, $4
+			);
+			`, item.IdMenu, item.IdIngredient, item.Quantity, item.Plat)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Insert the links MenuIngredient in the database.
@@ -531,6 +588,19 @@ func ScanMenuReceipes(rs *sql.Rows) (MenuReceipes, error) {
 	return structs, nil
 }
 
+func InsertMenuReceipe(db DB, item MenuReceipe) error {
+	_, err := db.Exec(`INSERT INTO menu_receipes (
+			idmenu, idreceipe
+			) VALUES (
+			$1, $2
+			);
+			`, item.IdMenu, item.IdReceipe)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Insert the links MenuReceipe in the database.
 // It is a no-op if 'items' is empty.
 func InsertManyMenuReceipes(tx *sql.Tx, items ...MenuReceipe) error {
@@ -670,6 +740,7 @@ func scanOneReceipe(row scanner) (Receipe, error) {
 		&item.Name,
 		&item.Description,
 		&item.IsPublished,
+		&item.Updated,
 	)
 	return item, err
 }
@@ -738,22 +809,22 @@ func ScanReceipes(rs *sql.Rows) (Receipes, error) {
 // Insert one Receipe in the database and returns the item with id filled.
 func (item Receipe) Insert(tx DB) (out Receipe, err error) {
 	row := tx.QueryRow(`INSERT INTO receipes (
-		owner, plat, name, description, ispublished
+		owner, plat, name, description, ispublished, updated
 		) VALUES (
-		$1, $2, $3, $4, $5
+		$1, $2, $3, $4, $5, $6
 		) RETURNING *;
-		`, item.Owner, item.Plat, item.Name, item.Description, item.IsPublished)
+		`, item.Owner, item.Plat, item.Name, item.Description, item.IsPublished, item.Updated)
 	return ScanReceipe(row)
 }
 
 // Update Receipe in the database and returns the new version.
 func (item Receipe) Update(tx DB) (out Receipe, err error) {
 	row := tx.QueryRow(`UPDATE receipes SET (
-		owner, plat, name, description, ispublished
+		owner, plat, name, description, ispublished, updated
 		) = (
-		$1, $2, $3, $4, $5
-		) WHERE id = $6 RETURNING *;
-		`, item.Owner, item.Plat, item.Name, item.Description, item.IsPublished, item.Id)
+		$1, $2, $3, $4, $5, $6
+		) WHERE id = $7 RETURNING *;
+		`, item.Owner, item.Plat, item.Name, item.Description, item.IsPublished, item.Updated, item.Id)
 	return ScanReceipe(row)
 }
 
@@ -861,6 +932,19 @@ func ScanReceipeIngredients(rs *sql.Rows) (ReceipeIngredients, error) {
 		return nil, err
 	}
 	return structs, nil
+}
+
+func InsertReceipeIngredient(db DB, item ReceipeIngredient) error {
+	_, err := db.Exec(`INSERT INTO receipe_ingredients (
+			idreceipe, idingredient, quantity
+			) VALUES (
+			$1, $2, $3
+			);
+			`, item.IdReceipe, item.IdIngredient, item.Quantity)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Insert the links ReceipeIngredient in the database.
@@ -1031,6 +1115,20 @@ func dumpJSON(s interface{}) (driver.Value, error) {
 		return nil, err
 	}
 	return driver.Value(string(b)), nil
+}
+
+func (s *Time) Scan(src interface{}) error {
+	var tmp pq.NullTime
+	err := tmp.Scan(src)
+	if err != nil {
+		return err
+	}
+	*s = Time(tmp.Time)
+	return nil
+}
+
+func (s Time) Value() (driver.Value, error) {
+	return pq.NullTime{Time: time.Time(s), Valid: true}.Value()
 }
 
 func IdIngredientArrayToPQ(ids []IdIngredient) pq.Int64Array {

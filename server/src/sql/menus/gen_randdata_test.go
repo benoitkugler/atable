@@ -2,6 +2,7 @@ package menus
 
 import (
 	"math/rand"
+	"time"
 
 	"github.com/benoitkugler/atable/sql/users"
 )
@@ -25,6 +26,7 @@ func randIngredient() Ingredient {
 	s.Id = randIdIngredient()
 	s.Name = randstring()
 	s.Kind = randIngredientKind()
+	s.Owner = randuse_IdUser()
 
 	return s
 }
@@ -41,6 +43,7 @@ func randMenu() Menu {
 	s.Owner = randuse_IdUser()
 	s.IsFavorite = randbool()
 	s.IsPublished = randbool()
+	s.Updated = randTime()
 
 	return s
 }
@@ -86,6 +89,7 @@ func randReceipe() Receipe {
 	s.Name = randstring()
 	s.Description = randstring()
 	s.IsPublished = randbool()
+	s.Updated = randTime()
 
 	return s
 }
@@ -97,6 +101,10 @@ func randReceipeIngredient() ReceipeIngredient {
 	s.Quantity = randQuantityR()
 
 	return s
+}
+
+func randTime() Time {
+	return Time(randtTime())
 }
 
 func randUnite() Unite {
@@ -131,6 +139,10 @@ func randstring() string {
 		b[i] = letterRunes2[rand.Intn(maxLength)]
 	}
 	return string(b)
+}
+
+func randtTime() time.Time {
+	return time.Unix(int64(rand.Int31()), 5)
 }
 
 func randuse_IdUser() users.IdUser {

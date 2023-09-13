@@ -11,13 +11,16 @@ type (
 // Ingredient is the basic element
 // used to build a receipe or a meal.
 //
-// [Ingredient]s are public, shared among users.
+// [Ingredient]s are owned by users, but always available
+// for everyone in read-only mode.
 //
 // gomacro:SQL ADD UNIQUE(Name)
 type Ingredient struct {
 	Id   IdIngredient
 	Name string
 	Kind IngredientKind
+
+	Owner users.IdUser `gomacro-sql-on-delete:"CASCADE"`
 }
 
 // Receipe is a list of ingredients
@@ -33,6 +36,9 @@ type Receipe struct {
 	Name        string
 	Description string // notice, optional
 	IsPublished bool   // If true, other users may use it (as readonly)
+
+	// Updated stores the time of the last edition
+	Updated Time
 }
 
 // ReceipeIngredient is a link object.
@@ -65,6 +71,9 @@ type Menu struct {
 	// If true, other users may use it (as readonly)
 	// It implies IsFavorite
 	IsPublished bool
+
+	// Updated stores the time of the last edition
+	Updated Time
 }
 
 // MenuIngredient is a link item

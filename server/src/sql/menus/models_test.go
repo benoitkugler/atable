@@ -15,10 +15,14 @@ func TestSQL(t *testing.T) {
 	user, err := users.User{IsAdmin: true, Mail: "test@free.fr", Password: "a"}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ing1, err := randIngredient().Insert(db)
+	ing1 := randIngredient()
+	ing1.Owner = user.Id
+	ing1, err = ing1.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ing2, err := randIngredient().Insert(db)
+	ing2 := randIngredient()
+	ing2.Owner = user.Id
+	ing2, err = ing2.Insert(db)
 	tu.AssertNoErr(t, err)
 
 	rec := randReceipe()
