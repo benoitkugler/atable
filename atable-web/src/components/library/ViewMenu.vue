@@ -10,11 +10,15 @@
         </v-btn>
       </v-col>
       <v-col align-self="center">
-        <v-card-title v-if="isReadonly">
+        <v-card-title>
           Détails du menu
-          <v-icon size="small">mdi-lock</v-icon>
+          <v-icon v-if="isReadonly" size="small">mdi-lock</v-icon>
         </v-card-title>
-        <v-card-title v-else> Modifier le menu </v-card-title>
+      </v-col>
+      <v-col cols="3" align-self="center" class="text-right px-2">
+        <small v-if="inner != null">
+          modifié le {{ formatTime(new Date(inner.Menu.Updated)) }}</small
+        >
       </v-col>
     </v-row>
 
@@ -155,6 +159,7 @@ import {
   controller,
   MenuItem,
   resourcesToList,
+  formatTime,
 } from "@/logic/controller";
 import { onMounted } from "vue";
 import { ref } from "vue";
@@ -195,11 +200,7 @@ const platItems = Object.entries(PlatKindLabels).map((ent) => ({
 platItems.sort((a, b) => -(a.plat - b.plat));
 
 async function fetch() {
-  const res = await controller.LibraryLoadMenu({
-    idMenu: props.menu,
-  });
-  if (res === undefined) return;
-  inner.value = res;
+  fetchMenu();
 
   const ings = await controller.LibraryLoadIngredients();
   if (ings === undefined) return;
@@ -209,12 +210,22 @@ async function fetch() {
   DB.value = resourcesToList(ings, recs);
 }
 
+async function fetchMenu() {
+  const res = await controller.LibraryLoadMenu({
+    idMenu: props.menu,
+  });
+  if (res === undefined) return;
+  inner.value = res;
+}
+
 async function save() {
   if (inner.value == null || isReadonly.value) return;
   const res = await controller.LibraryUpdateMenu(inner.value.Menu);
   if (res === undefined) return;
 
   controller.showMessage("Menu modifié avec succès.");
+
+  fetchMenu();
 }
 
 async function addResource(item: MenuResource) {
@@ -239,6 +250,8 @@ async function addIngredient(id: IdIngredient) {
 
   controller.showMessage("Ingrédient ajouté avec succès.");
   inner.value!.Ingredients = (inner.value?.Ingredients || []).concat(res);
+
+  fetchMenu();
 }
 
 async function createAndAddIngredient(ingredient: Ingredient) {
@@ -263,6 +276,8 @@ async function addReceipe(item: MenuResource) {
 
   controller.showMessage("Recette ajoutée avec succès.");
   inner.value!.Receipes = (inner.value?.Receipes || []).concat(res);
+
+  fetchMenu();
 }
 
 const hasSameForPeople = computed(() => {
@@ -283,6 +298,8 @@ async function updateIngredient(item: MenuItem, qu: QuantityR) {
     (ing) => ing.IdIngredient == item.id
   )!;
   toChange.Quantity = qu;
+
+  fetchMenu();
 }
 
 async function updatePlat(item: MenuItem, plat: PlatKind) {
@@ -298,6 +315,8 @@ async function updatePlat(item: MenuItem, plat: PlatKind) {
     (ing) => ing.IdIngredient == item.id
   )!;
   toChange.Plat = plat;
+
+  fetchMenu();
 }
 
 function deleteResource(item: MenuItem) {
@@ -318,6 +337,8 @@ async function deleteIngredient(id: IdIngredient) {
   inner.value!.Ingredients = (inner.value?.Ingredients || []).filter(
     (ing) => ing.IdIngredient != id
   );
+
+  fetchMenu();
 }
 async function deleteReceipe(id: IdReceipe) {
   const res = await controller.LibraryDeleteMenuReceipe({
@@ -329,6 +350,8 @@ async function deleteReceipe(id: IdReceipe) {
   inner.value!.Receipes = (inner.value?.Receipes || []).filter(
     (rec) => rec.Id != id
   );
+
+  fetchMenu();
 }
 
 function goTo(item: MenuItem) {

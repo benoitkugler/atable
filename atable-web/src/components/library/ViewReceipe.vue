@@ -11,11 +11,15 @@
           </v-btn>
         </v-col>
         <v-col align-self="center">
-          <v-card-title v-if="isReadonly">
+          <v-card-title>
             Détails de la recette
-            <v-icon size="small">mdi-lock</v-icon>
+            <v-icon v-if="isReadonly" size="small">mdi-lock</v-icon>
           </v-card-title>
-          <v-card-title v-else> Modifier la recette </v-card-title>
+        </v-col>
+        <v-col cols="3" align-self="center" class="text-right px-2">
+          <small v-if="inner != null">
+            modifiée le {{ formatTime(new Date(inner.Receipe.Updated)) }}</small
+          >
         </v-col>
       </v-row>
     </v-card>
@@ -162,6 +166,7 @@ import {
 import {
   MenuResource,
   controller,
+  formatTime,
   platColors,
   resourcesToList,
 } from "@/logic/controller";
@@ -202,16 +207,20 @@ const isReadonly = computed(
 );
 
 async function fetch() {
+  await fetchReceipe();
+  tmpName.value = inner.value!.Receipe.Name;
+
+  const ings = await controller.LibraryLoadIngredients();
+  if (ings === undefined) return;
+  DB.value = resourcesToList(ings, {});
+}
+
+async function fetchReceipe() {
   const res = await controller.LibraryLoadReceipe({
     idReceipe: props.receipe,
   });
   if (res === undefined) return;
   inner.value = res;
-  tmpName.value = res.Receipe.Name;
-
-  const ings = await controller.LibraryLoadIngredients();
-  if (ings === undefined) return;
-  DB.value = resourcesToList(ings, {});
 }
 
 const tmpName = ref("");
@@ -228,6 +237,8 @@ async function save() {
   if (res === undefined) return;
 
   controller.showMessage("Recette modifiée avec succès.");
+
+  fetchReceipe();
 }
 
 async function addIngredient(idIngredient: IdIngredient) {
@@ -246,6 +257,8 @@ async function addIngredient(idIngredient: IdIngredient) {
 
   controller.showMessage("Ingrédient ajouté avec succès.");
   inner.value!.Ingredients = (inner.value?.Ingredients || []).concat(res);
+
+  fetchReceipe();
 }
 
 async function createAndAddIngredient(ingredient: Ingredient) {
@@ -273,6 +286,8 @@ async function updateIngredient(id: IdIngredient, qu: QuantityR) {
   controller.showMessage("Quantité modifiée avec succès.");
   const item = inner.value?.Ingredients?.find((ing) => ing.Id == id)!;
   item.Quantity = qu;
+
+  fetchReceipe();
 }
 
 async function deleteIngredient(id: IdIngredient) {
@@ -285,5 +300,7 @@ async function deleteIngredient(id: IdIngredient) {
   inner.value!.Ingredients = (inner.value?.Ingredients || []).filter(
     (ing) => ing.Id != id
   );
+
+  fetchReceipe();
 }
 </script>

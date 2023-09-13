@@ -18,6 +18,7 @@ import {
   SejourExt,
   Unite,
   UniteLabels,
+  Time,
 } from "./api_gen";
 
 function arrayBufferToString(buffer: ArrayBuffer) {
@@ -168,6 +169,18 @@ export function formatDate(date: Date) {
     weekday: "short",
     day: "numeric",
     month: "short",
+  });
+}
+
+export function formatTime(date: Date) {
+  if (isNaN(date.valueOf())) return "";
+  return date.toLocaleTimeString("fr-FR", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    // second: "numeric",
   });
 }
 
