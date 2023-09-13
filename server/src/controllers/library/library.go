@@ -12,6 +12,7 @@ import (
 	us "github.com/benoitkugler/atable/sql/users"
 	"github.com/benoitkugler/atable/utils"
 	"github.com/labstack/echo/v4"
+	"github.com/lib/pq"
 )
 
 var errAccessForbidden = errors.New("resource access forbidden")
@@ -937,4 +938,100 @@ func (me MenuExt) QuantitiesFor(nbPeople int, ingredients men.Ingredients, recei
 		out = append(out, IngredientQuantity{ingredients[idIngredient], uniqueQuantities})
 	}
 	return out
+}
+
+// Ingredients API
+
+func (ct *Controller) LibraryUpdateIngredient(c echo.Context) error {
+	uID := users.JWTUser(c)
+
+	var args men.Ingredient
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	err := ct.updateIngredient(args, uID)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
+
+func (ct *Controller) updateIngredient(args men.Ingredient, userID us.IdUser) error {
+	ingredient, err := men.SelectIngredient(ct.db, args.Id)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	// check the owner
+	if ingredient.Owner != userID {
+		return errAccessForbidden
+	}
+	ingredient.Kind = args.Kind
+	ingredient.Name = args.Name
+	_, err = ingredient.Update(ct.db)
+	if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" /*unique_violation*/ {
+		return fmt.Errorf("Le nom %s est déjà présent.", args.Name)
+	}
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return nil
+}
+
+func (ct *Controller) LibraryDeleteIngredient(c echo.Context) error {
+	uID := users.JWTUser(c)
+
+	idI_, err := utils.QueryParamInt64(c, "idIngredient")
+	if err != nil {
+		return err
+	}
+
+	out, err := ct.deleteIngredient(men.IdIngredient(idI_), uID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+type DeleteIngredientOut struct {
+	Deleted      bool // true if the ingredient has properly been deleted
+	UsesReceipes []men.IdReceipe
+	UsesMenus    []men.IdMenu
+}
+
+func (ct *Controller) deleteIngredient(id men.IdIngredient, userID us.IdUser) (DeleteIngredientOut, error) {
+	ingredient, err := men.SelectIngredient(ct.db, id)
+	if err != nil {
+		return DeleteIngredientOut{}, utils.SQLError(err)
+	}
+	// check the owner
+	if ingredient.Owner != userID {
+		return DeleteIngredientOut{}, errAccessForbidden
+	}
+
+	// check the ingredient is not used
+	links1, err := men.SelectReceipeIngredientsByIdIngredients(ct.db, id)
+	if err != nil {
+		return DeleteIngredientOut{}, utils.SQLError(err)
+	}
+	links2, err := men.SelectMenuIngredientsByIdIngredients(ct.db, id)
+	if err != nil {
+		return DeleteIngredientOut{}, utils.SQLError(err)
+	}
+
+	out := DeleteIngredientOut{
+		UsesReceipes: links1.IdReceipes(),
+		UsesMenus:    links2.IdMenus(),
+	}
+	if len(out.UsesReceipes)+len(out.UsesMenus) == 0 {
+		_, err = men.DeleteIngredientById(ct.db, id)
+		if err != nil {
+			return DeleteIngredientOut{}, utils.SQLError(err)
+		}
+		out.Deleted = true
+	}
+
+	return out, nil
 }

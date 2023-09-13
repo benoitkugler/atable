@@ -4,6 +4,10 @@
     title="Menus et recettes"
     subtitle="Retrouver vos menus favoris et vos recettes."
   >
+    <v-dialog v-model="showIngredientsList">
+      <IngredientsList></IngredientsList>
+    </v-dialog>
+
     <v-dialog v-model="showImportCSV" max-width="1000px">
       <ImportCsvMain @import-done="onImportCSV"></ImportCsvMain>
     </v-dialog>
@@ -51,28 +55,17 @@
     </v-dialog>
 
     <template v-slot:append>
-      <v-menu>
-        <template v-slot:activator="{ isActive, props }">
-          <v-btn v-on="{ isActive }" v-bind="props">
-            <template v-slot:prepend>
-              <v-icon color="success">mdi-plus</v-icon>
-            </template>
-            Ajouter...</v-btn
-          >
+      <v-btn variant="text" class="mx-1" @click="showIngredientsList = true">
+        Liste des ingrédients
+        <template v-slot:prepend>
+          <v-icon>mdi-view-list</v-icon>
         </template>
-        <v-list density="compact">
-          <v-list-item title="Ajouter une recette" @click="createReceipe">
-          </v-list-item>
-          <v-list-item title="Ajouter un menu" @click="createMenu">
-          </v-list-item>
-        </v-list>
-      </v-menu>
-      <v-divider vertical></v-divider>
+      </v-btn>
 
       <v-menu>
         <template v-slot:activator="{ isActive, props }">
           <v-btn
-            class="mx-2"
+            class="mx-1"
             icon
             v-on="{ isActive }"
             v-bind="props"
@@ -96,6 +89,23 @@
             :href="controller.receipesExportURL()"
             prepend-icon="mdi-file-export-outline"
           >
+          </v-list-item>
+        </v-list>
+      </v-menu>
+
+      <v-menu>
+        <template v-slot:activator="{ isActive, props }">
+          <v-btn v-on="{ isActive }" v-bind="props" class="ml-2">
+            <template v-slot:prepend>
+              <v-icon color="success">mdi-plus</v-icon>
+            </template>
+            Ajouter...</v-btn
+          >
+        </template>
+        <v-list density="compact">
+          <v-list-item title="Ajouter une recette" @click="createReceipe">
+          </v-list-item>
+          <v-list-item title="Ajouter un menu" @click="createMenu">
           </v-list-item>
         </v-list>
       </v-menu>
@@ -163,6 +173,7 @@ import { onActivated } from "vue";
 import { computed } from "vue";
 import { ref } from "vue";
 import ImportCsvMain from "./ImportCsvMain.vue";
+import IngredientsList from "./IngredientsList.vue";
 
 const props = defineProps<{
   pageIndex: number;
@@ -267,4 +278,6 @@ function onImportCSV(receipes: ReceipeExt[]) {
   showImportCSV.value = false;
   search(""); // refresh the main list
 }
+
+const showIngredientsList = ref(false);
 </script>

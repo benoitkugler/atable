@@ -47,6 +47,9 @@ func setupWebAPI(e *echo.Echo, tvc *users.Controller, sej *sejours.Controller, l
 	gr.PUT("/api/library/all-ingredients", lib.LibraryCreateIngredient)
 	gr.GET("/api/library/all-receipes", lib.LibraryLoadReceipes)
 
+	gr.POST("/api/library/all-ingredients", lib.LibraryUpdateIngredient)
+	gr.DELETE("/api/library/all-ingredients", lib.LibraryDeleteIngredient)
+
 	gr.POST("/api/library/receipes/import", lib.LibraryImportReceipes1)
 	gr.PUT("/api/library/receipes/import", lib.LibraryImportReceipes2)
 

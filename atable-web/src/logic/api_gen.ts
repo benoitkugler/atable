@@ -33,6 +33,12 @@ export interface AddReceipeIngredientIn {
   IdIngredient: IdIngredient;
   InitialFor: number;
 }
+// github.com/benoitkugler/atable/controllers/library.DeleteIngredientOut
+export interface DeleteIngredientOut {
+  Deleted: boolean;
+  UsesReceipes: IdReceipe[] | null;
+  UsesMenus: IdMenu[] | null;
+}
 // github.com/benoitkugler/atable/controllers/library.ImportReceipes1Out
 export interface ImportReceipes1Out {
   Receipes: ReceipeI[] | null;
@@ -1055,6 +1061,52 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessLibraryLoadReceipes(data: Receipes): void {}
+
+  protected async rawLibraryUpdateIngredient(params: Ingredient) {
+    const fullUrl = this.baseUrl + "/api/library/all-ingredients";
+    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+    return true;
+  }
+
+  /** LibraryUpdateIngredient wraps rawLibraryUpdateIngredient and handles the error */
+  async LibraryUpdateIngredient(params: Ingredient) {
+    this.startRequest();
+    try {
+      const out = await this.rawLibraryUpdateIngredient(params);
+      this.onSuccessLibraryUpdateIngredient();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessLibraryUpdateIngredient(): void {}
+
+  protected async rawLibraryDeleteIngredient(params: { idIngredient: number }) {
+    const fullUrl = this.baseUrl + "/api/library/all-ingredients";
+    const rep: AxiosResponse<DeleteIngredientOut> = await Axios.delete(
+      fullUrl,
+      {
+        params: { idIngredient: String(params["idIngredient"]) },
+        headers: this.getHeaders(),
+      },
+    );
+    return rep.data;
+  }
+
+  /** LibraryDeleteIngredient wraps rawLibraryDeleteIngredient and handles the error */
+  async LibraryDeleteIngredient(params: { idIngredient: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawLibraryDeleteIngredient(params);
+      this.onSuccessLibraryDeleteIngredient(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessLibraryDeleteIngredient(data: DeleteIngredientOut): void {}
 
   protected async rawLibraryImportReceipes1(params: {}, file: File) {
     const fullUrl = this.baseUrl + "/api/library/receipes/import";
