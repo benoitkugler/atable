@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/benoitkugler/atable/sql/menus"
+	"github.com/benoitkugler/atable/sql/orders"
 	"github.com/benoitkugler/atable/sql/users"
 )
 
@@ -63,14 +64,28 @@ func randMealGroup() MealGroup {
 	return s
 }
 
+func randOptionnalIdProfile() OptionnalIdProfile {
+	var s OptionnalIdProfile
+	s.Valid = randbool()
+	s.IdProfile = randord_IdProfile()
+
+	return s
+}
+
 func randSejour() Sejour {
 	var s Sejour
 	s.Id = randIdSejour()
 	s.Owner = randuse_IdUser()
 	s.Start = randDate()
 	s.Name = randstring()
+	s.IdProfile = randOptionnalIdProfile()
 
 	return s
+}
+
+func randbool() bool {
+	i := rand.Int31n(2)
+	return i == 1
 }
 
 func randint() int {
@@ -83,6 +98,10 @@ func randint64() int64 {
 
 func randmen_IdMenu() menus.IdMenu {
 	return menus.IdMenu(randint64())
+}
+
+func randord_IdProfile() orders.IdProfile {
+	return orders.IdProfile(randint64())
 }
 
 var letterRunes2 = []rune("azertyuiopqsdfghjklmwxcvbn123456789é@!?&èïab ")

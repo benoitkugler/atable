@@ -28,6 +28,16 @@
             "Output": "sql/menus/gen_randdata_test.go"
         }
     ],
+    "sql/orders/models.go": [
+        {
+            "Mode": "sql",
+            "Output": "sql/orders/gen_create.sql"
+        },
+        {
+            "Mode": "go/sqlcrud",
+            "Output": "sql/orders/gen_scans.go"
+        }
+    ],
     "sql/sejours/models.go": [
         {
             "Mode": "sql",

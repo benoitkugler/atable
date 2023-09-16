@@ -1,6 +1,10 @@
 package sejours
 
-import "time"
+import (
+	"time"
+
+	"github.com/benoitkugler/atable/sql/orders"
+)
 
 type Date time.Time
 
@@ -66,4 +70,9 @@ func (ml Meals) RestrictByHoraire(horaire Horaire) {
 			delete(ml, id)
 		}
 	}
+}
+
+type OptionnalIdProfile struct {
+	Valid     bool
+	IdProfile orders.IdProfile
 }

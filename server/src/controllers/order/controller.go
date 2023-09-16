@@ -15,6 +15,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+type uID = us.IdUser
+
 var errAccessForbidden = errors.New("resource access forbidden")
 
 type Controller struct {
@@ -23,7 +25,7 @@ type Controller struct {
 
 func NewController(db *sql.DB) *Controller { return &Controller{db: db} }
 
-func (ct *Controller) checkSejourOwner(id sej.IdSejour, uID us.IdUser) (sej.Sejour, error) {
+func (ct *Controller) checkSejourOwner(id sej.IdSejour, uID uID) (sej.Sejour, error) {
 	sejour, err := sej.SelectSejour(ct.db, id)
 	if err != nil {
 		return sej.Sejour{}, utils.SQLError(err)
@@ -54,7 +56,7 @@ func (ct *Controller) OrderGetDays(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) getDays(id sej.IdSejour, uID us.IdUser) ([]int, error) {
+func (ct *Controller) getDays(id sej.IdSejour, uID uID) ([]int, error) {
 	_, err := ct.checkSejourOwner(id, uID)
 	if err != nil {
 		return nil, err
@@ -114,7 +116,7 @@ type QuantityMeal struct {
 	Origin   sej.IdMeal
 }
 
-func (ct *Controller) compileIngredients(args CompileIngredientsIn, uID us.IdUser) (out CompileIngredientsOut, _ error) {
+func (ct *Controller) compileIngredients(args CompileIngredientsIn, uID uID) (out CompileIngredientsOut, _ error) {
 	_, err := ct.checkSejourOwner(args.IdSejour, uID)
 	if err != nil {
 		return out, err

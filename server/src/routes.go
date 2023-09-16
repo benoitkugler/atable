@@ -73,4 +73,14 @@ func setupWebAPI(e *echo.Echo, tvc *users.Controller, sej *sejours.Controller, l
 
 	gr.GET("/api/order/days", ord.OrderGetDays)
 	gr.POST("/api/order/ingredients", ord.OrderCompileIngredients)
+
+	gr.GET("/api/order/profiles", ord.OrderGetProfiles)
+	gr.PUT("/api/order/profiles", ord.OrderCreateProfile)
+	gr.POST("/api/order/profiles", ord.OrderUpdateProfile)
+	gr.DELETE("/api/order/profiles", ord.OrderDeleteProfile)
+
+	gr.GET("/api/order/profile/suppliers", ord.OrderLoadProfile)
+	gr.PUT("/api/order/profile/suppliers", ord.OrderAddSupplier)
+	gr.POST("/api/order/profile/suppliers", ord.OrderUpdateSupplier)
+	gr.DELETE("/api/order/profile/suppliers", ord.OrderDeleteSupplier)
 }

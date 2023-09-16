@@ -24,6 +24,9 @@ type Sejour struct {
 	// Following days are computed by an offset from this day.
 	Start Date
 	Name  string
+
+	// The default associations to use for ingredients
+	IdProfile OptionnalIdProfile `gomacro-sql-foreign:"Profile" gomacro-sql-on-delete:"SET NULL"`
 }
 
 // Group is a group of people in a [Sejour].

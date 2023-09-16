@@ -25,7 +25,8 @@ CREATE TABLE sejours (
     Id serial PRIMARY KEY,
     Owner integer NOT NULL,
     Start date NOT NULL,
-    Name text NOT NULL
+    Name text NOT NULL,
+    IdProfile integer
 );
 
 -- constraints
@@ -34,6 +35,9 @@ ALTER TABLE sejours
 
 ALTER TABLE sejours
     ADD FOREIGN KEY (OWNER) REFERENCES users ON DELETE CASCADE;
+
+ALTER TABLE sejours
+    ADD FOREIGN KEY (IdProfile) REFERENCES profiles ON DELETE SET NULL;
 
 ALTER TABLE GROUPS
     ADD FOREIGN KEY (Sejour) REFERENCES sejours ON DELETE CASCADE;

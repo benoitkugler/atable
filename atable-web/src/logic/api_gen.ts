@@ -129,6 +129,18 @@ export interface IngredientQuantities {
   Ingredient: Ingredient;
   Quantities: QuantityMeal[] | null;
 }
+// github.com/benoitkugler/atable/controllers/order.Mapping
+export type Mapping = MappingItem[] | null;
+// github.com/benoitkugler/atable/controllers/order.MappingItem
+export interface MappingItem {
+  K: IdSupplier;
+  V: IdIngredient[] | null;
+}
+// github.com/benoitkugler/atable/controllers/order.ProfileHeader
+export interface ProfileHeader {
+  Profile: Profile;
+  Suppliers: Suppliers;
+}
 // github.com/benoitkugler/atable/controllers/order.QuantityMeal
 export interface QuantityMeal {
   Quantity: Quantity;
@@ -339,6 +351,24 @@ export const UniteLabels: { [key in Unite]: string } = {
   [Unite.U_CL]: "cL",
 };
 
+// github.com/benoitkugler/atable/sql/orders.IdProfile
+export type IdProfile = number;
+// github.com/benoitkugler/atable/sql/orders.IdSupplier
+export type IdSupplier = number;
+// github.com/benoitkugler/atable/sql/orders.Profile
+export interface Profile {
+  Id: IdProfile;
+  IdOwner: IdUser;
+  Name: string;
+}
+// github.com/benoitkugler/atable/sql/orders.Supplier
+export interface Supplier {
+  Id: IdSupplier;
+  IdProfile: IdProfile;
+  Name: string;
+}
+// github.com/benoitkugler/atable/sql/orders.Suppliers
+export type Suppliers = { [key: IdSupplier]: Supplier } | null;
 // github.com/benoitkugler/atable/sql/sejours.Date
 export type Date = Date_;
 // github.com/benoitkugler/atable/sql/sejours.Group
@@ -390,12 +420,18 @@ export interface MealGroup {
 export type MealGroups = MealGroup[] | null;
 // github.com/benoitkugler/atable/sql/sejours.Meals
 export type Meals = { [key: IdMeal]: Meal } | null;
+// github.com/benoitkugler/atable/sql/sejours.OptionnalIdProfile
+export interface OptionnalIdProfile {
+  Valid: boolean;
+  IdProfile: IdProfile;
+}
 // github.com/benoitkugler/atable/sql/sejours.Sejour
 export interface Sejour {
   Id: IdSejour;
   Owner: IdUser;
   Start: Date;
   Name: string;
+  IdProfile: OptionnalIdProfile;
 }
 // github.com/benoitkugler/atable/sql/users.IdUser
 export type IdUser = number;
@@ -1592,4 +1628,180 @@ export abstract class AbstractAPI {
   protected onSuccessOrderCompileIngredients(
     data: CompileIngredientsOut,
   ): void {}
+
+  protected async rawOrderGetProfiles() {
+    const fullUrl = this.baseUrl + "/api/order/profiles";
+    const rep: AxiosResponse<ProfileHeader[] | null> = await Axios.get(
+      fullUrl,
+      { headers: this.getHeaders() },
+    );
+    return rep.data;
+  }
+
+  /** OrderGetProfiles wraps rawOrderGetProfiles and handles the error */
+  async OrderGetProfiles() {
+    this.startRequest();
+    try {
+      const out = await this.rawOrderGetProfiles();
+      this.onSuccessOrderGetProfiles(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessOrderGetProfiles(data: ProfileHeader[] | null): void {}
+
+  protected async rawOrderCreateProfile() {
+    const fullUrl = this.baseUrl + "/api/order/profiles";
+    const rep: AxiosResponse<Profile> = await Axios.put(fullUrl, null, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** OrderCreateProfile wraps rawOrderCreateProfile and handles the error */
+  async OrderCreateProfile() {
+    this.startRequest();
+    try {
+      const out = await this.rawOrderCreateProfile();
+      this.onSuccessOrderCreateProfile(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessOrderCreateProfile(data: Profile): void {}
+
+  protected async rawOrderUpdateProfile(params: Profile) {
+    const fullUrl = this.baseUrl + "/api/order/profiles";
+    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+    return true;
+  }
+
+  /** OrderUpdateProfile wraps rawOrderUpdateProfile and handles the error */
+  async OrderUpdateProfile(params: Profile) {
+    this.startRequest();
+    try {
+      const out = await this.rawOrderUpdateProfile(params);
+      this.onSuccessOrderUpdateProfile();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessOrderUpdateProfile(): void {}
+
+  protected async rawOrderDeleteProfile(params: { id: number }) {
+    const fullUrl = this.baseUrl + "/api/order/profiles";
+    await Axios.delete(fullUrl, {
+      params: { id: String(params["id"]) },
+      headers: this.getHeaders(),
+    });
+    return true;
+  }
+
+  /** OrderDeleteProfile wraps rawOrderDeleteProfile and handles the error */
+  async OrderDeleteProfile(params: { id: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawOrderDeleteProfile(params);
+      this.onSuccessOrderDeleteProfile();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessOrderDeleteProfile(): void {}
+
+  protected async rawOrderLoadProfile(params: { idProfile: number }) {
+    const fullUrl = this.baseUrl + "/api/order/profile/suppliers";
+    const rep: AxiosResponse<Mapping> = await Axios.get(fullUrl, {
+      params: { idProfile: String(params["idProfile"]) },
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** OrderLoadProfile wraps rawOrderLoadProfile and handles the error */
+  async OrderLoadProfile(params: { idProfile: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawOrderLoadProfile(params);
+      this.onSuccessOrderLoadProfile(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessOrderLoadProfile(data: Mapping): void {}
+
+  protected async rawOrderAddSupplier(params: Supplier) {
+    const fullUrl = this.baseUrl + "/api/order/profile/suppliers";
+    const rep: AxiosResponse<Supplier> = await Axios.put(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** OrderAddSupplier wraps rawOrderAddSupplier and handles the error */
+  async OrderAddSupplier(params: Supplier) {
+    this.startRequest();
+    try {
+      const out = await this.rawOrderAddSupplier(params);
+      this.onSuccessOrderAddSupplier(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessOrderAddSupplier(data: Supplier): void {}
+
+  protected async rawOrderUpdateSupplier(params: Supplier) {
+    const fullUrl = this.baseUrl + "/api/order/profile/suppliers";
+    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+    return true;
+  }
+
+  /** OrderUpdateSupplier wraps rawOrderUpdateSupplier and handles the error */
+  async OrderUpdateSupplier(params: Supplier) {
+    this.startRequest();
+    try {
+      const out = await this.rawOrderUpdateSupplier(params);
+      this.onSuccessOrderUpdateSupplier();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessOrderUpdateSupplier(): void {}
+
+  protected async rawOrderDeleteSupplier(params: { id: number }) {
+    const fullUrl = this.baseUrl + "/api/order/profile/suppliers";
+    await Axios.delete(fullUrl, {
+      params: { id: String(params["id"]) },
+      headers: this.getHeaders(),
+    });
+    return true;
+  }
+
+  /** OrderDeleteSupplier wraps rawOrderDeleteSupplier and handles the error */
+  async OrderDeleteSupplier(params: { id: number }) {
+    this.startRequest();
+    try {
+      const out = await this.rawOrderDeleteSupplier(params);
+      this.onSuccessOrderDeleteSupplier();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessOrderDeleteSupplier(): void {}
 }

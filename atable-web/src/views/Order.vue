@@ -1,20 +1,35 @@
 <template>
   <v-responsive class="align-center fill-height">
-    <v-alert class="mx-2 text-center" v-if="controller.activeSejour == null">
-      <v-row>
-        <v-col align-self="center">
-          Merci de sélectionner (ou de créer) un séjour
-        </v-col>
-        <v-col>
-          <v-btn class="my-2" :to="{ name: 'sejours' }"
-            >Aller aux séjours</v-btn
-          >
-        </v-col>
-      </v-row>
-    </v-alert>
-    <v-card v-else title="Bilan des ingrédients">
+    <v-dialog v-model="showSuppliers" max-width="1000px">
+      <ProfilesList></ProfilesList>
+    </v-dialog>
+
+    <v-card title="Bilan des ingrédients">
+      <template v-slot:append>
+        <v-btn @click="showSuppliers = true">
+          <template v-slot:prepend>
+            <v-icon>mdi-view-list</v-icon>
+          </template>
+          Fournisseurs
+        </v-btn>
+      </template>
       <v-card-text>
-        <v-row>
+        <v-alert
+          class="mx-2 text-center"
+          v-if="controller.activeSejour == null"
+        >
+          <v-row>
+            <v-col align-self="center">
+              Merci de sélectionner (ou de créer) un séjour
+            </v-col>
+            <v-col>
+              <v-btn class="my-2" :to="{ name: 'sejours' }"
+                >Aller aux séjours</v-btn
+              >
+            </v-col>
+          </v-row>
+        </v-alert>
+        <v-row v-else>
           <v-col cols="auto" align-self="center">
             <v-list>
               <v-list-subheader> Sélectionner les jours </v-list-subheader>
@@ -58,6 +73,7 @@
 
 <script lang="ts" setup>
 import CompiledIngredientsList from "@/components/order/CompiledIngredientsList.vue";
+import ProfilesList from "@/components/order/ProfilesList.vue";
 import { CompileIngredientsOut } from "@/logic/api_gen";
 import { addDays, controller, formatDate } from "@/logic/controller";
 import { computed } from "vue";
@@ -96,4 +112,6 @@ async function compileIngredients() {
   if (res === undefined) return;
   compiledIngredients.value = res;
 }
+
+const showSuppliers = ref(false);
 </script>

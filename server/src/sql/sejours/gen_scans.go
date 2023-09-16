@@ -5,9 +5,12 @@ package sejours
 import (
 	"database/sql"
 	"database/sql/driver"
+	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/benoitkugler/atable/sql/menus"
+	"github.com/benoitkugler/atable/sql/orders"
 	"github.com/benoitkugler/atable/sql/users"
 	"github.com/lib/pq"
 )
@@ -557,6 +560,7 @@ func scanOneSejour(row scanner) (Sejour, error) {
 		&item.Owner,
 		&item.Start,
 		&item.Name,
+		&item.IdProfile,
 	)
 	return item, err
 }
@@ -625,22 +629,22 @@ func ScanSejours(rs *sql.Rows) (Sejours, error) {
 // Insert one Sejour in the database and returns the item with id filled.
 func (item Sejour) Insert(tx DB) (out Sejour, err error) {
 	row := tx.QueryRow(`INSERT INTO sejours (
-		owner, start, name
+		owner, start, name, idprofile
 		) VALUES (
-		$1, $2, $3
+		$1, $2, $3, $4
 		) RETURNING *;
-		`, item.Owner, item.Start, item.Name)
+		`, item.Owner, item.Start, item.Name, item.IdProfile)
 	return ScanSejour(row)
 }
 
 // Update Sejour in the database and returns the new version.
 func (item Sejour) Update(tx DB) (out Sejour, err error) {
 	row := tx.QueryRow(`UPDATE sejours SET (
-		owner, start, name
+		owner, start, name, idprofile
 		) = (
-		$1, $2, $3
-		) WHERE id = $4 RETURNING *;
-		`, item.Owner, item.Start, item.Name, item.Id)
+		$1, $2, $3, $4
+		) WHERE id = $5 RETURNING *;
+		`, item.Owner, item.Start, item.Name, item.IdProfile, item.Id)
 	return ScanSejour(row)
 }
 
@@ -700,6 +704,22 @@ func DeleteSejoursByOwners(tx DB, owners_ ...users.IdUser) ([]IdSejour, error) {
 	return ScanIdSejourArray(rows)
 }
 
+func SelectSejoursByIdProfiles(tx DB, idProfiles_ ...orders.IdProfile) (Sejours, error) {
+	rows, err := tx.Query("SELECT * FROM sejours WHERE idprofile = ANY($1)", orders.IdProfileArrayToPQ(idProfiles_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanSejours(rows)
+}
+
+func DeleteSejoursByIdProfiles(tx DB, idProfiles_ ...orders.IdProfile) ([]IdSejour, error) {
+	rows, err := tx.Query("DELETE FROM sejours WHERE idprofile = ANY($1) RETURNING id", orders.IdProfileArrayToPQ(idProfiles_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIdSejourArray(rows)
+}
+
 // SelectSejourByIdAndOwner return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectSejourByIdAndOwner(tx DB, id IdSejour, owner users.IdUser) (item Sejour, found bool, err error) {
 	row := tx.QueryRow("SELECT * FROM sejours WHERE Id = $1 AND Owner = $2", id, owner)
@@ -708,6 +728,25 @@ func SelectSejourByIdAndOwner(tx DB, id IdSejour, owner users.IdUser) (item Sejo
 		return item, false, nil
 	}
 	return item, true, err
+}
+
+func loadJSON(out interface{}, src interface{}) error {
+	if src == nil {
+		return nil //zero value out
+	}
+	bs, ok := src.([]byte)
+	if !ok {
+		return errors.New("not a []byte")
+	}
+	return json.Unmarshal(bs, out)
+}
+
+func dumpJSON(s interface{}) (driver.Value, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	return driver.Value(string(b)), nil
 }
 
 func (s *Date) Scan(src interface{}) error {
@@ -869,4 +908,23 @@ func (s IdSejourSet) Keys() []IdSejour {
 		out = append(out, k)
 	}
 	return out
+}
+
+func (s *OptionnalIdProfile) Scan(src interface{}) error {
+	var tmp sql.NullInt64
+	err := tmp.Scan(src)
+	if err != nil {
+		return err
+	}
+	*s = OptionnalIdProfile{
+		Valid:     tmp.Valid,
+		IdProfile: orders.IdProfile(tmp.Int64),
+	}
+	return nil
+}
+
+func (s OptionnalIdProfile) Value() (driver.Value, error) {
+	return sql.NullInt64{
+		Int64: int64(s.IdProfile),
+		Valid: s.Valid}.Value()
 }

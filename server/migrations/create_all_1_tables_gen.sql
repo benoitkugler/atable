@@ -75,6 +75,7 @@ CREATE TABLE sejours (
     Id serial PRIMARY KEY,
     Owner integer NOT NULL,
     Start date NOT NULL,
-    Name text NOT NULL
+    Name text NOT NULL,
+    IdProfile integer
 );
 
