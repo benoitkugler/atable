@@ -171,7 +171,7 @@
 import DateField from "@/components/DateField.vue";
 import GroupList from "@/components/sejours/GroupList.vue";
 import MonoGroup from "@/components/sejours/MonoGroup.vue";
-// import QRCodeVue3 from "qrcode-vue3";
+import QRCodeVue3 from "qrcode-vue3";
 import { Group, SejourExt } from "@/logic/api_gen";
 import { controller, copy } from "@/logic/controller";
 import { onActivated } from "vue";

@@ -38,19 +38,6 @@
             </v-list-item>
           </template>
         </v-tooltip>
-        <v-tooltip text="Ingrédients requis et commandes.">
-          <template v-slot:activator="{ isActive, props }">
-            <v-list-item
-              v-on="{ isActive }"
-              v-bind="props"
-              color="secondary"
-              title="Commandes"
-              prepend-icon="mdi-cart"
-              :to="{ name: 'order' }"
-            >
-            </v-list-item>
-          </template>
-        </v-tooltip>
         <v-tooltip text="Bibliothèque de menus et recettes">
           <template v-slot:activator="{ isActive, props }">
             <v-list-item
@@ -60,6 +47,19 @@
               title="Bibliothèque"
               prepend-icon="mdi-notebook-heart-outline"
               :to="{ name: 'library' }"
+            >
+            </v-list-item>
+          </template>
+        </v-tooltip>
+        <v-tooltip text="Ingrédients requis et commandes.">
+          <template v-slot:activator="{ isActive, props }">
+            <v-list-item
+              v-on="{ isActive }"
+              v-bind="props"
+              color="secondary"
+              title="Commandes"
+              prepend-icon="mdi-cart"
+              :to="{ name: 'order' }"
             >
             </v-list-item>
           </template>

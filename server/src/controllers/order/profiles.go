@@ -1,6 +1,9 @@
 package order
 
 import (
+	"database/sql"
+	"sort"
+
 	"github.com/benoitkugler/atable/controllers/users"
 	"github.com/benoitkugler/atable/sql/menus"
 	ord "github.com/benoitkugler/atable/sql/orders"
@@ -45,6 +48,9 @@ func (ct *Controller) getProfiles() ([]ProfileHeader, error) {
 			Suppliers: byProfile[profile.Id],
 		})
 	}
+
+	sort.Slice(out, func(i, j int) bool { return out[i].Profile.Name < out[j].Profile.Name })
+
 	return out, nil
 }
 
@@ -265,8 +271,48 @@ func (ct *Controller) deleteSupplier(id ord.IdSupplier, uID uID) error {
 }
 
 type UpdateProfileMapIn struct {
-	IdProfile ord.IdProfile
-	Map       Mapping
+	IdProfile   ord.IdProfile
+	Ingredients []menus.IdIngredient
+	NewSupplier ord.IdSupplier // -1 to remove the supplier
 }
 
-// func (ct *Controller) OrderUpdateProfileMap(c echo.Context) error {}
+func (ct *Controller) OrderUpdateProfileMap(c echo.Context) error {
+	uID := users.JWTUser(c)
+
+	var args UpdateProfileMapIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	err := ct.updateProfileMap(args, uID)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
+
+func (ct *Controller) updateProfileMap(args UpdateProfileMapIn, uID uID) error {
+	if _, err := ct.checkProfileOwner(args.IdProfile, uID); err != nil {
+		return err
+	}
+
+	err := ct.inTx(func(tx *sql.Tx) error {
+		err := ord.RemoveSupplierFor(tx, args.Ingredients, args.IdProfile)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+		if args.NewSupplier != -1 {
+			links := make([]ord.IngredientSupplier, len(args.Ingredients))
+			for i, id := range args.Ingredients {
+				links[i] = ord.IngredientSupplier{IdIngredient: id, IdSupplier: args.NewSupplier, IdProfile: args.IdProfile}
+			}
+			err = ord.InsertManyIngredientSuppliers(tx, links...)
+			if err != nil {
+				return utils.SQLError(err)
+			}
+		}
+		return nil
+	})
+	return err
+}

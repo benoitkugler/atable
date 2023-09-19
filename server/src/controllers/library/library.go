@@ -27,24 +27,7 @@ func NewController(db *sql.DB, admin us.User) *Controller {
 }
 
 // handle commit / rollback
-func (ct *Controller) inTx(fn func(tx *sql.Tx) error) error { return inTx(ct.db, fn) }
-
-func inTx(db *sql.DB, fn func(tx *sql.Tx) error) error {
-	tx, err := db.Begin()
-	if err != nil {
-		return utils.SQLError(err)
-	}
-	err = fn(tx)
-	if err != nil {
-		_ = tx.Rollback()
-		return err
-	}
-	err = tx.Commit()
-	if err != nil {
-		return utils.SQLError(err)
-	}
-	return nil
-}
+func (ct *Controller) inTx(fn func(tx *sql.Tx) error) error { return utils.InTx(ct.db, fn) }
 
 func (ct *Controller) checkReceipeOwner(idReceipe men.IdReceipe, uID us.IdUser) (men.Receipe, error) {
 	receipe, err := men.SelectReceipe(ct.db, idReceipe)
@@ -633,7 +616,7 @@ func UpdateMenuIngredient(db *sql.DB, link men.MenuIngredient, uID us.IdUser) er
 		return err
 	}
 
-	err = inTx(db, func(tx *sql.Tx) error {
+	err = utils.InTx(db, func(tx *sql.Tx) error {
 		_, err = men.DeleteMenuIngredientsByIdMenuAndIdIngredient(tx, link.IdMenu, link.IdIngredient)
 		if err != nil {
 			return utils.SQLError(err)

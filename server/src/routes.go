@@ -83,4 +83,6 @@ func setupWebAPI(e *echo.Echo, tvc *users.Controller, sej *sejours.Controller, l
 	gr.PUT("/api/order/profile/suppliers", ord.OrderAddSupplier)
 	gr.POST("/api/order/profile/suppliers", ord.OrderUpdateSupplier)
 	gr.DELETE("/api/order/profile/suppliers", ord.OrderDeleteSupplier)
+
+	gr.POST("/api/order/profile/map", ord.OrderUpdateProfileMap)
 }

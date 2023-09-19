@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"database/sql"
 	"fmt"
 	"math/rand"
 	"net/url"
@@ -33,6 +34,24 @@ func SQLError(err error) error {
 		return fmt.Errorf("La requête SQL a échoué : %s (table %s)", err, err.Table)
 	}
 	return fmt.Errorf("La requête SQL a échoué : %s %T", err, err)
+}
+
+// InTx starts a transaction, calls [fn] and commit.
+func InTx(db *sql.DB, fn func(tx *sql.Tx) error) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return SQLError(err)
+	}
+	err = fn(tx)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	err = tx.Commit()
+	if err != nil {
+		return SQLError(err)
+	}
+	return nil
 }
 
 // QueryParamInt64 parse the query param `name` to an int64

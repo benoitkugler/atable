@@ -5,6 +5,7 @@ package orders
 import (
 	"github.com/benoitkugler/atable/sql/menus"
 	"github.com/benoitkugler/atable/sql/users"
+	"github.com/benoitkugler/atable/utils"
 )
 
 type (
@@ -34,9 +35,17 @@ type Profile struct {
 // IngredientSupplier is a link mapping one ingredient to a supplier
 //
 // gomacro:SQL ADD UNIQUE(IdProfile, IdIngredient)
-// gomacro:SQL ADD FOREIGN KEY(IdSupplier, IdProfile) REFERENCES Suppliers (Id, IdProfile)
+// gomacro:SQL ADD FOREIGN KEY(IdSupplier, IdProfile) REFERENCES Suppliers (Id, IdProfile) ON DELETE CASCADE
 type IngredientSupplier struct {
 	IdIngredient menus.IdIngredient `gomacro-sql-on-delete:"CASCADE"`
 	IdSupplier   IdSupplier         `gomacro-sql-on-delete:"CASCADE"`
 	IdProfile    IdProfile          `gomacro-sql-on-delete:"CASCADE"` // used for consistency
+}
+
+func RemoveSupplierFor(db DB, ingredients []menus.IdIngredient, profile IdProfile) error {
+	_, err := db.Exec("DELETE FROM ingredient_suppliers WHERE idingredient = ANY($1) AND idprofile = $2;", menus.IdIngredientArrayToPQ(ingredients), profile)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+	return nil
 }

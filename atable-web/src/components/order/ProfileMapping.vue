@@ -1,5 +1,8 @@
 <template>
-  <v-card title="Associations ingrédients fournisseurs">
+  <v-card
+    title="Associations ingrédients fournisseurs"
+    subtitle="Cliquer-déplacer des ingrédients pour les associer à un fournisseur."
+  >
     <v-dialog
       :model-value="toDelete != null"
       @update:model-value="toDelete = null"
@@ -21,9 +24,7 @@
     </v-dialog>
 
     <template v-slot:append>
-      <v-btn
-        @click="addSupplier"
-        :disabled="props.profile.Profile.IdOwner != controller.idUser"
+      <v-btn @click="addSupplier" :disabled="isReadonly"
         >Ajouter un fournisseur
         <template v-slot:prepend>
           <v-icon color="success">mdi-plus</v-icon>
@@ -41,9 +42,9 @@
     <v-card-text>
       <v-row class="fill-width">
         <v-col
-          cols="4"
-          md="3"
-          lg="2"
+          cols="6"
+          md="4"
+          lg="3"
           v-for="(column, index) in columns"
           :key="index"
           class="px-1"
@@ -51,8 +52,10 @@
           <ProfileColumn
             :supplier="column.supplier"
             :ingredients="column.ingredients"
+            :readonly="isReadonly"
             @update="(name) => updateSupplier(column.supplier, name)"
             @delete="toDelete = column.supplier"
+            @moveIngredients="moveIngredients"
           ></ProfileColumn>
         </v-col>
       </v-row>
@@ -67,6 +70,8 @@ import type {
   Ingredients,
   Ingredient,
   Supplier,
+  IdIngredient,
+  IdSupplier,
 } from "@/logic/api_gen";
 import { controller } from "@/logic/controller";
 import { computed } from "vue";
@@ -82,6 +87,10 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "close"): void;
 }>();
+
+const isReadonly = computed(
+  () => props.profile.Profile.IdOwner != controller.idUser
+);
 
 const suppliers = reactive(props.profile.Suppliers || {});
 const content = ref<Mapping>([]);
@@ -116,7 +125,7 @@ const columns = computed(() => {
   const cols: column[] = [];
   const associated = new Set<number>();
   (content.value || []).forEach((item) => {
-    item.V?.forEach(associated.add);
+    (item.V || []).forEach((ing) => associated.add(ing));
     cols.push({
       supplier: (suppliers || {})[item.K],
       ingredients: (item.V || []).map((id) => (allIngredients.value || {})[id]),
@@ -167,6 +176,30 @@ async function deleteSupplier() {
 
   delete suppliers[sup.Id];
   content.value = content.value!.filter((item) => item.K != sup.Id);
+}
+
+async function moveIngredients(
+  idIngredients: IdIngredient[],
+  from: IdSupplier,
+  to: IdSupplier
+) {
+  const res = await controller.OrderUpdateProfileMap({
+    IdProfile: props.profile.Profile.Id,
+    Ingredients: idIngredients,
+    NewSupplier: to,
+  });
+  if (res === undefined) return;
+
+  controller.showMessage("Associations modifiées avec succès.");
+
+  if (from != -1) {
+    const fromL = content.value?.find((v) => v.K == from)!;
+    fromL.V = fromL?.V?.filter((id) => !idIngredients.includes(id)) || [];
+  }
+  if (to != -1) {
+    const toL = content.value?.find((v) => v.K == to)!;
+    toL.V = (toL.V || []).concat(...idIngredients);
+  }
 }
 </script>
 

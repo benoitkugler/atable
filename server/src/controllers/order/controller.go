@@ -25,6 +25,8 @@ type Controller struct {
 
 func NewController(db *sql.DB) *Controller { return &Controller{db: db} }
 
+func (ct *Controller) inTx(fn func(tx *sql.Tx) error) error { return utils.InTx(ct.db, fn) }
+
 func (ct *Controller) checkSejourOwner(id sej.IdSejour, uID uID) (sej.Sejour, error) {
 	sejour, err := sej.SelectSejour(ct.db, id)
 	if err != nil {

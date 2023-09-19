@@ -146,6 +146,12 @@ export interface QuantityMeal {
   Quantity: Quantity;
   Origin: IdMeal;
 }
+// github.com/benoitkugler/atable/controllers/order.UpdateProfileMapIn
+export interface UpdateProfileMapIn {
+  IdProfile: IdProfile;
+  Ingredients: IdIngredient[] | null;
+  NewSupplier: IdSupplier;
+}
 // github.com/benoitkugler/atable/controllers/sejours.AddIngredientIn
 export interface AddIngredientIn {
   IdMenu: IdMenu;
@@ -1804,4 +1810,24 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessOrderDeleteSupplier(): void {}
+
+  protected async rawOrderUpdateProfileMap(params: UpdateProfileMapIn) {
+    const fullUrl = this.baseUrl + "/api/order/profile/map";
+    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+    return true;
+  }
+
+  /** OrderUpdateProfileMap wraps rawOrderUpdateProfileMap and handles the error */
+  async OrderUpdateProfileMap(params: UpdateProfileMapIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawOrderUpdateProfileMap(params);
+      this.onSuccessOrderUpdateProfileMap();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessOrderUpdateProfileMap(): void {}
 }
