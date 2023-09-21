@@ -889,6 +889,7 @@ type IngredientQuantity struct {
 	Quantities []Quantity
 }
 
+// The units are normalized in the larger size.
 func (me MenuExt) QuantitiesFor(nbPeople int, ingredients men.Ingredients, receipes map[men.IdReceipe]ReceipeExt) []IngredientQuantity {
 	quantities := make(map[men.IdIngredient][]Quantity)
 	for _, ing := range me.Ingredients {

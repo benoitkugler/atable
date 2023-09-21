@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	"time"
 
 	lib "github.com/benoitkugler/atable/controllers/library"
 	"github.com/benoitkugler/atable/pass"
@@ -37,8 +36,6 @@ func (ct *Controller) SejoursExportToClient(c echo.Context) error {
 
 	return c.JSON(200, out)
 }
-
-const day = 24 * time.Hour
 
 func (ct *Controller) exportToClient(idSejour sej.IdSejour) (out TablesM, _ error) {
 	sejour, err := sej.SelectSejour(ct.db, idSejour)
@@ -103,7 +100,7 @@ func (ct *Controller) exportToClient(idSejour sej.IdSejour) (out TablesM, _ erro
 		}
 
 		// adjust the date, also encoding the horaire
-		date := sejour.Start.T().Add(time.Duration(meal.Jour) * day)
+		date := sejour.DayAt(meal.Jour)
 		date = meal.Horaire.ApplyTo(date)
 
 		out.Meals = append(out.Meals, MealM{

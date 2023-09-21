@@ -1,0 +1,1094 @@
+{
+ "Meals": {
+  "13": {
+   "Id": 13,
+   "Sejour": 2,
+   "Menu": 13,
+   "Jour": 3,
+   "AdditionalPeople": 0,
+   "Horaire": 0
+  },
+  "14": {
+   "Id": 14,
+   "Sejour": 2,
+   "Menu": 14,
+   "Jour": 3,
+   "AdditionalPeople": 0,
+   "Horaire": 0
+  },
+  "15": {
+   "Id": 15,
+   "Sejour": 2,
+   "Menu": 15,
+   "Jour": 3,
+   "AdditionalPeople": 0,
+   "Horaire": 1
+  },
+  "16": {
+   "Id": 16,
+   "Sejour": 2,
+   "Menu": 16,
+   "Jour": 3,
+   "AdditionalPeople": 0,
+   "Horaire": 1
+  },
+  "17": {
+   "Id": 17,
+   "Sejour": 2,
+   "Menu": 17,
+   "Jour": 3,
+   "AdditionalPeople": 0,
+   "Horaire": 3
+  },
+  "20": {
+   "Id": 20,
+   "Sejour": 2,
+   "Menu": 20,
+   "Jour": 3,
+   "AdditionalPeople": 0,
+   "Horaire": 2
+  },
+  "21": {
+   "Id": 21,
+   "Sejour": 2,
+   "Menu": 21,
+   "Jour": 4,
+   "AdditionalPeople": 0,
+   "Horaire": 0
+  },
+  "22": {
+   "Id": 22,
+   "Sejour": 2,
+   "Menu": 22,
+   "Jour": 4,
+   "AdditionalPeople": 0,
+   "Horaire": 1
+  },
+  "23": {
+   "Id": 23,
+   "Sejour": 2,
+   "Menu": 23,
+   "Jour": 4,
+   "AdditionalPeople": 0,
+   "Horaire": 3
+  },
+  "24": {
+   "Id": 24,
+   "Sejour": 2,
+   "Menu": 24,
+   "Jour": 4,
+   "AdditionalPeople": 0,
+   "Horaire": 2
+  },
+  "25": {
+   "Id": 25,
+   "Sejour": 2,
+   "Menu": 25,
+   "Jour": 5,
+   "AdditionalPeople": 0,
+   "Horaire": 0
+  },
+  "26": {
+   "Id": 26,
+   "Sejour": 2,
+   "Menu": 26,
+   "Jour": 5,
+   "AdditionalPeople": 0,
+   "Horaire": 0
+  },
+  "27": {
+   "Id": 27,
+   "Sejour": 2,
+   "Menu": 27,
+   "Jour": 5,
+   "AdditionalPeople": 0,
+   "Horaire": 1
+  },
+  "28": {
+   "Id": 28,
+   "Sejour": 2,
+   "Menu": 28,
+   "Jour": 5,
+   "AdditionalPeople": 0,
+   "Horaire": 1
+  },
+  "29": {
+   "Id": 29,
+   "Sejour": 2,
+   "Menu": 29,
+   "Jour": 5,
+   "AdditionalPeople": 0,
+   "Horaire": 3
+  },
+  "30": {
+   "Id": 30,
+   "Sejour": 2,
+   "Menu": 30,
+   "Jour": 5,
+   "AdditionalPeople": 0,
+   "Horaire": 3
+  },
+  "31": {
+   "Id": 31,
+   "Sejour": 2,
+   "Menu": 31,
+   "Jour": 5,
+   "AdditionalPeople": 0,
+   "Horaire": 2
+  },
+  "32": {
+   "Id": 32,
+   "Sejour": 2,
+   "Menu": 32,
+   "Jour": 5,
+   "AdditionalPeople": 0,
+   "Horaire": 2
+  },
+  "33": {
+   "Id": 33,
+   "Sejour": 2,
+   "Menu": 33,
+   "Jour": 6,
+   "AdditionalPeople": 0,
+   "Horaire": 0
+  },
+  "34": {
+   "Id": 34,
+   "Sejour": 2,
+   "Menu": 34,
+   "Jour": 6,
+   "AdditionalPeople": 0,
+   "Horaire": 1
+  },
+  "35": {
+   "Id": 35,
+   "Sejour": 2,
+   "Menu": 35,
+   "Jour": 6,
+   "AdditionalPeople": 0,
+   "Horaire": 3
+  },
+  "36": {
+   "Id": 36,
+   "Sejour": 2,
+   "Menu": 36,
+   "Jour": 6,
+   "AdditionalPeople": 0,
+   "Horaire": 2
+  },
+  "5": {
+   "Id": 5,
+   "Sejour": 2,
+   "Menu": 5,
+   "Jour": 1,
+   "AdditionalPeople": 0,
+   "Horaire": 0
+  },
+  "6": {
+   "Id": 6,
+   "Sejour": 2,
+   "Menu": 6,
+   "Jour": 1,
+   "AdditionalPeople": 0,
+   "Horaire": 1
+  },
+  "7": {
+   "Id": 7,
+   "Sejour": 2,
+   "Menu": 7,
+   "Jour": 1,
+   "AdditionalPeople": 0,
+   "Horaire": 3
+  },
+  "8": {
+   "Id": 8,
+   "Sejour": 2,
+   "Menu": 8,
+   "Jour": 1,
+   "AdditionalPeople": 0,
+   "Horaire": 2
+  }
+ },
+ "Ingredients": [
+  {
+   "Ingredient": {
+    "Id": 7,
+    "Name": "Popcorn",
+    "Kind": 0,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 2.5
+     },
+     "Origin": 14
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 190,
+    "Name": "Jus de fruits",
+    "Kind": 0,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 3,
+      "Val": 3.75
+     },
+     "Origin": 13
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 75,
+    "Name": "Carottes",
+    "Kind": 1,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 1,
+      "Val": 3.125
+     },
+     "Origin": 16
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 96,
+    "Name": "Salade verte",
+    "Kind": 1,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 1.25
+     },
+     "Origin": 16
+    },
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 5
+     },
+     "Origin": 5
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 72,
+    "Name": "Tomates",
+    "Kind": 1,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 1,
+      "Val": 1
+     },
+     "Origin": 16
+    },
+    {
+     "Quantity": {
+      "Unite": 1,
+      "Val": 3
+     },
+     "Origin": 17
+    },
+    {
+     "Quantity": {
+      "Unite": 1,
+      "Val": 0.75
+     },
+     "Origin": 15
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 73,
+    "Name": "Poivrons",
+    "Kind": 1,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 30
+     },
+     "Origin": 17
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 28,
+    "Name": "Ananas",
+    "Kind": 1,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 2.5
+     },
+     "Origin": 14
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 93,
+    "Name": "Courgettes",
+    "Kind": 1,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 1,
+      "Val": 0.75
+     },
+     "Origin": 15
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 26,
+    "Name": "Nectarines",
+    "Kind": 1,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 5
+     },
+     "Origin": 21
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 74,
+    "Name": "Concombres",
+    "Kind": 1,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 3,
+      "Val": 2.5
+     },
+     "Origin": 13
+    },
+    {
+     "Quantity": {
+      "Unite": 1,
+      "Val": 3.75
+     },
+     "Origin": 15
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 63,
+    "Name": "Oignons",
+    "Kind": 1,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 7.5
+     },
+     "Origin": 16
+    },
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 20
+     },
+     "Origin": 17
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 215,
+    "Name": "Tagliatelles",
+    "Kind": 2,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 5
+     },
+     "Origin": 22
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 212,
+    "Name": "Lasagnes",
+    "Kind": 2,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 5
+     },
+     "Origin": 6
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 117,
+    "Name": "Flétan",
+    "Kind": 3,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 5
+     },
+     "Origin": 24
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 98,
+    "Name": "Saumon fumé (tranches)",
+    "Kind": 3,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 5
+     },
+     "Origin": 8
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 115,
+    "Name": "Lardons",
+    "Kind": 3,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 1,
+      "Val": 0.45
+     },
+     "Origin": 15
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 121,
+    "Name": "Oeufs",
+    "Kind": 3,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 12.5
+     },
+     "Origin": 15
+    },
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 15
+     },
+     "Origin": 20
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 105,
+    "Name": "Poulet",
+    "Kind": 3,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 1,
+      "Val": 5
+     },
+     "Origin": 17
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 109,
+    "Name": "Steaks hachés",
+    "Kind": 3,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 50
+     },
+     "Origin": 16
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 111,
+    "Name": "Saucisses",
+    "Kind": 3,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 5
+     },
+     "Origin": 6
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 192,
+    "Name": "Confiture",
+    "Kind": 4,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 1,
+      "Val": 0.5
+     },
+     "Origin": 13
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 150,
+    "Name": "Farine",
+    "Kind": 4,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 1,
+      "Val": 0.625
+     },
+     "Origin": 15
+    },
+    {
+     "Quantity": {
+      "Unite": 1,
+      "Val": 1
+     },
+     "Origin": 20
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 92,
+    "Name": "Levure (sachet)",
+    "Kind": 4,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 3.75
+     },
+     "Origin": 15
+    },
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 5
+     },
+     "Origin": 20
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 151,
+    "Name": "Sucre",
+    "Kind": 4,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 1,
+      "Val": 1
+     },
+     "Origin": 20
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 162,
+    "Name": "Huile d'olive",
+    "Kind": 4,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 3,
+      "Val": 0.25
+     },
+     "Origin": 16
+    },
+    {
+     "Quantity": {
+      "Unite": 3,
+      "Val": 0.125
+     },
+     "Origin": 15
+    },
+    {
+     "Quantity": {
+      "Unite": 3,
+      "Val": 0.5
+     },
+     "Origin": 20
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 52,
+    "Name": "Thé",
+    "Kind": 4,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 2.5
+     },
+     "Origin": 13
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 187,
+    "Name": "Sauce burger",
+    "Kind": 4,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 2.5
+     },
+     "Origin": 16
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 59,
+    "Name": "Vinaigre balsamique",
+    "Kind": 4,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 3,
+      "Val": 0.175
+     },
+     "Origin": 16
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 189,
+    "Name": "Café",
+    "Kind": 4,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 2.5
+     },
+     "Origin": 13
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 191,
+    "Name": "Céréales",
+    "Kind": 4,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 1,
+      "Val": 0.75
+     },
+     "Origin": 13
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 69,
+    "Name": "Moutarde",
+    "Kind": 4,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 1,
+      "Val": 5
+     },
+     "Origin": 23
+    },
+    {
+     "Quantity": {
+      "Unite": 1,
+      "Val": 0.0375
+     },
+     "Origin": 16
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 143,
+    "Name": "Safran",
+    "Kind": 4,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 5
+     },
+     "Origin": 7
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 41,
+    "Name": "Guacamole",
+    "Kind": 4,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 1,
+      "Val": 1.5
+     },
+     "Origin": 17
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 185,
+    "Name": "Ketchup",
+    "Kind": 4,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 2.5
+     },
+     "Origin": 16
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 60,
+    "Name": "Ciboulette (botte)",
+    "Kind": 4,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 2.5
+     },
+     "Origin": 15
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 160,
+    "Name": "Jus de citron",
+    "Kind": 4,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 3,
+      "Val": 0.125
+     },
+     "Origin": 15
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 199,
+    "Name": "Fromage burger",
+    "Kind": 5,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 50
+     },
+     "Origin": 16
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 206,
+    "Name": "Beurre",
+    "Kind": 5,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 1,
+      "Val": 0.375
+     },
+     "Origin": 13
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 201,
+    "Name": "Lait",
+    "Kind": 5,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 3,
+      "Val": 5
+     },
+     "Origin": 13
+    },
+    {
+     "Quantity": {
+      "Unite": 3,
+      "Val": 0.5
+     },
+     "Origin": 15
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 198,
+    "Name": "Fromage de chèvre",
+    "Kind": 5,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 1,
+      "Val": 0.75
+     },
+     "Origin": 15
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 203,
+    "Name": "Fromage râpé",
+    "Kind": 5,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 1,
+      "Val": 1.25
+     },
+     "Origin": 17
+    },
+    {
+     "Quantity": {
+      "Unite": 1,
+      "Val": 0.375
+     },
+     "Origin": 15
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 200,
+    "Name": "Crème fraiche",
+    "Kind": 5,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 3,
+      "Val": 1.5
+     },
+     "Origin": 17
+    },
+    {
+     "Quantity": {
+      "Unite": 3,
+      "Val": 1.25
+     },
+     "Origin": 15
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 202,
+    "Name": "Yaourt nature",
+    "Kind": 5,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 5
+     },
+     "Origin": 20
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 216,
+    "Name": "Galettes faritas",
+    "Kind": 6,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 100
+     },
+     "Origin": 17
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 221,
+    "Name": "Baguettes",
+    "Kind": 6,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 12.5
+     },
+     "Origin": 13
+    }
+   ]
+  },
+  {
+   "Ingredient": {
+    "Id": 219,
+    "Name": "Pains burgers",
+    "Kind": 6,
+    "Owner": 1
+   },
+   "Quantities": [
+    {
+     "Quantity": {
+      "Unite": 0,
+      "Val": 50
+     },
+     "Origin": 16
+    }
+   ]
+  }
+ ]
+}

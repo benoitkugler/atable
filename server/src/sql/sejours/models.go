@@ -1,6 +1,8 @@
 package sejours
 
 import (
+	"time"
+
 	"github.com/benoitkugler/atable/sql/menus"
 	"github.com/benoitkugler/atable/sql/users"
 )
@@ -27,6 +29,12 @@ type Sejour struct {
 
 	// The default associations to use for ingredients
 	IdProfile OptionnalIdProfile `gomacro-sql-foreign:"Profile" gomacro-sql-on-delete:"SET NULL"`
+}
+
+const day = 24 * time.Hour
+
+func (sej *Sejour) DayAt(offset int) time.Time {
+	return sej.Start.T().Add(time.Duration(offset) * day)
 }
 
 // Group is a group of people in a [Sejour].

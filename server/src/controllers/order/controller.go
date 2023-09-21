@@ -113,6 +113,19 @@ type IngredientQuantities struct {
 	Quantities []QuantityMeal
 }
 
+func (iq IngredientQuantities) total() []lib.Quantity {
+	byQuantite := map[men.Unite]float64{}
+	for _, qu := range iq.Quantities {
+		byQuantite[qu.Quantity.Unite] += qu.Quantity.Val
+	}
+	out := make([]lib.Quantity, 0, len(byQuantite))
+	for unite, val := range byQuantite {
+		out = append(out, lib.Quantity{Unite: unite, Val: val})
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Unite < out[j].Unite })
+	return out
+}
+
 type QuantityMeal struct {
 	Quantity lib.Quantity
 	Origin   sej.IdMeal

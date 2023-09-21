@@ -35,6 +35,23 @@ func (h Horaire) ApplyTo(date time.Time) time.Time {
 	return time.Date(date.Year(), date.Month(), date.Day(), hours[h], 0, 0, 0, date.Location())
 }
 
+func (h Horaire) String() string {
+	switch h {
+	case PetitDejeuner:
+		return "Petit déjeuner"
+	case Midi:
+		return "Midi"
+	case Gouter:
+		return "Goûter"
+	case Diner:
+		return "Dîner"
+	case Cinquieme:
+		return "Cinquième"
+	default:
+		return ""
+	}
+}
+
 // RestrictByDay restrict the map to the meals
 // registred for the given offset.
 func (ml Meals) RestrictByDay(day int) {

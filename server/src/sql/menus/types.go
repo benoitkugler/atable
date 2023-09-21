@@ -43,6 +43,23 @@ const (
 	U_CL                 // cL
 )
 
+func (u Unite) String() string {
+	switch u {
+	case U_Piece:
+		return "pièces"
+	case U_Kg:
+		return "kg"
+	case U_G:
+		return "gr"
+	case U_L:
+		return "L"
+	case U_CL:
+		return "cL"
+	default:
+		return ""
+	}
+}
+
 // QuantityR is a relative quantity.
 type QuantityR struct {
 	Val   float64
