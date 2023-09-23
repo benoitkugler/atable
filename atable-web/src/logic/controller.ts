@@ -19,7 +19,13 @@ import {
   Unite,
   UniteLabels,
   Time,
+  Suppliers,
+  ProfileHeader,
+  IngredientMapping,
+  IdIngredient,
+  IdSupplier,
 } from "./api_gen";
+import { AxiosResponse } from "axios";
 
 function arrayBufferToString(buffer: ArrayBuffer) {
   const uintArray = new Uint8Array(buffer);
@@ -339,4 +345,26 @@ export function formatQuantity(qu: Quantity): string {
     qu = { Unite: Unite.U_L, Val: qu.Val / 100 };
   }
   return `${qu.Val} ${UniteLabels[qu.Unite]}`;
+}
+
+export function formatSuppliers(suppliers: Suppliers) {
+  const l = Object.values(suppliers || {});
+  if (!l.length) return "Aucun fournisseur";
+  l.sort((a, b) => a.Name.localeCompare(b.Name));
+  return l.map((a) => a.Name).join(", ");
+}
+
+export interface OrderIngredientMapping {
+  baseProfile: ProfileHeader | null;
+  customMapping: Map<IdIngredient, IdSupplier>;
+}
+
+export function saveBlobAsFile(binaryData: Blob, filename: string) {
+  const url = window.URL.createObjectURL(new Blob([binaryData]));
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", filename);
+  document.body.appendChild(link);
+  link.click();
+  window.URL.revokeObjectURL(url);
 }

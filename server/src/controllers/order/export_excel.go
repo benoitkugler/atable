@@ -14,11 +14,13 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
+type IngredientMapping map[men.IdIngredient]ord.IdSupplier
+
 type exportExcel struct {
 	CompileIngredientsOut
 	Sejour    sejours.Sejour
 	Suppliers ord.Suppliers
-	Mapping   map[men.IdIngredient]ord.IdSupplier
+	Mapping   IngredientMapping
 }
 
 func (ee exportExcel) sheetName(id ord.IdSupplier) string {
@@ -166,7 +168,7 @@ func (ee exportExcel) fillSheet(f cursor, sName string, sheet supplierSheet, sho
 	}
 }
 
-func (ee exportExcel) toExcel() (*bytes.Buffer, error) {
+func (ee exportExcel) ToExcel() (*bytes.Buffer, error) {
 	const (
 		summaryName = "Tous les fournisseurs"
 	)

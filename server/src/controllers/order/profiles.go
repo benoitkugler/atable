@@ -7,6 +7,7 @@ import (
 	"github.com/benoitkugler/atable/controllers/users"
 	"github.com/benoitkugler/atable/sql/menus"
 	ord "github.com/benoitkugler/atable/sql/orders"
+	sej "github.com/benoitkugler/atable/sql/sejours"
 	"github.com/benoitkugler/atable/utils"
 	"github.com/labstack/echo/v4"
 )
@@ -315,4 +316,79 @@ func (ct *Controller) updateProfileMap(args UpdateProfileMapIn, uID uID) error {
 		return nil
 	})
 	return err
+}
+
+type SetDefaultProfile struct {
+	IdSejour  sej.IdSejour
+	IdProfile ord.IdProfile
+}
+
+func (ct *Controller) OrderSetDefaultProfile(c echo.Context) error {
+	uID := users.JWTUser(c)
+
+	var args SetDefaultProfile
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	err := ct.setDefaultProfile(args, uID)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
+
+func (ct *Controller) setDefaultProfile(args SetDefaultProfile, uID uID) error {
+	sejour, err := ct.checkSejourOwner(args.IdSejour, uID)
+	if err != nil {
+		return err
+	}
+
+	sejour.IdProfile = sej.NewOptionnalIdProfile(args.IdProfile)
+	_, err = sejour.Update(ct.db)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type DefaultMappingIn struct {
+	Ingredients []menus.IdIngredient
+	Profile     sej.OptionnalIdProfile
+}
+
+func (ct *Controller) OrderGetDefaultMapping(c echo.Context) error {
+	// uID := users.JWTUser(c)
+
+	var args DefaultMappingIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	out, err := ct.defaultMapping(args)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) defaultMapping(args DefaultMappingIn) (IngredientMapping, error) {
+	if !args.Profile.Valid {
+		return nil, nil
+	}
+
+	// load the profile
+	links, err := ord.SelectIngredientSuppliersByIdProfiles(ct.db, args.Profile.IdProfile)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+
+	out := make(IngredientMapping)
+	for idIng, supps := range links.ByIdIngredient() {
+		out[idIng] = supps[0].IdSupplier // valid thanks to a unique constraint
+	}
+	return out, nil
 }

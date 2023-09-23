@@ -93,3 +93,7 @@ type OptionnalIdProfile struct {
 	Valid     bool
 	IdProfile orders.IdProfile
 }
+
+func NewOptionnalIdProfile(id orders.IdProfile) OptionnalIdProfile {
+	return OptionnalIdProfile{Valid: true, IdProfile: id}
+}

@@ -31,7 +31,7 @@ ALTER TABLE ingredient_suppliers
     ADD UNIQUE (IdProfile, IdIngredient);
 
 ALTER TABLE ingredient_suppliers
-    ADD FOREIGN KEY (IdSupplier, IdProfile) REFERENCES Suppliers (Id, IdProfile);
+    ADD FOREIGN KEY (IdSupplier, IdProfile) REFERENCES Suppliers (Id, IdProfile) ON DELETE CASCADE;
 
 ALTER TABLE ingredient_suppliers
     ADD FOREIGN KEY (IdIngredient) REFERENCES ingredients ON DELETE CASCADE;

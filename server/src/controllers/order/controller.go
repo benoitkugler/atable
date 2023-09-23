@@ -3,12 +3,16 @@ package order
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+	"net/url"
 	"sort"
+	"strings"
 
 	lib "github.com/benoitkugler/atable/controllers/library"
 	"github.com/benoitkugler/atable/controllers/sejours"
 	"github.com/benoitkugler/atable/controllers/users"
 	men "github.com/benoitkugler/atable/sql/menus"
+	"github.com/benoitkugler/atable/sql/orders"
 	sej "github.com/benoitkugler/atable/sql/sejours"
 	us "github.com/benoitkugler/atable/sql/users"
 	"github.com/benoitkugler/atable/utils"
@@ -183,4 +187,56 @@ func (ct *Controller) compileIngredients(args CompileIngredientsIn, uID uID) (ou
 	sort.Slice(out.Ingredients, func(i, j int) bool { return out.Ingredients[i].Ingredient.Kind < out.Ingredients[j].Ingredient.Kind })
 
 	return out, nil
+}
+
+type ExportExcelIn struct {
+	IdSejour sej.IdSejour
+	Data     CompileIngredientsOut
+	Mapping  IngredientMapping
+}
+
+func (ct *Controller) OrderExportExcel(c echo.Context) error {
+	uID := users.JWTUser(c)
+
+	var args ExportExcelIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	fileBytes, filename, err := ct.exportExcel(args, uID)
+	if err != nil {
+		return err
+	}
+
+	escapedFilename := url.QueryEscape(strings.ReplaceAll(filename, " ", "_"))
+	c.Response().Header().Set(echo.HeaderContentDisposition, fmt.Sprintf(`%s; filename=%s`, "attachment", escapedFilename))
+	return c.Blob(200, "application/vnd.ms-excel", fileBytes)
+}
+
+func (ct *Controller) exportExcel(args ExportExcelIn, uID uID) ([]byte, string, error) {
+	sejour, err := ct.checkSejourOwner(args.IdSejour, uID)
+	if err != nil {
+		return nil, "", err
+	}
+
+	// load the suppliers
+	suppliers, err := orders.SelectAllSuppliers(ct.db)
+	if err != nil {
+		return nil, "", utils.SQLError(err)
+	}
+
+	ee := exportExcel{
+		CompileIngredientsOut: args.Data,
+		Mapping:               args.Mapping,
+		Sejour:                sejour,
+		Suppliers:             suppliers,
+	}
+	buf, err := ee.ToExcel()
+	if err != nil {
+		return nil, "", err
+	}
+
+	filename := fmt.Sprintf("Ingrédients %s.xlsx", sejour.Name)
+
+	return buf.Bytes(), filename, nil
 }

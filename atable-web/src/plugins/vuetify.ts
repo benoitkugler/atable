@@ -22,6 +22,7 @@ export default createVuetify({
           primary: "#f5e238",
           secondary: "#3c9fc9",
           accent: "#e8d52c",
+          "secondary-lighten": "#9eddf7",
         },
       },
     },

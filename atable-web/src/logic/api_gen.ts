@@ -124,6 +124,19 @@ export interface CompileIngredientsOut {
   Meals: Meals;
   Ingredients: IngredientQuantities[] | null;
 }
+// github.com/benoitkugler/atable/controllers/order.DefaultMappingIn
+export interface DefaultMappingIn {
+  Ingredients: IdIngredient[] | null;
+  Profile: OptionnalIdProfile;
+}
+// github.com/benoitkugler/atable/controllers/order.ExportExcelIn
+export interface ExportExcelIn {
+  IdSejour: IdSejour;
+  Data: CompileIngredientsOut;
+  Mapping: IngredientMapping;
+}
+// github.com/benoitkugler/atable/controllers/order.IngredientMapping
+export type IngredientMapping = { [key: IdIngredient]: IdSupplier } | null;
 // github.com/benoitkugler/atable/controllers/order.IngredientQuantities
 export interface IngredientQuantities {
   Ingredient: Ingredient;
@@ -145,6 +158,11 @@ export interface ProfileHeader {
 export interface QuantityMeal {
   Quantity: Quantity;
   Origin: IdMeal;
+}
+// github.com/benoitkugler/atable/controllers/order.SetDefaultProfile
+export interface SetDefaultProfile {
+  IdSejour: IdSejour;
+  IdProfile: IdProfile;
 }
 // github.com/benoitkugler/atable/controllers/order.UpdateProfileMapIn
 export interface UpdateProfileMapIn {
@@ -446,10 +464,7 @@ export type IdUser = number;
 		as base class for an app controller.
 	*/
 export abstract class AbstractAPI {
-  constructor(
-    protected baseUrl: string,
-    protected authToken: string,
-  ) {}
+  constructor(protected baseUrl: string, protected authToken: string) {}
 
   protected abstract handleError(error: any): void;
 
@@ -464,7 +479,7 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<AskInscriptionOut> = await Axios.post(
       fullUrl,
       params,
-      { headers: this.getHeaders() },
+      { headers: this.getHeaders() }
     );
     return rep.data;
   }
@@ -486,8 +501,8 @@ export abstract class AbstractAPI {
   protected async rawValidateInscription(params: { data: string }) {
     const fullUrl = this.baseUrl + "inscription";
     await Axios.get(fullUrl, {
-      params: { data: params["data"] },
       headers: this.getHeaders(),
+      params: { data: params["data"] },
     });
     return true;
   }
@@ -531,8 +546,8 @@ export abstract class AbstractAPI {
   protected async rawUserResetPassword(params: { mail: string }) {
     const fullUrl = this.baseUrl + "/api/reset";
     await Axios.get(fullUrl, {
-      params: { mail: params["mail"] },
       headers: this.getHeaders(),
+      params: { mail: params["mail"] },
     });
     return true;
   }
@@ -618,8 +633,8 @@ export abstract class AbstractAPI {
   protected async rawSejoursDelete(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/sejours";
     await Axios.delete(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return true;
   }
@@ -641,8 +656,8 @@ export abstract class AbstractAPI {
   protected async rawSejoursCreateGroupe(params: { "id-sejour": number }) {
     const fullUrl = this.baseUrl + "/api/sejours/groups";
     const rep: AxiosResponse<Group> = await Axios.put(fullUrl, null, {
-      params: { "id-sejour": String(params["id-sejour"]) },
       headers: this.getHeaders(),
+      params: { "id-sejour": String(params["id-sejour"]) },
     });
     return rep.data;
   }
@@ -684,8 +699,8 @@ export abstract class AbstractAPI {
   protected async rawSejoursDeleteGroupe(params: { "id-group": number }) {
     const fullUrl = this.baseUrl + "/api/sejours/groups";
     await Axios.delete(fullUrl, {
-      params: { "id-group": String(params["id-group"]) },
       headers: this.getHeaders(),
+      params: { "id-group": String(params["id-group"]) },
     });
     return true;
   }
@@ -707,11 +722,11 @@ export abstract class AbstractAPI {
   protected async rawMealsLoadDay(params: { idSejour: number; day: number }) {
     const fullUrl = this.baseUrl + "/api/meals";
     const rep: AxiosResponse<MealsLoadOut> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
       params: {
         idSejour: String(params["idSejour"]),
         day: String(params["day"]),
       },
-      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -733,8 +748,8 @@ export abstract class AbstractAPI {
   protected async rawMealsLoadAll(params: { idSejour: number }) {
     const fullUrl = this.baseUrl + "/api/meals-all";
     const rep: AxiosResponse<MealsLoadOut> = await Axios.get(fullUrl, {
-      params: { idSejour: String(params["idSejour"]) },
       headers: this.getHeaders(),
+      params: { idSejour: String(params["idSejour"]) },
     });
     return rep.data;
   }
@@ -778,8 +793,8 @@ export abstract class AbstractAPI {
   protected async rawMealsSearch(params: { search: string }) {
     const fullUrl = this.baseUrl + "/api/meals/search";
     const rep: AxiosResponse<ResourceSearchOut> = await Axios.get(fullUrl, {
-      params: { search: params["search"] },
       headers: this.getHeaders(),
+      params: { search: params["search"] },
     });
     return rep.data;
   }
@@ -801,8 +816,8 @@ export abstract class AbstractAPI {
   protected async rawMealsPreviewQuantities(params: { idMeal: number }) {
     const fullUrl = this.baseUrl + "/api/meals/quantities";
     const rep: AxiosResponse<PreviewQuantitiesOut> = await Axios.get(fullUrl, {
-      params: { idMeal: String(params["idMeal"]) },
       headers: this.getHeaders(),
+      params: { idMeal: String(params["idMeal"]) },
     });
     return rep.data;
   }
@@ -866,8 +881,8 @@ export abstract class AbstractAPI {
   protected async rawMealsDelete(params: { idMeal: number }) {
     const fullUrl = this.baseUrl + "/api/meals/details";
     await Axios.delete(fullUrl, {
-      params: { idMeal: String(params["idMeal"]) },
       headers: this.getHeaders(),
+      params: { idMeal: String(params["idMeal"]) },
     });
     return true;
   }
@@ -1129,9 +1144,9 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<DeleteIngredientOut> = await Axios.delete(
       fullUrl,
       {
-        params: { idIngredient: String(params["idIngredient"]) },
         headers: this.getHeaders(),
-      },
+        params: { idIngredient: String(params["idIngredient"]) },
+      }
     );
     return rep.data;
   }
@@ -1157,7 +1172,7 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<ImportReceipes1Out> = await Axios.post(
       fullUrl,
       formData,
-      { headers: this.getHeaders() },
+      { headers: this.getHeaders() }
     );
     return rep.data;
   }
@@ -1181,7 +1196,7 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<ReceipeExt[] | null> = await Axios.put(
       fullUrl,
       params,
-      { headers: this.getHeaders() },
+      { headers: this.getHeaders() }
     );
     return rep.data;
   }
@@ -1203,8 +1218,8 @@ export abstract class AbstractAPI {
   protected async rawLibraryLoadMenu(params: { idMenu: number }) {
     const fullUrl = this.baseUrl + "/api/library/menus";
     const rep: AxiosResponse<MenuExt> = await Axios.get(fullUrl, {
-      params: { idMenu: String(params["idMenu"]) },
       headers: this.getHeaders(),
+      params: { idMenu: String(params["idMenu"]) },
     });
     return rep.data;
   }
@@ -1268,8 +1283,8 @@ export abstract class AbstractAPI {
   protected async rawLibraryDeleteMenu(params: { idMenu: number }) {
     const fullUrl = this.baseUrl + "/api/library/menus";
     await Axios.delete(fullUrl, {
-      params: { idMenu: String(params["idMenu"]) },
       headers: this.getHeaders(),
+      params: { idMenu: String(params["idMenu"]) },
     });
     return true;
   }
@@ -1291,8 +1306,8 @@ export abstract class AbstractAPI {
   protected async rawLibraryLoadReceipe(params: { idReceipe: number }) {
     const fullUrl = this.baseUrl + "/api/library/receipes";
     const rep: AxiosResponse<ReceipeExt> = await Axios.get(fullUrl, {
-      params: { idReceipe: String(params["idReceipe"]) },
       headers: this.getHeaders(),
+      params: { idReceipe: String(params["idReceipe"]) },
     });
     return rep.data;
   }
@@ -1356,8 +1371,8 @@ export abstract class AbstractAPI {
   protected async rawLibraryDeleteReceipe(params: { idReceipe: number }) {
     const fullUrl = this.baseUrl + "/api/library/receipes";
     await Axios.delete(fullUrl, {
-      params: { idReceipe: String(params["idReceipe"]) },
       headers: this.getHeaders(),
+      params: { idReceipe: String(params["idReceipe"]) },
     });
     return true;
   }
@@ -1377,13 +1392,13 @@ export abstract class AbstractAPI {
   protected onSuccessLibraryDeleteReceipe(): void {}
 
   protected async rawLibraryAddReceipeIngredient(
-    params: AddReceipeIngredientIn,
+    params: AddReceipeIngredientIn
   ) {
     const fullUrl = this.baseUrl + "/api/library/receipes/ingredients";
     const rep: AxiosResponse<ReceipeIngredientExt> = await Axios.put(
       fullUrl,
       params,
-      { headers: this.getHeaders() },
+      { headers: this.getHeaders() }
     );
     return rep.data;
   }
@@ -1401,7 +1416,7 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessLibraryAddReceipeIngredient(
-    data: ReceipeIngredientExt,
+    data: ReceipeIngredientExt
   ): void {}
 
   protected async rawLibraryUpdateReceipeIngredient(params: ReceipeIngredient) {
@@ -1430,11 +1445,11 @@ export abstract class AbstractAPI {
   }) {
     const fullUrl = this.baseUrl + "/api/library/receipes/ingredients";
     await Axios.delete(fullUrl, {
+      headers: this.getHeaders(),
       params: {
         idReceipe: String(params["idReceipe"]),
         idIngredient: String(params["idIngredient"]),
       },
-      headers: this.getHeaders(),
     });
     return true;
   }
@@ -1461,7 +1476,7 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<MenuIngredientExt> = await Axios.put(
       fullUrl,
       params,
-      { headers: this.getHeaders() },
+      { headers: this.getHeaders() }
     );
     return rep.data;
   }
@@ -1506,11 +1521,11 @@ export abstract class AbstractAPI {
   }) {
     const fullUrl = this.baseUrl + "/api/library/menus/ingredients";
     await Axios.delete(fullUrl, {
+      headers: this.getHeaders(),
       params: {
         idMenu: String(params["idMenu"]),
         idIngredient: String(params["idIngredient"]),
       },
-      headers: this.getHeaders(),
     });
     return true;
   }
@@ -1560,11 +1575,11 @@ export abstract class AbstractAPI {
   }) {
     const fullUrl = this.baseUrl + "/api/library/menus/receipes";
     await Axios.delete(fullUrl, {
+      headers: this.getHeaders(),
       params: {
         idMenu: String(params["idMenu"]),
         idReceipe: String(params["idReceipe"]),
       },
-      headers: this.getHeaders(),
     });
     return true;
   }
@@ -1589,8 +1604,8 @@ export abstract class AbstractAPI {
   protected async rawOrderGetDays(params: { idSejour: number }) {
     const fullUrl = this.baseUrl + "/api/order/days";
     const rep: AxiosResponse<number[] | null> = await Axios.get(fullUrl, {
-      params: { idSejour: String(params["idSejour"]) },
       headers: this.getHeaders(),
+      params: { idSejour: String(params["idSejour"]) },
     });
     return rep.data;
   }
@@ -1614,7 +1629,7 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<CompileIngredientsOut> = await Axios.post(
       fullUrl,
       params,
-      { headers: this.getHeaders() },
+      { headers: this.getHeaders() }
     );
     return rep.data;
   }
@@ -1632,14 +1647,14 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessOrderCompileIngredients(
-    data: CompileIngredientsOut,
+    data: CompileIngredientsOut
   ): void {}
 
   protected async rawOrderGetProfiles() {
     const fullUrl = this.baseUrl + "/api/order/profiles";
     const rep: AxiosResponse<ProfileHeader[] | null> = await Axios.get(
       fullUrl,
-      { headers: this.getHeaders() },
+      { headers: this.getHeaders() }
     );
     return rep.data;
   }
@@ -1703,8 +1718,8 @@ export abstract class AbstractAPI {
   protected async rawOrderDeleteProfile(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/order/profiles";
     await Axios.delete(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return true;
   }
@@ -1726,8 +1741,8 @@ export abstract class AbstractAPI {
   protected async rawOrderLoadProfile(params: { idProfile: number }) {
     const fullUrl = this.baseUrl + "/api/order/profile/suppliers";
     const rep: AxiosResponse<Mapping> = await Axios.get(fullUrl, {
-      params: { idProfile: String(params["idProfile"]) },
       headers: this.getHeaders(),
+      params: { idProfile: String(params["idProfile"]) },
     });
     return rep.data;
   }
@@ -1791,8 +1806,8 @@ export abstract class AbstractAPI {
   protected async rawOrderDeleteSupplier(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/order/profile/suppliers";
     await Axios.delete(fullUrl, {
-      params: { id: String(params["id"]) },
       headers: this.getHeaders(),
+      params: { id: String(params["id"]) },
     });
     return true;
   }
@@ -1830,4 +1845,77 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessOrderUpdateProfileMap(): void {}
+
+  protected async rawOrderGetDefaultMapping(params: DefaultMappingIn) {
+    const fullUrl = this.baseUrl + "/api/order/profile/default-map";
+    const rep: AxiosResponse<IngredientMapping> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
+  }
+
+  /** OrderGetDefaultMapping wraps rawOrderGetDefaultMapping and handles the error */
+  async OrderGetDefaultMapping(params: DefaultMappingIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawOrderGetDefaultMapping(params);
+      this.onSuccessOrderGetDefaultMapping(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessOrderGetDefaultMapping(data: IngredientMapping): void {}
+
+  protected async rawOrderSetDefaultProfile(params: SetDefaultProfile) {
+    const fullUrl = this.baseUrl + "/api/order/profile/default";
+    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+    return true;
+  }
+
+  /** OrderSetDefaultProfile wraps rawOrderSetDefaultProfile and handles the error */
+  async OrderSetDefaultProfile(params: SetDefaultProfile) {
+    this.startRequest();
+    try {
+      const out = await this.rawOrderSetDefaultProfile(params);
+      this.onSuccessOrderSetDefaultProfile();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessOrderSetDefaultProfile(): void {}
+
+  protected async rawOrderExportExcel(params: ExportExcelIn) {
+    const fullUrl = this.baseUrl + "/api/order/export";
+    const rep: AxiosResponse<Blob> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+      responseType: "arraybuffer",
+    });
+
+    const header: string = rep.headers["content-disposition"];
+
+    const startIndex = header.indexOf("filename=") + 9;
+    const endIndex = header.length;
+    const filename = decodeURIComponent(header.substring(startIndex, endIndex));
+    return { blob: rep.data, filename: decodeURIComponent(filename) };
+  }
+
+  /** OrderExportExcel wraps rawOrderExportExcel and handles the error */
+  async OrderExportExcel(params: ExportExcelIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawOrderExportExcel(params);
+      this.onSuccessOrderExportExcel(out.blob);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessOrderExportExcel(data: Blob): void {}
 }

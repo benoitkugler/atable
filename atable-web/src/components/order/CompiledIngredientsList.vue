@@ -1,6 +1,9 @@
 <template>
   <v-list style="max-height: 72vh" class="overflow-y-auto">
-    <i v-if="!ingredients.Ingredients?.length">Aucun ingrédient.</i>
+    <div v-if="!ingredients.Ingredients?.length" class="text-center">
+      <i>Aucun ingrédient.</i>
+    </div>
+
     <template v-for="kind in byKind" :key="kind.kind">
       <v-list-subheader>{{ IngredientKindLabels[kind.kind] }}</v-list-subheader>
       <v-list-item v-for="ing in kind.ingredients" :key="ing.Ingredient.Id">

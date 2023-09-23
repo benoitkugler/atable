@@ -17,7 +17,7 @@ Courgettes,300,gr
 Tomates,300,gr
 Farine,250,gr
 Levure (sachet),1.5,pièces
-Huile d'olive,5,cL
+Huile,5,cL
 Fromage râpé,150,gr
 Oeufs,5,pièces
 Lait,20,cL
@@ -53,7 +53,7 @@ Sucre,200,gr
 Farine,200,gr
 Oeufs,3,pièces
 Levure (sachet),1,pièces
-Huile d'olive,10,cL
+Huile,10,cL
 ,,
 Hot dog,platPrincipal,10
 Saucisses,1,kg
@@ -87,7 +87,7 @@ Tomates,1,kg
 Viande hachée (boeuf),1,kg
 Oignons,3,pièces
 Fromage râpé,200,gr
-Crème fraîche,1,L
+Crème de marron,1,L
 ,,
 Pain Bagnat,platPrincipal,10
 Thon,500,gr
@@ -129,7 +129,7 @@ Vin blanc,20,cL
 Poulet au curry,platPrincipal,10
 Poulet,1,kg
 Curry,1,pièces
-Crème fraîche,50,cL
+Crème de marron,50,cL
 Oignons,3,pièces
 Riz,700,gr
 Ananas,300,gr
@@ -166,7 +166,7 @@ Moutarde,15,gr
 ,,
 Salade de concombres,entree,10
 Concombres,1.5,kg
-Crème fraîche,50,cL
+Crème de marron,50,cL
 Ciboulette (botte),1,pièces
 Jus de citron,5,cL
 ,,

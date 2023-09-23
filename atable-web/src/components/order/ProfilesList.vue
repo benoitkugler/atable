@@ -1,7 +1,7 @@
 <template>
   <v-card
     title="Fournisseurs"
-    subtitle="Les fournisseurs sont regroupés par profil, et un profil peut être associé à un séjour."
+    subtitle="Les fournisseurs sont regroupés par profil, et un profil peut être associé au séjour courant."
   >
     <v-dialog
       :model-value="toShowDetails != null"
@@ -87,10 +87,28 @@
           :subtitle="formatSuppliers(profile.Suppliers)"
           @click="toShowDetails = profile"
         >
+          <template v-slot:prepend>
+            <v-btn
+              icon
+              size="x-small"
+              class="mr-4"
+              @click.stop="setDefaultProfile(profile.Profile.Id)"
+            >
+              <v-icon
+                :color="
+                  sejourCourant?.IdProfile.IdProfile == profile.Profile.Id
+                    ? 'primary'
+                    : 'grey-lighten-2'
+                "
+                >mdi-heart</v-icon
+              >
+            </v-btn>
+          </template>
           <template v-slot:append>
             <v-btn
               icon
               size="x-small"
+              class="mx-1"
               @click.stop="toEdit = copy(profile.Profile)"
               :disabled="profile.Profile.IdOwner != controller.idUser"
             >
@@ -113,11 +131,18 @@
 </template>
 
 <script lang="ts" setup>
-import type { ProfileHeader, Profile, Suppliers } from "@/logic/api_gen";
-import { controller, copy } from "@/logic/controller";
+import type {
+  ProfileHeader,
+  Profile,
+  Suppliers,
+  IdProfile,
+} from "@/logic/api_gen";
+import { controller, copy, formatSuppliers } from "@/logic/controller";
 import { onMounted } from "vue";
 import { ref } from "vue";
 import ProfileMapping from "./ProfileMapping.vue";
+import { computed } from "vue";
+import { id } from "vuetify/lib/locale/index.mjs";
 
 // const props = defineProps<{}>();
 
@@ -127,17 +152,12 @@ const profiles = ref<ProfileHeader[]>([]);
 
 onMounted(fetchProfiles);
 
+const sejourCourant = ref(controller.activeSejour?.Sejour || null);
+
 async function fetchProfiles() {
   const res = await controller.OrderGetProfiles();
   if (res === undefined) return;
   profiles.value = res || [];
-}
-
-function formatSuppliers(suppliers: Suppliers) {
-  const l = Object.values(suppliers || {});
-  if (!l.length) return "Aucun fournisseur";
-  l.sort((a, b) => a.Name.localeCompare(b.Name));
-  return l.map((a) => a.Name).join(", ");
 }
 
 async function addProfil() {
@@ -179,4 +199,18 @@ async function deleteProfile() {
 }
 
 const toShowDetails = ref<ProfileHeader | null>(null);
+
+async function setDefaultProfile(idProfile: IdProfile) {
+  const sej = sejourCourant.value;
+  if (sej === null) return;
+  const res = await controller.OrderSetDefaultProfile({
+    IdProfile: idProfile,
+    IdSejour: sej.Id,
+  });
+  if (res === undefined) return;
+
+  sej.IdProfile = { Valid: true, IdProfile: idProfile };
+
+  controller.showMessage("Fournisseurs par défaut modifié avec succès.");
+}
 </script>
