@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 	"unicode/utf8"
 
@@ -114,4 +115,18 @@ func UpperFirst(s string) string {
 	}
 	r, L := utf8.DecodeRuneInString(s)
 	return string(unicode.ToUpper(r)) + s[L:]
+}
+
+var days = [...]string{
+	"Dim.",
+	"Lun.",
+	"Mar.",
+	"Mer.",
+	"Jeu.",
+	"Ven.",
+	"Sam.",
+}
+
+func FormatDate(day time.Time) string {
+	return fmt.Sprintf("%s %d/%d", days[day.Weekday()], day.Day(), day.Month())
 }

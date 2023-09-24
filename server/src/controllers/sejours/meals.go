@@ -2,6 +2,8 @@ package sejours
 
 import (
 	"database/sql"
+	"fmt"
+	"net/url"
 	"sort"
 	"strings"
 	"time"
@@ -1065,10 +1067,30 @@ func (ct *Controller) previewQuantities(idMeal sej.IdMeal) (out PreviewQuantitie
 	menu := mm[meal.Menu]
 
 	out.NbPeople = forNb
-	out.Quantities = menu.QuantitiesFor(forNb, loader.Ingredients, rm)
+	out.Quantities = menu.QuantitiesFor(forNb, rm)
 	return out, nil
 }
 
+func (ct *Controller) MealsExportCookbook(c echo.Context) error {
+	uID := users.JWTUser(c)
+
+	var args ExportCookbookIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	fileBytes, filename, err := ct.exportCookbook(args, uID)
+	if err != nil {
+		return err
+	}
+
+	escapedFilename := url.QueryEscape(strings.ReplaceAll(filename, " ", "_"))
+	c.Response().Header().Set(echo.HeaderContentDisposition, fmt.Sprintf(`%s; filename=%s`, "attachment", escapedFilename))
+	return c.Blob(200, "application/pdf", fileBytes)
+}
+
+// ResolveSize adds the size of the groups in [links] (resolved thanks to [groups]),
+// and [additionnalPeople]
 func ResolveSize(links sej.MealGroups, groups sej.Groups, additionnalPeople int) int {
 	forNb := additionnalPeople
 	for _, link := range links {

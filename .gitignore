@@ -2,4 +2,5 @@ server/node_modules/**/*
 atable-web/src/env.ts
 server/.env
 server/main
- 
+server/src/controllers/sejours/fontconfig.bin
+server/fontconfig.bin

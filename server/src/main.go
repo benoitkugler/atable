@@ -121,6 +121,12 @@ func main() {
 	fmt.Println("Admin teacher loaded.")
 
 	sc := sejours.NewController(db, host, admin, encKey)
+	err = sc.LoadFontconfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Goweasyprint font config loaded.")
+
 	lc := library.NewController(db, admin)
 	shopC := shopsession.NewController()
 	oc := order.NewController(db)

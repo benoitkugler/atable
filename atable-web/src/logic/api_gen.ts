@@ -189,6 +189,11 @@ export interface AssistantMealsIn {
   GroupsForCinquieme: IdGroup[] | null;
   DeleteExisting: boolean;
 }
+// github.com/benoitkugler/atable/controllers/sejours.ExportCookbookIn
+export interface ExportCookbookIn {
+  IdSejour: IdSejour;
+  Days: number[] | null;
+}
 // github.com/benoitkugler/atable/controllers/sejours.MealCreateIn
 export interface MealCreateIn {
   IdSejour: IdSejour;
@@ -464,7 +469,10 @@ export type IdUser = number;
 		as base class for an app controller.
 	*/
 export abstract class AbstractAPI {
-  constructor(protected baseUrl: string, protected authToken: string) {}
+  constructor(
+    protected baseUrl: string,
+    protected authToken: string,
+  ) {}
 
   protected abstract handleError(error: any): void;
 
@@ -479,7 +487,7 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<AskInscriptionOut> = await Axios.post(
       fullUrl,
       params,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -1053,6 +1061,34 @@ export abstract class AbstractAPI {
 
   protected onSuccessMealsSwapMenus(): void {}
 
+  protected async rawMealsExportCookbook(params: ExportCookbookIn) {
+    const fullUrl = this.baseUrl + "/api/meals/cookbook";
+    const rep: AxiosResponse<Blob> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+      responseType: "arraybuffer",
+    });
+
+    const header = rep.headers["content-disposition"];
+    const startIndex = header.indexOf("filename=") + 9;
+    const endIndex = header.length;
+    const filename = header.substring(startIndex, endIndex);
+    return { blob: rep.data, filename: filename };
+  }
+
+  /** MealsExportCookbook wraps rawMealsExportCookbook and handles the error */
+  async MealsExportCookbook(params: ExportCookbookIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawMealsExportCookbook(params);
+      this.onSuccessMealsExportCookbook(out.blob);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessMealsExportCookbook(data: Blob): void {}
+
   protected async rawLibraryLoadIngredients() {
     const fullUrl = this.baseUrl + "/api/library/all-ingredients";
     const rep: AxiosResponse<Ingredients> = await Axios.get(fullUrl, {
@@ -1146,7 +1182,7 @@ export abstract class AbstractAPI {
       {
         headers: this.getHeaders(),
         params: { idIngredient: String(params["idIngredient"]) },
-      }
+      },
     );
     return rep.data;
   }
@@ -1172,7 +1208,7 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<ImportReceipes1Out> = await Axios.post(
       fullUrl,
       formData,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -1196,7 +1232,7 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<ReceipeExt[] | null> = await Axios.put(
       fullUrl,
       params,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -1392,13 +1428,13 @@ export abstract class AbstractAPI {
   protected onSuccessLibraryDeleteReceipe(): void {}
 
   protected async rawLibraryAddReceipeIngredient(
-    params: AddReceipeIngredientIn
+    params: AddReceipeIngredientIn,
   ) {
     const fullUrl = this.baseUrl + "/api/library/receipes/ingredients";
     const rep: AxiosResponse<ReceipeIngredientExt> = await Axios.put(
       fullUrl,
       params,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -1416,7 +1452,7 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessLibraryAddReceipeIngredient(
-    data: ReceipeIngredientExt
+    data: ReceipeIngredientExt,
   ): void {}
 
   protected async rawLibraryUpdateReceipeIngredient(params: ReceipeIngredient) {
@@ -1476,7 +1512,7 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<MenuIngredientExt> = await Axios.put(
       fullUrl,
       params,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -1629,7 +1665,7 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<CompileIngredientsOut> = await Axios.post(
       fullUrl,
       params,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -1647,14 +1683,14 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessOrderCompileIngredients(
-    data: CompileIngredientsOut
+    data: CompileIngredientsOut,
   ): void {}
 
   protected async rawOrderGetProfiles() {
     const fullUrl = this.baseUrl + "/api/order/profiles";
     const rep: AxiosResponse<ProfileHeader[] | null> = await Axios.get(
       fullUrl,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -1851,7 +1887,7 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<IngredientMapping> = await Axios.post(
       fullUrl,
       params,
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
     );
     return rep.data;
   }
@@ -1897,12 +1933,11 @@ export abstract class AbstractAPI {
       responseType: "arraybuffer",
     });
 
-    const header: string = rep.headers["content-disposition"];
-
+    const header = rep.headers["content-disposition"];
     const startIndex = header.indexOf("filename=") + 9;
     const endIndex = header.length;
-    const filename = decodeURIComponent(header.substring(startIndex, endIndex));
-    return { blob: rep.data, filename: decodeURIComponent(filename) };
+    const filename = header.substring(startIndex, endIndex);
+    return { blob: rep.data, filename: filename };
   }
 
   /** OrderExportExcel wraps rawOrderExportExcel and handles the error */

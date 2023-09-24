@@ -167,7 +167,7 @@ func (ct *Controller) compileIngredients(args CompileIngredientsIn, uID uID) (ou
 	for _, meal := range meals {
 		for_ := sejours.ResolveSize(mealToGroups[meal.Id], groups, meal.AdditionalPeople)
 		menu := menus[meal.Menu]
-		quantities := menu.QuantitiesFor(for_, mt.Ingredients, receipes)
+		quantities := menu.QuantitiesFor(for_, receipes)
 		// merge to the global map, adding the meal origin
 		for _, qu := range quantities {
 			l := tmp[qu.Ingredient.Id]

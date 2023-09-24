@@ -874,6 +874,17 @@ type Quantity struct {
 	Val   float64
 }
 
+func (qu Quantity) String() string {
+	if qu.Unite == men.U_G && qu.Val >= 1000 {
+		qu.Unite = men.U_Kg
+		qu.Val /= 1000
+	} else if qu.Unite == men.U_CL && qu.Val >= 100 {
+		qu.Unite = men.U_L
+		qu.Val /= 100
+	}
+	return fmt.Sprintf("%g %s", qu.Val, qu.Unite.String())
+}
+
 // normalize applies the trivial conversions
 func (qu Quantity) normalize() Quantity {
 	if qu.Unite == men.U_G {
@@ -890,13 +901,15 @@ type IngredientQuantity struct {
 }
 
 // The units are normalized in the larger size.
-func (me MenuExt) QuantitiesFor(nbPeople int, ingredients men.Ingredients, receipes map[men.IdReceipe]ReceipeExt) []IngredientQuantity {
+func (me MenuExt) QuantitiesFor(nbPeople int, receipes map[men.IdReceipe]ReceipeExt) []IngredientQuantity {
 	quantities := make(map[men.IdIngredient][]Quantity)
+	ingredients := make(men.Ingredients)
 	for _, ing := range me.Ingredients {
 		quantities[ing.IdIngredient] = append(quantities[ing.IdIngredient], Quantity{
 			Unite: ing.Quantity.Unite,
 			Val:   ing.Quantity.ResolveFor(nbPeople),
 		})
+		ingredients[ing.IdIngredient] = ing.Ingredient
 	}
 	for _, rec := range me.Receipes {
 		rec := receipes[rec.Id]
@@ -905,6 +918,7 @@ func (me MenuExt) QuantitiesFor(nbPeople int, ingredients men.Ingredients, recei
 				Unite: ing.Quantity.Unite,
 				Val:   ing.Quantity.ResolveFor(nbPeople),
 			})
+			ingredients[ing.Ingredient.Id] = ing.Ingredient
 		}
 	}
 

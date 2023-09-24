@@ -6,6 +6,8 @@ package sejours
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+	"os"
 	"sort"
 	"time"
 
@@ -14,6 +16,9 @@ import (
 	sej "github.com/benoitkugler/atable/sql/sejours"
 	us "github.com/benoitkugler/atable/sql/users"
 	"github.com/benoitkugler/atable/utils"
+	"github.com/benoitkugler/textprocessing/fontconfig"
+	"github.com/benoitkugler/textprocessing/pango/fcfonts"
+	"github.com/benoitkugler/webrender/text"
 
 	"github.com/labstack/echo/v4"
 )
@@ -25,10 +30,37 @@ type Controller struct {
 	host  string
 	admin us.User
 	key   pass.Encrypter
+
+	// used for pdf creation
+	fc *text.FontConfiguration
 }
 
 func NewController(db *sql.DB, host string, admin us.User, key pass.Encrypter) *Controller {
 	return &Controller{db: db, host: host, admin: admin, key: key}
+}
+
+// LoadFontconfig setup the fonts used by goweasyprint,
+// and must be called once at startup.
+func (ct *Controller) LoadFontconfig() error {
+	const scanPath = "fontconfig.bin"
+
+	if _, err := os.Stat(scanPath); err != nil {
+		fmt.Println("Scaning fonts...")
+		_, err = fontconfig.ScanAndCache(scanPath)
+		if err != nil {
+			return err
+		}
+		fmt.Println("Done.")
+	}
+
+	fs, err := fontconfig.LoadFontsetFile(scanPath)
+	if err != nil {
+		return err
+	}
+
+	ct.fc = text.NewFontConfiguration(fcfonts.NewFontMap(fontconfig.Standard.Copy(), fs))
+
+	return nil
 }
 
 // SejoursGet return the [Sejour]s owned by the user

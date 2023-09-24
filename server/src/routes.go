@@ -43,6 +43,8 @@ func setupWebAPI(e *echo.Echo, tvc *users.Controller, sej *sejours.Controller, l
 	gr.POST("/api/meals/menus", sej.MealsSetMenu)
 	gr.POST("/api/meals/swap", sej.MealsSwapMenus)
 
+	gr.POST("/api/meals/cookbook", sej.MealsExportCookbook)
+
 	gr.GET("/api/library/all-ingredients", lib.LibraryLoadIngredients)
 	gr.PUT("/api/library/all-ingredients", lib.LibraryCreateIngredient)
 	gr.GET("/api/library/all-receipes", lib.LibraryLoadReceipes)

@@ -20,6 +20,21 @@ const (
 
 type PlatKind uint8
 
+func (pk PlatKind) String() string {
+	switch pk {
+	case P_Empty:
+		return "Autre"
+	case P_Dessert:
+		return "Dessert"
+	case P_PlatPrincipal:
+		return "Plat principal"
+	case P_Entree:
+		return "Entrée"
+	default:
+		return ""
+	}
+}
+
 const (
 	P_Empty         PlatKind = iota // Autre
 	P_Dessert                       // Dessert

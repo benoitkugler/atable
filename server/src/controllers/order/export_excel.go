@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	"time"
 
 	lib "github.com/benoitkugler/atable/controllers/library"
 	men "github.com/benoitkugler/atable/sql/menus"
 	ord "github.com/benoitkugler/atable/sql/orders"
 	"github.com/benoitkugler/atable/sql/sejours"
+	"github.com/benoitkugler/atable/utils"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -61,23 +61,9 @@ func (ee exportExcel) supplierSheets() []supplierSheet {
 func (exportExcel) formatQuantities(qus []lib.Quantity) string {
 	chunks := make([]string, len(qus))
 	for i, qu := range qus {
-		chunks[i] = fmt.Sprintf("%g %s", qu.Val, qu.Unite.String())
+		chunks[i] = qu.String()
 	}
 	return strings.Join(chunks, " et ")
-}
-
-var days = [...]string{
-	"Dim.",
-	"Lun.",
-	"Mar.",
-	"Mer.",
-	"Jeu.",
-	"Ven.",
-	"Sam.",
-}
-
-func (exportExcel) formatDay(day time.Time, horaire sejours.Horaire) string {
-	return fmt.Sprintf("%s %d/%d %s", days[day.Weekday()], day.Day(), day.Month(), horaire.String())
 }
 
 type styleSpec struct {
@@ -159,7 +145,7 @@ func (ee exportExcel) fillSheet(f cursor, sName string, sheet supplierSheet, sho
 		if len(ing.Quantities) >= 2 {
 			for j, mealQu := range ing.Quantities {
 				meal := ee.Meals[mealQu.Origin]
-				f.SetCellStr(sName, fmt.Sprintf("A%d", row), ee.formatDay(ee.Sejour.DayAt(meal.Jour), meal.Horaire))
+				f.SetCellStr(sName, fmt.Sprintf("A%d", row), fmt.Sprintf("%s - %s", utils.FormatDate(ee.Sejour.DayAt(meal.Jour)), meal.Horaire.String()))
 				f.SetCellStr(sName, fmt.Sprintf("B%d", row), ee.formatQuantities([]lib.Quantity{mealQu.Quantity}))
 				f.SetCellStyle(sName, fmt.Sprintf("A%d", row), fmt.Sprintf("B%d", row), f.styles[styleSpec{greyBg: greyBg, small: true, borderBottom: j == len(ing.Quantities)-1}])
 				row++
