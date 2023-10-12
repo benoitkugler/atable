@@ -126,12 +126,12 @@ const title = computed(() => {
     case "agenda": {
       const sejour = controller.activeSejour;
       if (sejour == null) return "Organisation d'un séjour";
-      return `Organisation du séjour courant : ${sejour.Sejour.Name}`;
+      return `Organisation du séjour : ${sejour.Sejour.Name}`;
     }
     case "order": {
       const sejour = controller.activeSejour;
       if (sejour == null) return "Bilan des ingrédients et commandes";
-      return `Bilan des ingrédients et commandes pour le séjour courant : ${sejour.Sejour.Name}`;
+      return `Bilan des ingrédients pour le séjour : ${sejour.Sejour.Name}`;
     }
     case "library":
       return "Bibliothèque de menus favoris et recettes";

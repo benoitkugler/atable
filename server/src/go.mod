@@ -14,6 +14,8 @@ require (
 	golang.org/x/text v0.12.0
 )
 
+replace github.com/benoitkugler/webrender => /home/benoit/go/src/github.com/benoitkugler/webrender
+
 require (
 	github.com/benoitkugler/pdf v0.0.1 // indirect
 	github.com/benoitkugler/pstokenizer v1.0.1 // indirect

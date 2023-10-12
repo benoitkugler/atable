@@ -26,6 +26,7 @@ import {
   IdSupplier,
 } from "./api_gen";
 import { AxiosResponse } from "axios";
+import { file } from "@babel/types";
 
 function arrayBufferToString(buffer: ArrayBuffer) {
   const uintArray = new Uint8Array(buffer);
@@ -363,7 +364,7 @@ export function saveBlobAsFile(binaryData: Blob, filename: string) {
   const url = window.URL.createObjectURL(new Blob([binaryData]));
   const link = document.createElement("a");
   link.href = url;
-  link.setAttribute("download", filename);
+  link.setAttribute("download", decodeURIComponent(filename));
   document.body.appendChild(link);
   link.click();
   window.URL.revokeObjectURL(url);

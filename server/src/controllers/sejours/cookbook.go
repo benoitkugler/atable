@@ -178,5 +178,5 @@ func (ct *Controller) exportCookbook(args ExportCookbookIn, uID users.IdUser) ([
 		return nil, "", err
 	}
 
-	return bytes, fmt.Sprintf("%s - Fiches cuisine.pdf", sejour.Name), nil
+	return bytes, fmt.Sprintf("%s Fiches cuisine.pdf", sejour.Name), nil
 }

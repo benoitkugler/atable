@@ -4,7 +4,10 @@
       <ProfilesList></ProfilesList>
     </v-dialog>
 
-    <v-card title="Bilan des ingrédients">
+    <v-card
+      title="Bilan des ingrédients"
+      subtitle="Fiches de cuisine et commandes"
+    >
       <template v-slot:append>
         <v-btn @click="showSuppliers = true">
           <template v-slot:prepend>
@@ -33,8 +36,12 @@
           <v-col cols="auto" align-self="center">
             <v-list>
               <v-list-subheader> Sélectionner les jours </v-list-subheader>
-              <div class="overflow-y-auto" style="max-height: 70vh">
-                <v-list-item title="Tout sélectionner" class="pl-1">
+              <div class="overflow-y-auto" style="max-height: 66vh">
+                <v-list-item
+                  title="Tout sélectionner"
+                  class="pl-1"
+                  @click="onSelectAll(allDaysSelected != true)"
+                >
                   <template v-slot:prepend="">
                     <v-list-item-action start>
                       <v-checkbox-btn
@@ -51,6 +58,10 @@
                   :key="day.offset"
                   :title="formatDate(day.date)"
                   class="pl-1"
+                  @click="
+                    selectedDays[day.offset] = !selectedDays[day.offset];
+                    compiledIngredients = null;
+                  "
                 >
                   <template v-slot:prepend="">
                     <v-list-item-action start>
@@ -68,20 +79,39 @@
           <v-col cols="auto" align-self="center">
             <v-icon>mdi-chevron-right</v-icon>
           </v-col>
-          <v-col cols="5" align-self="center">
+          <v-col
+            :cols="compiledIngredients != null ? 5 : 9"
+            align-self="center"
+          >
             <div class="text-center" v-if="compiledIngredients == null">
-              <v-btn
-                :disabled="!selectedDaysList.length"
-                @click="compileIngredients"
-                >Calculer les ingrédients nécessaires</v-btn
-              >
+              <v-row no-gutters>
+                <v-col cols="12">
+                  <v-btn
+                    :disabled="!selectedDaysList.length"
+                    @click="compileIngredients"
+                    >Calculer les ingrédients nécessaires</v-btn
+                  >
+                </v-col>
+                <v-col cols="12">
+                  <v-btn
+                    class="mt-4"
+                    :disabled="!selectedDaysList.length"
+                    @click="downloadCookbook"
+                    >Exporter les fiches de cuisine</v-btn
+                  >
+                </v-col>
+              </v-row>
             </div>
             <compiled-ingredients-list
               v-else
               :ingredients="compiledIngredients"
             ></compiled-ingredients-list>
           </v-col>
-          <v-col cols="auto" align-self="center">
+          <v-col
+            cols="auto"
+            align-self="center"
+            v-if="compiledIngredients != null"
+          >
             <v-icon>mdi-chevron-right</v-icon>
           </v-col>
           <v-col align-self="center">
@@ -101,7 +131,12 @@ import CompiledIngredientsList from "@/components/order/CompiledIngredientsList.
 import ExportMappingCard from "@/components/order/ExportMappingCard.vue";
 import ProfilesList from "@/components/order/ProfilesList.vue";
 import { CompileIngredientsOut } from "@/logic/api_gen";
-import { addDays, controller, formatDate } from "@/logic/controller";
+import {
+  addDays,
+  controller,
+  formatDate,
+  saveBlobAsFile,
+} from "@/logic/controller";
 import { computed } from "vue";
 import { onMounted } from "vue";
 import { ref } from "vue";
@@ -136,6 +171,7 @@ const allDaysSelected = computed(() => {
 });
 function onSelectAll(b: boolean) {
   dayItems.value.forEach((d) => (selectedDays.value[d.offset] = b));
+  compiledIngredients.value = null;
 }
 
 const compiledIngredients = ref<CompileIngredientsOut | null>(null);
@@ -149,4 +185,16 @@ async function compileIngredients() {
 }
 
 const showSuppliers = ref(false);
+
+async function downloadCookbook() {
+  const res = await controller.MealsExportCookbook({
+    IdSejour: controller.activeSejour!.Sejour.Id,
+    Days: selectedDaysList.value,
+  });
+  if (res === undefined) return;
+
+  controller.showMessage("Fichier téléchargé avec succès.");
+
+  saveBlobAsFile(res.blob, res.filename);
+}
 </script>
