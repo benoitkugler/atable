@@ -4,7 +4,7 @@
     title="Menus et recettes"
     subtitle="Retrouver vos menus favoris et vos recettes."
   >
-    <v-dialog v-model="showIngredientsList">
+    <v-dialog v-model="showIngredientsList" max-width="1000px">
       <IngredientsList></IngredientsList>
     </v-dialog>
 

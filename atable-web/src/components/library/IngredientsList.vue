@@ -21,11 +21,22 @@
       ></IngredientEditor>
     </v-dialog>
     <v-card-text>
+      <v-row>
+        <v-col cols="4">
+          <v-text-field
+            density="compact"
+            variant="underlined"
+            append-inner-icon="mdi-magnify"
+            label="Filtrer les ingrédients par nom"
+            v-model="search"
+          ></v-text-field>
+        </v-col>
+      </v-row>
       <v-virtual-scroll :items="ingList" height="400px">
         <template v-slot:default="{ item }">
           <v-row no-gutters class="my-2">
             <v-col cols="6" align-self="center">{{ item.Name }}</v-col>
-            <v-col cols="4" align-self="center">{{
+            <v-col cols="4" align-self="center" class="text-grey">{{
               IngredientKindLabels[item.Kind]
             }}</v-col>
             <v-col cols="2" align-self="center" class="text-center">
@@ -67,7 +78,10 @@ const emit = defineEmits<{}>();
 onMounted(fetchIngredients);
 
 const ingList = computed(() => {
-  const out = Object.values(ingredients.value || {});
+  const s = search.value.toLowerCase();
+  const out = Object.values(ingredients.value || {}).filter((ing) => {
+    return s == "" || ing.Name.toLowerCase().includes(s);
+  });
   out.sort((a, b) => a.Name.localeCompare(b.Name));
   return out;
 });
@@ -106,4 +120,6 @@ async function deleteIngredient(idIngredient: IdIngredient) {
     );
   }
 }
+
+const search = ref("");
 </script>

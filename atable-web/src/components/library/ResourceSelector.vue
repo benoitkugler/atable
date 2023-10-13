@@ -19,10 +19,10 @@
     class="my-2 mx-2"
     density="compact"
     variant="underlined"
+    append-inner-icon="mdi-magnify"
     menu-icon=""
     auto-select-first
     :label="label"
-    append-inner-icon="mdi-magnify"
     hint="Appuyer sur Tab ou Entrée pour valider rapidement."
     persistent-hint
     :custom-filter="customFilter"
