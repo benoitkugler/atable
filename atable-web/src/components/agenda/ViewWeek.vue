@@ -8,7 +8,7 @@
       ></MealWizzard>
     </v-dialog>
 
-    <v-row justify="space-between" class="my-2">
+    <v-row justify="space-between" class="mt-2">
       <v-col cols="auto">
         <v-btn flat icon @click="offset -= 1">
           <v-icon>mdi-chevron-left</v-icon>
@@ -69,6 +69,45 @@
       </v-col>
     </v-row>
 
+    <v-card class="my-2" elevation="4">
+      <v-row class="mx-1">
+        <v-col cols="3" align-self="center">
+          <v-text-field
+            variant="outlined"
+            density="compact"
+            hide-details
+            label="Rechercher et ajouter un menu"
+            v-model="menuSearch"
+            @update:model-value="debounce.onType(menuSearch)"
+          ></v-text-field>
+        </v-col>
+        <v-col align-self="center">
+          <v-row
+            no-gutters
+            style="height: 13vh"
+            class="overflow-y-auto"
+            density="compact"
+          >
+            <v-col cols="4" v-for="(menu, index) in menus" :key="index">
+              <v-list-item
+                style="cursor: grab"
+                rounded
+                :title="menu.Title"
+                density="compact"
+                class="bg-grey-lighten-4 my-1 mx-1"
+                :draggable="true"
+                @dragstart="(ev: DragEvent) => onDragMenu(ev, menu)"
+              >
+                <template v-slot:prepend>
+                  <v-icon class="ml-0 mr-1 px-0"> mdi-drag-vertical </v-icon>
+                </template>
+              </v-list-item>
+            </v-col>
+          </v-row>
+        </v-col>
+      </v-row>
+    </v-card>
+
     <table width="100%">
       <tr>
         <th v-for="i in 7" :key="i" style="border-bottom: 1px solid grey">
@@ -92,6 +131,7 @@
             :menus="meals.Menus || {}"
             :groups="groups"
             @swap-meals="swapMeals"
+            @set-menu="setMenu"
           ></HoraireCell>
         </td>
       </tr>
@@ -107,13 +147,16 @@ import {
   formatDate,
   horairesItems,
   horaireColors,
+  Debouncer,
 } from "@/logic/controller";
 import { computed } from "vue";
 import {
   AssistantMealsIn,
   Horaire,
   IdMeal,
+  MealExt,
   MealsLoadOut,
+  ResourceHeader,
 } from "@/logic/api_gen";
 import { onMounted } from "vue";
 import { onActivated } from "vue";
@@ -136,9 +179,9 @@ onActivated(fetchMeals);
 const meals = reactive<MealsLoadOut>({ Meals: [], Menus: {} });
 const emtpyMealsNb = computed(
   () =>
-    Object.values(meals.Menus || {}).filter(
-      (m) => !m.Ingredients?.length && !m.Receipes?.length
-    ).length
+    (meals.Meals || [])
+      .map((meal) => (meals.Menus || {})[meal.Meal.Menu])
+      .filter((m) => !m.Ingredients?.length && !m.Receipes?.length).length
 );
 
 const groups = computed(() => sejour.value.Groups || []);
@@ -152,6 +195,8 @@ async function fetchMeals() {
   meals.Menus = res.Menus || {};
 
   sejour.value = controller.activeSejour!;
+
+  search("");
 }
 
 // offset of the first day displayed
@@ -207,5 +252,34 @@ async function swapMeals(m1: IdMeal, m2: IdMeal) {
   const tmp = meal1.Meal.Menu;
   meal1.Meal.Menu = meal2.Meal.Menu;
   meal2.Meal.Menu = tmp;
+}
+
+const menuSearch = ref("");
+// debounce feature for text field
+const debounce = new Debouncer(search);
+const menus = ref<ResourceHeader[]>([]);
+async function search(pattern: string) {
+  const res = await controller.MealsSearch({ search: pattern });
+  if (res === undefined) return;
+  menus.value = res.Menus || [];
+}
+
+function onDragMenu(event: DragEvent, menu: ResourceHeader) {
+  event.dataTransfer!.dropEffect = "move";
+  event.dataTransfer?.setData("json/add-menu", JSON.stringify(menu));
+}
+
+async function setMenu(menu: ResourceHeader, meal: MealExt) {
+  const res = await controller.MealsSetMenu({
+    IdMeal: meal.Meal.Id,
+    IdMenu: menu.ID,
+  });
+  if (res === undefined) return;
+  controller.showMessage("Menu mis en place avec succès");
+
+  meals.Menus![menu.ID] = res;
+  // redirect the meal to the updated menu
+  const m = meals.Meals?.find((ml) => ml.Meal.Id == meal.Meal.Id)!;
+  m.Meal.Menu = menu.ID;
 }
 </script>

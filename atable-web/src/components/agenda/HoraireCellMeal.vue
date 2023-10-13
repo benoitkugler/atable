@@ -1,8 +1,9 @@
 <template>
   <v-card
+    height="100%"
     :elevation="isDraggingOver ? 2 : 0"
     color="transparent"
-    class="px-2 py-2 text-body-2"
+    class="px-2 py-1 text-body-2"
     style="cursor: grab"
     :draggable="true"
     @dragstart="(ev) => onDragstart(ev)"
@@ -12,14 +13,14 @@
   >
     <v-tooltip
       location="bottom"
-      content-class="ma-0 pa-0"
+      content-class="ma-0 pa-0 rounded-lg"
       :disabled="props.groups.size <= 1"
     >
       <template v-slot:activator="{ isActive, props: innerProps }">
         <div v-on="{ isActive }" v-bind="innerProps">
           <!-- visually optimize common cases -->
           <template v-if="props.showExpanded">
-            <small v-if="!content.length">Menu vide.</small>
+            <small v-if="!content.length" class="text-grey">Menu vide.</small>
             <div v-for="(item, indexI) in content" :key="indexI">
               {{ item.title }}
             </div>
@@ -28,7 +29,7 @@
           <template v-else> Repas {{ props.meal.Meal.Id }} </template>
         </div>
       </template>
-      <v-card class="pa-0 ma-0">
+      <v-card class="pa-0 ma-0" rounded="lg">
         <v-card-text class="pa-1 ma-0">
           <i v-if="!props.meal.Groups?.length">Aucun groupe</i>
           <GroupChip
@@ -47,7 +48,14 @@
 </template>
 
 <script lang="ts" setup>
-import type { Group, IdGroup, IdMeal, MealExt, MenuExt } from "@/logic/api_gen";
+import type {
+  Group,
+  IdGroup,
+  IdMeal,
+  MealExt,
+  MenuExt,
+  ResourceHeader,
+} from "@/logic/api_gen";
 import { sortMenuContent } from "@/logic/controller";
 import { computed } from "vue";
 import GroupChip from "./GroupChip.vue";
@@ -62,6 +70,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (ev: "swapMeals", m1: IdMeal, m2: IdMeal): void;
+  (ev: "setMenu", menu: ResourceHeader): void;
 }>();
 
 const content = computed(() => sortMenuContent(props.menu));
@@ -75,7 +84,8 @@ function onDragstart(event: DragEvent) {
 
 const isDraggingOver = ref(false);
 function onDragover(event: DragEvent) {
-  if (event.dataTransfer?.types?.includes("json/swap-meals")) {
+  const types = event.dataTransfer?.types;
+  if (types?.includes("json/swap-meals") || types?.includes("json/add-menu")) {
     event.preventDefault();
     event.dataTransfer!.dropEffect = "move";
     isDraggingOver.value = true;
@@ -83,12 +93,21 @@ function onDragover(event: DragEvent) {
 }
 
 function onDrop(event: DragEvent) {
-  const idSource = JSON.parse(
-    event.dataTransfer?.getData("json/swap-meals") || ""
-  ) as number;
-  const idTarget = props.meal.Meal.Id;
   isDraggingOver.value = false;
-  if (idSource == idTarget) return;
-  emit("swapMeals", idSource, idTarget);
+
+  const types = event.dataTransfer?.types;
+  if (types?.includes("json/swap-meals")) {
+    const idSource = JSON.parse(
+      event.dataTransfer?.getData("json/swap-meals") || ""
+    ) as number;
+    const idTarget = props.meal.Meal.Id;
+    if (idSource == idTarget) return;
+    emit("swapMeals", idSource, idTarget);
+  } else {
+    const menu: ResourceHeader = JSON.parse(
+      event.dataTransfer?.getData("json/add-menu") || ""
+    );
+    emit("setMenu", menu);
+  }
 }
 </script>

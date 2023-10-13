@@ -231,6 +231,7 @@ import {
   MenuExt,
   type Ingredient,
   IngredientKind,
+  Time,
 } from "@/logic/api_gen";
 import ResourceSearch from "./ResourceSearch.vue";
 import IngredientEditor from "@/components/IngredientEditor.vue";
@@ -314,6 +315,7 @@ async function createMeal(horaire: Horaire) {
       Owner: controller.idUser!,
       IsFavorite: false,
       IsPublished: false,
+      Updated: "" as Time,
     },
     Ingredients: [],
     Receipes: [],
@@ -472,7 +474,12 @@ function formatQuantities(qus: Quantity[]) {
 const resourceSearch = ref<InstanceType<typeof ResourceSearch> | null>(null);
 const ingToCreate = ref<Ingredient | null>(null);
 function showCreateIngredient(name: string) {
-  ingToCreate.value = { Name: name, Id: -1, Kind: IngredientKind.I_Empty };
+  ingToCreate.value = {
+    Name: name,
+    Id: -1,
+    Kind: IngredientKind.I_Empty,
+    Owner: -1,
+  };
 }
 async function createIngredient(ing: Ingredient) {
   ingToCreate.value = null;

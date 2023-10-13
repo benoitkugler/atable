@@ -114,6 +114,7 @@ function updateMap(index: number, ing: MenuResource) {
     Id: ing.Id,
     Name: ing.Title,
     Kind: ing.IngredientKind!,
+    Owner: -1,
   };
   indexToEdit.value = -1;
 }
@@ -123,6 +124,7 @@ function updateMapNew(index: number, ing: Ingredient) {
     Id: -1, // mark as new
     Name: ing.Name,
     Kind: ing.Kind,
+    Owner: -1,
   };
   indexToEdit.value = -1;
 }

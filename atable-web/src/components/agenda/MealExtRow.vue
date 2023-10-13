@@ -170,6 +170,7 @@ import {
   type Group,
 } from "@/logic/api_gen";
 import {
+  DragKind,
   ResourceDrag,
   formatHoraire,
   platColors,
@@ -210,12 +211,21 @@ function onGroupDragStart(event: DragEvent, idGroup: number) {
 const acceptDrop = ref(false);
 
 function onDragover(event: DragEvent) {
-  const isMenu = event.dataTransfer?.types.includes("drag-menu");
-  if (!props.menu.Menu.IsFavorite || isMenu) {
-    // accept the drop
-    event.preventDefault();
-    acceptDrop.value = true;
+  const data = event.dataTransfer!;
+  // we want to prevent modification of favorite menu
+  if (data.types.includes("json/add-resource")) {
+    const val: ResourceDrag = JSON.parse(data.getData("json/add-resource"));
+    if (
+      (val.kind == DragKind.ingredient || val.kind == DragKind.receipe) &&
+      props.menu.Menu.IsFavorite
+    ) {
+      return;
+    }
   }
+
+  // accept the drop
+  event.preventDefault();
+  acceptDrop.value = true;
 }
 
 function onDrop(event: DragEvent) {

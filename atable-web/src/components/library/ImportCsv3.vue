@@ -53,12 +53,10 @@
 <script setup lang="ts">
 import {
   ImportReceipes1Out,
-  Ingredient,
   PlatKindLabels,
   UniteLabels,
 } from "@/logic/api_gen";
-import { ref } from "vue";
-import { MenuResource, platColors } from "@/logic/controller";
+import { platColors } from "@/logic/controller";
 
 const props = defineProps<{
   receipes: ImportReceipes1Out;
@@ -68,34 +66,4 @@ const emit = defineEmits<{
   (e: "back"): void;
   (e: "import"): void;
 }>();
-
-const toMap = ref(
-  Object.entries(props.receipes.Map || {}).map((l) => ({
-    key: l[0],
-    ing: l[1],
-  }))
-);
-
-const indexToEdit = ref(-1);
-function editItem(index: number) {
-  indexToEdit.value = index;
-}
-
-function updateMap(index: number, ing: MenuResource) {
-  toMap.value[index].ing = {
-    Id: ing.Id,
-    Name: ing.Title,
-    Kind: ing.IngredientKind!,
-  };
-  indexToEdit.value = -1;
-}
-
-function updateMapNew(index: number, ing: Ingredient) {
-  toMap.value[index].ing = {
-    Id: -1, // mark as new
-    Name: ing.Name,
-    Kind: ing.Kind,
-  };
-  indexToEdit.value = -1;
-}
 </script>

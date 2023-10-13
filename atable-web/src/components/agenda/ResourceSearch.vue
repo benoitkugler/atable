@@ -134,16 +134,12 @@ async function search(pattern: string) {
   if (pattern.length < 2) return;
   const res = await controller.MealsSearch({ search: pattern });
   if (res === undefined) return;
-  resources.value = res || [];
+  resources.value = res || {};
 }
 
 function dragStart(event: DragEvent, item: ResourceHeader, kind: DragKind) {
   const payload: ResourceDrag = { item, kind };
   event.dataTransfer?.setData("json/add-resource", JSON.stringify(payload));
   event.dataTransfer!.dropEffect = "copy";
-  // special case menu
-  if (kind == DragKind.menu) {
-    event.dataTransfer?.setData("drag-menu", "true");
-  }
 }
 </script>

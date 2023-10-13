@@ -97,6 +97,7 @@ function startCreateIngredient() {
     Id: 0,
     Name: upperFirst(search.value),
     Kind: IngredientKind.I_Empty,
+    Owner: -1,
   };
   // clear the selector
   nextTick(() => {

@@ -18,15 +18,11 @@ import {
   SejourExt,
   Unite,
   UniteLabels,
-  Time,
   Suppliers,
   ProfileHeader,
-  IngredientMapping,
   IdIngredient,
   IdSupplier,
 } from "./api_gen";
-import { AxiosResponse } from "axios";
-import { file } from "@babel/types";
 
 function arrayBufferToString(buffer: ArrayBuffer) {
   const uintArray = new Uint8Array(buffer);
