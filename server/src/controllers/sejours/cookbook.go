@@ -35,6 +35,8 @@ type cookbookData struct {
 
 // for one Meal, on one page
 type cookbookPage struct {
+	meal sej.Meal
+
 	Date        string
 	Horaire     string
 	NbPersonnes int
@@ -166,12 +168,20 @@ func (ct *Controller) exportCookbook(args ExportCookbookIn, uID users.IdUser) ([
 		sort.SliceStable(l, func(i, j int) bool { return l[i].plat < l[j].plat })
 
 		data.Pages = append(data.Pages, cookbookPage{
+			meal:        meal,
 			Date:        ut.FormatDate(sejour.DayAt(meal.Jour)),
 			Horaire:     meal.Horaire.String(),
 			NbPersonnes: forNb,
 			Receipes:    l,
 		})
 	}
+
+	sort.Slice(data.Pages, func(i, j int) bool {
+		return data.Pages[i].meal.Horaire < data.Pages[j].meal.Horaire
+	})
+	sort.SliceStable(data.Pages, func(i, j int) bool {
+		return data.Pages[i].meal.Jour < data.Pages[j].meal.Jour
+	})
 
 	bytes, err := buildCookbook(data, ct.fc)
 	if err != nil {
