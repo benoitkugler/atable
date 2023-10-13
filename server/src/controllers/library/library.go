@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"math"
+	"strconv"
 	"time"
 
 	"github.com/benoitkugler/atable/controllers/users"
@@ -882,7 +884,11 @@ func (qu Quantity) String() string {
 		qu.Unite = men.U_L
 		qu.Val /= 100
 	}
-	return fmt.Sprintf("%g %s", qu.Val, qu.Unite.String())
+	v := strconv.FormatFloat(qu.Val, 'f', 1, 64)
+	if math.Round(qu.Val) == qu.Val {
+		v = strconv.Itoa(int(qu.Val))
+	}
+	return fmt.Sprintf("%s %s", v, qu.Unite.String())
 }
 
 // normalize applies the trivial conversions
