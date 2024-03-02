@@ -91,7 +91,7 @@ func newCookbookReceipeFromPlat(plat men.PlatKind, ingredients []library.MenuIng
 	}
 }
 
-func buildCookbook(pages cookbookData, fc *text.FontConfiguration) ([]byte, error) {
+func buildCookbook(pages cookbookData, fc text.FontConfiguration) ([]byte, error) {
 	var buf bytes.Buffer
 	err := cookbookTemplate.Execute(&buf, pages)
 	if err != nil {

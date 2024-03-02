@@ -32,7 +32,7 @@ type Controller struct {
 	key   pass.Encrypter
 
 	// used for pdf creation
-	fc *text.FontConfiguration
+	fc text.FontConfiguration
 }
 
 func NewController(db *sql.DB, host string, admin us.User, key pass.Encrypter) *Controller {
@@ -58,7 +58,7 @@ func (ct *Controller) LoadFontconfig() error {
 		return err
 	}
 
-	ct.fc = text.NewFontConfiguration(fcfonts.NewFontMap(fontconfig.Standard.Copy(), fs))
+	ct.fc = text.NewFontConfigurationPango(fcfonts.NewFontMap(fontconfig.Standard.Copy(), fs))
 
 	return nil
 }
