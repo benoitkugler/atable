@@ -460,7 +460,33 @@ INSERT INTO ingredients (name, kind, OWNER)
     --
     ('Pains ronds', 6, 1),
     --
-    ('Baguettes', 6, 1);
+    ('Baguettes', 6, 1),
+    --
+    ('Veau', 3, 1),
+    --
+    ('Chair à saucisse', 3, 1),
+    --
+    ('Sauce vinaigrette', 4, 1),
+    --
+    ('Chocolat au lait', 4, 1),
+    --
+    ('Sirop', 4, 1),
+    --
+    ('Herbes de provence', 4, 1),
+    --
+    ('Beurre salé', 5, 1),
+    --
+    ('Maïzena', 5, 1),
+    --
+    ('Sucre glace', 4, 1),
+    --
+    ('Muscade', 4, 1),
+    --
+    ('Sauce tomate', 4, 1),
+    --
+    ('Pâte feuilletée', 4, 1),
+    --
+    ('Fromages (secs)', 5, 1);
 
 SELECT
     setval('users_id_seq', (
