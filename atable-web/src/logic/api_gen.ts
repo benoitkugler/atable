@@ -3,19 +3,15 @@
 import type { AxiosResponse } from "axios";
 import Axios from "axios";
 
-class DateTag {
-  private _ = "D" as const;
-}
+export type Ar2_MealGroups = [MealGroups, MealGroups];
 
 // AAAA-MM-YY date format
-export type Date_ = string & DateTag;
+export type Date_ = string & { __opaque__: "Date" };
 
-class TimeTag {
-  private _ = "T" as const;
-}
+export type Int = number & { __opaque__: "Int" };
 
 // ISO date-time string
-export type Time = string & TimeTag;
+export type Time = string & { __opaque__: "Time" };
 
 // github.com/benoitkugler/atable/controllers/library.AddMenuIngredientIn
 export interface AddMenuIngredientIn {
@@ -31,7 +27,7 @@ export interface AddMenuReceipeIn {
 export interface AddReceipeIngredientIn {
   IdReceipe: IdReceipe;
   IdIngredient: IdIngredient;
-  InitialFor: number;
+  InitialFor: Int;
 }
 // github.com/benoitkugler/atable/controllers/library.DeleteIngredientOut
 export interface DeleteIngredientOut {
@@ -42,13 +38,14 @@ export interface DeleteIngredientOut {
 // github.com/benoitkugler/atable/controllers/library.ImportReceipes1Out
 export interface ImportReceipes1Out {
   Receipes: ReceipeI[] | null;
-  Map: { [key: string]: Ingredient } | null;
+  Map: { [key in string]: Ingredient } | null;
 }
 // github.com/benoitkugler/atable/controllers/library.IngredientHeader
 export interface IngredientHeader {
   Title: string;
-  ID: number;
+  ID: Int;
   IsPersonnal: boolean;
+  Owner: string;
   Kind: IngredientKind;
 }
 // github.com/benoitkugler/atable/controllers/library.IngredientI
@@ -89,14 +86,15 @@ export interface ReceipeExt {
 // github.com/benoitkugler/atable/controllers/library.ReceipeHeader
 export interface ReceipeHeader {
   Title: string;
-  ID: number;
+  ID: Int;
   IsPersonnal: boolean;
+  Owner: string;
   Plat: PlatKind;
 }
 // github.com/benoitkugler/atable/controllers/library.ReceipeI
 export interface ReceipeI {
   Name: string;
-  For: number;
+  For: Int;
   Plat: PlatKind;
   Ingredients: IngredientI[] | null;
 }
@@ -111,13 +109,14 @@ export interface ReceipeIngredientExt {
 // github.com/benoitkugler/atable/controllers/library.ResourceHeader
 export interface ResourceHeader {
   Title: string;
-  ID: number;
+  ID: Int;
   IsPersonnal: boolean;
+  Owner: string;
 }
 // github.com/benoitkugler/atable/controllers/order.CompileIngredientsIn
 export interface CompileIngredientsIn {
   IdSejour: IdSejour;
-  DayOffsets: number[] | null;
+  DayOffsets: Int[] | null;
 }
 // github.com/benoitkugler/atable/controllers/order.CompileIngredientsOut
 export interface CompileIngredientsOut {
@@ -136,7 +135,7 @@ export interface ExportExcelIn {
   Mapping: IngredientMapping;
 }
 // github.com/benoitkugler/atable/controllers/order.IngredientMapping
-export type IngredientMapping = { [key: IdIngredient]: IdSupplier } | null;
+export type IngredientMapping = { [key in IdIngredient]: IdSupplier } | null;
 // github.com/benoitkugler/atable/controllers/order.IngredientQuantities
 export interface IngredientQuantities {
   Ingredient: Ingredient;
@@ -183,8 +182,8 @@ export interface AddReceipeIn {
 // github.com/benoitkugler/atable/controllers/sejours.AssistantMealsIn
 export interface AssistantMealsIn {
   IdSejour: IdSejour;
-  DaysNumber: number;
-  Excursions: { [key: number]: IdGroup[] | null } | null;
+  DaysNumber: Int;
+  Excursions: { [key in Int]: IdGroup[] | null } | null;
   WithGouter: boolean;
   GroupsForCinquieme: IdGroup[] | null;
   DeleteExisting: boolean;
@@ -192,12 +191,12 @@ export interface AssistantMealsIn {
 // github.com/benoitkugler/atable/controllers/sejours.ExportCookbookIn
 export interface ExportCookbookIn {
   IdSejour: IdSejour;
-  Days: number[] | null;
+  Days: Int[] | null;
 }
 // github.com/benoitkugler/atable/controllers/sejours.MealCreateIn
 export interface MealCreateIn {
   IdSejour: IdSejour;
-  Day: number;
+  Day: Int;
   Horaire: Horaire;
 }
 // github.com/benoitkugler/atable/controllers/sejours.MealExt
@@ -207,7 +206,7 @@ export interface MealExt {
 }
 // github.com/benoitkugler/atable/controllers/sejours.MealsLoadOut
 export interface MealsLoadOut {
-  Menus: { [key: IdMenu]: MenuExt } | null;
+  Menus: { [key in IdMenu]: MenuExt } | null;
   Meals: MealExt[] | null;
 }
 // github.com/benoitkugler/atable/controllers/sejours.MoveGroupIn
@@ -218,13 +217,13 @@ export interface MoveGroupIn {
 }
 // github.com/benoitkugler/atable/controllers/sejours.PreviewQuantitiesOut
 export interface PreviewQuantitiesOut {
-  NbPeople: number;
+  NbPeople: Int;
   Quantities: IngredientQuantity[] | null;
 }
 // github.com/benoitkugler/atable/controllers/sejours.RemoveItemIn
 export interface RemoveItemIn {
   IdMenu: IdMenu;
-  ID: number;
+  ID: Int;
   IsReceipe: boolean;
 }
 // github.com/benoitkugler/atable/controllers/sejours.ResourceSearchOut
@@ -274,11 +273,11 @@ export interface LogginOut {
   Pseudo: string;
 }
 // github.com/benoitkugler/atable/sql/menus.IdIngredient
-export type IdIngredient = number;
+export type IdIngredient = Int;
 // github.com/benoitkugler/atable/sql/menus.IdMenu
-export type IdMenu = number;
+export type IdMenu = Int;
 // github.com/benoitkugler/atable/sql/menus.IdReceipe
-export type IdReceipe = number;
+export type IdReceipe = Int;
 // github.com/benoitkugler/atable/sql/menus.Ingredient
 export interface Ingredient {
   Id: IdIngredient;
@@ -287,15 +286,17 @@ export interface Ingredient {
   Owner: IdUser;
 }
 // github.com/benoitkugler/atable/sql/menus.IngredientKind
-export enum IngredientKind {
-  I_Empty = 0,
-  I_Legumes = 1,
-  I_Feculents = 2,
-  I_Viandes = 3,
-  I_Epicerie = 4,
-  I_Laitages = 5,
-  I_Boulangerie = 6,
-}
+export const IngredientKind = {
+  I_Empty: 0,
+  I_Legumes: 1,
+  I_Feculents: 2,
+  I_Viandes: 3,
+  I_Epicerie: 4,
+  I_Laitages: 5,
+  I_Boulangerie: 6,
+} as const;
+export type IngredientKind =
+  (typeof IngredientKind)[keyof typeof IngredientKind];
 
 export const IngredientKindLabels: { [key in IngredientKind]: string } = {
   [IngredientKind.I_Empty]: "Autre",
@@ -308,7 +309,7 @@ export const IngredientKindLabels: { [key in IngredientKind]: string } = {
 };
 
 // github.com/benoitkugler/atable/sql/menus.Ingredients
-export type Ingredients = { [key: IdIngredient]: Ingredient } | null;
+export type Ingredients = { [key in IdIngredient]: Ingredient } | null;
 // github.com/benoitkugler/atable/sql/menus.Menu
 export interface Menu {
   Id: IdMenu;
@@ -325,12 +326,13 @@ export interface MenuIngredient {
   Plat: PlatKind;
 }
 // github.com/benoitkugler/atable/sql/menus.PlatKind
-export enum PlatKind {
-  P_Empty = 0,
-  P_Dessert = 1,
-  P_PlatPrincipal = 2,
-  P_Entree = 3,
-}
+export const PlatKind = {
+  P_Empty: 0,
+  P_Dessert: 1,
+  P_PlatPrincipal: 2,
+  P_Entree: 3,
+} as const;
+export type PlatKind = (typeof PlatKind)[keyof typeof PlatKind];
 
 export const PlatKindLabels: { [key in PlatKind]: string } = {
   [PlatKind.P_Empty]: "Autre",
@@ -343,7 +345,7 @@ export const PlatKindLabels: { [key in PlatKind]: string } = {
 export interface QuantityR {
   Val: number;
   Unite: Unite;
-  For_: number;
+  For_: Int;
 }
 // github.com/benoitkugler/atable/sql/menus.Receipe
 export interface Receipe {
@@ -362,15 +364,16 @@ export interface ReceipeIngredient {
   Quantity: QuantityR;
 }
 // github.com/benoitkugler/atable/sql/menus.Receipes
-export type Receipes = { [key: IdReceipe]: Receipe } | null;
+export type Receipes = { [key in IdReceipe]: Receipe } | null;
 // github.com/benoitkugler/atable/sql/menus.Unite
-export enum Unite {
-  U_Piece = 0,
-  U_Kg = 1,
-  U_G = 2,
-  U_L = 3,
-  U_CL = 4,
-}
+export const Unite = {
+  U_Piece: 0,
+  U_Kg: 1,
+  U_G: 2,
+  U_L: 3,
+  U_CL: 4,
+} as const;
+export type Unite = (typeof Unite)[keyof typeof Unite];
 
 export const UniteLabels: { [key in Unite]: string } = {
   [Unite.U_Piece]: "pièces",
@@ -381,9 +384,9 @@ export const UniteLabels: { [key in Unite]: string } = {
 };
 
 // github.com/benoitkugler/atable/sql/orders.IdProfile
-export type IdProfile = number;
+export type IdProfile = Int;
 // github.com/benoitkugler/atable/sql/orders.IdSupplier
-export type IdSupplier = number;
+export type IdSupplier = Int;
 // github.com/benoitkugler/atable/sql/orders.Profile
 export interface Profile {
   Id: IdProfile;
@@ -397,7 +400,7 @@ export interface Supplier {
   Name: string;
 }
 // github.com/benoitkugler/atable/sql/orders.Suppliers
-export type Suppliers = { [key: IdSupplier]: Supplier } | null;
+export type Suppliers = { [key in IdSupplier]: Supplier } | null;
 // github.com/benoitkugler/atable/sql/sejours.Date
 export type Date = Date_;
 // github.com/benoitkugler/atable/sql/sejours.Group
@@ -406,16 +409,17 @@ export interface Group {
   Sejour: IdSejour;
   Name: string;
   Color: string;
-  Size: number;
+  Size: Int;
 }
 // github.com/benoitkugler/atable/sql/sejours.Horaire
-export enum Horaire {
-  PetitDejeuner = 0,
-  Midi = 1,
-  Gouter = 2,
-  Diner = 3,
-  Cinquieme = 4,
-}
+export const Horaire = {
+  PetitDejeuner: 0,
+  Midi: 1,
+  Gouter: 2,
+  Diner: 3,
+  Cinquieme: 4,
+} as const;
+export type Horaire = (typeof Horaire)[keyof typeof Horaire];
 
 export const HoraireLabels: { [key in Horaire]: string } = {
   [Horaire.PetitDejeuner]: "Petit déjeuner",
@@ -426,18 +430,18 @@ export const HoraireLabels: { [key in Horaire]: string } = {
 };
 
 // github.com/benoitkugler/atable/sql/sejours.IdGroup
-export type IdGroup = number;
+export type IdGroup = Int;
 // github.com/benoitkugler/atable/sql/sejours.IdMeal
-export type IdMeal = number;
+export type IdMeal = Int;
 // github.com/benoitkugler/atable/sql/sejours.IdSejour
-export type IdSejour = number;
+export type IdSejour = Int;
 // github.com/benoitkugler/atable/sql/sejours.Meal
 export interface Meal {
   Id: IdMeal;
   Sejour: IdSejour;
   Menu: IdMenu;
-  Jour: number;
-  AdditionalPeople: number;
+  Jour: Int;
+  AdditionalPeople: Int;
   Horaire: Horaire;
 }
 // github.com/benoitkugler/atable/sql/sejours.MealGroup
@@ -448,7 +452,7 @@ export interface MealGroup {
 // github.com/benoitkugler/atable/sql/sejours.MealGroups
 export type MealGroups = MealGroup[] | null;
 // github.com/benoitkugler/atable/sql/sejours.Meals
-export type Meals = { [key: IdMeal]: Meal } | null;
+export type Meals = { [key in IdMeal]: Meal } | null;
 // github.com/benoitkugler/atable/sql/sejours.OptionnalIdProfile
 export interface OptionnalIdProfile {
   Valid: boolean;
@@ -463,7 +467,7 @@ export interface Sejour {
   IdProfile: OptionnalIdProfile;
 }
 // github.com/benoitkugler/atable/sql/users.IdUser
-export type IdUser = number;
+export type IdUser = Int;
 
 /** AbstractAPI provides auto-generated API calls and should be used 
 		as base class for an app controller.
@@ -638,7 +642,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessSejoursUpdate(): void {}
 
-  protected async rawSejoursDelete(params: { id: number }) {
+  protected async rawSejoursDelete(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/sejours";
     await Axios.delete(fullUrl, {
       headers: this.getHeaders(),
@@ -648,7 +652,7 @@ export abstract class AbstractAPI {
   }
 
   /** SejoursDelete wraps rawSejoursDelete and handles the error */
-  async SejoursDelete(params: { id: number }) {
+  async SejoursDelete(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawSejoursDelete(params);
@@ -661,7 +665,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessSejoursDelete(): void {}
 
-  protected async rawSejoursCreateGroupe(params: { "id-sejour": number }) {
+  protected async rawSejoursCreateGroupe(params: { "id-sejour": Int }) {
     const fullUrl = this.baseUrl + "/api/sejours/groups";
     const rep: AxiosResponse<Group> = await Axios.put(fullUrl, null, {
       headers: this.getHeaders(),
@@ -671,7 +675,7 @@ export abstract class AbstractAPI {
   }
 
   /** SejoursCreateGroupe wraps rawSejoursCreateGroupe and handles the error */
-  async SejoursCreateGroupe(params: { "id-sejour": number }) {
+  async SejoursCreateGroupe(params: { "id-sejour": Int }) {
     this.startRequest();
     try {
       const out = await this.rawSejoursCreateGroupe(params);
@@ -704,7 +708,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessSejoursUpdateGroupe(): void {}
 
-  protected async rawSejoursDeleteGroupe(params: { "id-group": number }) {
+  protected async rawSejoursDeleteGroupe(params: { "id-group": Int }) {
     const fullUrl = this.baseUrl + "/api/sejours/groups";
     await Axios.delete(fullUrl, {
       headers: this.getHeaders(),
@@ -714,7 +718,7 @@ export abstract class AbstractAPI {
   }
 
   /** SejoursDeleteGroupe wraps rawSejoursDeleteGroupe and handles the error */
-  async SejoursDeleteGroupe(params: { "id-group": number }) {
+  async SejoursDeleteGroupe(params: { "id-group": Int }) {
     this.startRequest();
     try {
       const out = await this.rawSejoursDeleteGroupe(params);
@@ -727,7 +731,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessSejoursDeleteGroupe(): void {}
 
-  protected async rawMealsLoadDay(params: { idSejour: number; day: number }) {
+  protected async rawMealsLoadDay(params: { idSejour: Int; day: Int }) {
     const fullUrl = this.baseUrl + "/api/meals";
     const rep: AxiosResponse<MealsLoadOut> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
@@ -740,7 +744,7 @@ export abstract class AbstractAPI {
   }
 
   /** MealsLoadDay wraps rawMealsLoadDay and handles the error */
-  async MealsLoadDay(params: { idSejour: number; day: number }) {
+  async MealsLoadDay(params: { idSejour: Int; day: Int }) {
     this.startRequest();
     try {
       const out = await this.rawMealsLoadDay(params);
@@ -753,7 +757,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessMealsLoadDay(data: MealsLoadOut): void {}
 
-  protected async rawMealsLoadAll(params: { idSejour: number }) {
+  protected async rawMealsLoadAll(params: { idSejour: Int }) {
     const fullUrl = this.baseUrl + "/api/meals-all";
     const rep: AxiosResponse<MealsLoadOut> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
@@ -763,7 +767,7 @@ export abstract class AbstractAPI {
   }
 
   /** MealsLoadAll wraps rawMealsLoadAll and handles the error */
-  async MealsLoadAll(params: { idSejour: number }) {
+  async MealsLoadAll(params: { idSejour: Int }) {
     this.startRequest();
     try {
       const out = await this.rawMealsLoadAll(params);
@@ -821,7 +825,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessMealsSearch(data: ResourceSearchOut): void {}
 
-  protected async rawMealsPreviewQuantities(params: { idMeal: number }) {
+  protected async rawMealsPreviewQuantities(params: { idMeal: Int }) {
     const fullUrl = this.baseUrl + "/api/meals/quantities";
     const rep: AxiosResponse<PreviewQuantitiesOut> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
@@ -831,7 +835,7 @@ export abstract class AbstractAPI {
   }
 
   /** MealsPreviewQuantities wraps rawMealsPreviewQuantities and handles the error */
-  async MealsPreviewQuantities(params: { idMeal: number }) {
+  async MealsPreviewQuantities(params: { idMeal: Int }) {
     this.startRequest();
     try {
       const out = await this.rawMealsPreviewQuantities(params);
@@ -886,7 +890,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessMealsUpdate(): void {}
 
-  protected async rawMealsDelete(params: { idMeal: number }) {
+  protected async rawMealsDelete(params: { idMeal: Int }) {
     const fullUrl = this.baseUrl + "/api/meals/details";
     await Axios.delete(fullUrl, {
       headers: this.getHeaders(),
@@ -896,7 +900,7 @@ export abstract class AbstractAPI {
   }
 
   /** MealsDelete wraps rawMealsDelete and handles the error */
-  async MealsDelete(params: { idMeal: number }) {
+  async MealsDelete(params: { idMeal: Int }) {
     this.startRequest();
     try {
       const out = await this.rawMealsDelete(params);
@@ -911,9 +915,11 @@ export abstract class AbstractAPI {
 
   protected async rawMealsMoveGroup(params: MoveGroupIn) {
     const fullUrl = this.baseUrl + "/api/meals/groups";
-    const rep: AxiosResponse<MealGroups[]> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
+    const rep: AxiosResponse<Ar2_MealGroups> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() },
+    );
     return rep.data;
   }
 
@@ -929,7 +935,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected onSuccessMealsMoveGroup(data: MealGroups[]): void {}
+  protected onSuccessMealsMoveGroup(data: Ar2_MealGroups): void {}
 
   protected async rawMealsAddIngredient(params: AddIngredientIn) {
     const fullUrl = this.baseUrl + "/api/meals/ingredients";
@@ -1071,7 +1077,7 @@ export abstract class AbstractAPI {
     const header = rep.headers["content-disposition"];
     const startIndex = header.indexOf("filename=") + 9;
     const endIndex = header.length;
-    const filename = header.substring(startIndex, endIndex);
+    const filename = decodeURIComponent(header.substring(startIndex, endIndex));
     return { blob: rep.data, filename: filename };
   }
 
@@ -1175,7 +1181,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessLibraryUpdateIngredient(): void {}
 
-  protected async rawLibraryDeleteIngredient(params: { idIngredient: number }) {
+  protected async rawLibraryDeleteIngredient(params: { idIngredient: Int }) {
     const fullUrl = this.baseUrl + "/api/library/all-ingredients";
     const rep: AxiosResponse<DeleteIngredientOut> = await Axios.delete(
       fullUrl,
@@ -1188,7 +1194,7 @@ export abstract class AbstractAPI {
   }
 
   /** LibraryDeleteIngredient wraps rawLibraryDeleteIngredient and handles the error */
-  async LibraryDeleteIngredient(params: { idIngredient: number }) {
+  async LibraryDeleteIngredient(params: { idIngredient: Int }) {
     this.startRequest();
     try {
       const out = await this.rawLibraryDeleteIngredient(params);
@@ -1251,7 +1257,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessLibraryImportReceipes2(data: ReceipeExt[] | null): void {}
 
-  protected async rawLibraryLoadMenu(params: { idMenu: number }) {
+  protected async rawLibraryLoadMenu(params: { idMenu: Int }) {
     const fullUrl = this.baseUrl + "/api/library/menus";
     const rep: AxiosResponse<MenuExt> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
@@ -1261,7 +1267,7 @@ export abstract class AbstractAPI {
   }
 
   /** LibraryLoadMenu wraps rawLibraryLoadMenu and handles the error */
-  async LibraryLoadMenu(params: { idMenu: number }) {
+  async LibraryLoadMenu(params: { idMenu: Int }) {
     this.startRequest();
     try {
       const out = await this.rawLibraryLoadMenu(params);
@@ -1316,7 +1322,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessLibraryUpdateMenu(): void {}
 
-  protected async rawLibraryDeleteMenu(params: { idMenu: number }) {
+  protected async rawLibraryDeleteMenu(params: { idMenu: Int }) {
     const fullUrl = this.baseUrl + "/api/library/menus";
     await Axios.delete(fullUrl, {
       headers: this.getHeaders(),
@@ -1326,7 +1332,7 @@ export abstract class AbstractAPI {
   }
 
   /** LibraryDeleteMenu wraps rawLibraryDeleteMenu and handles the error */
-  async LibraryDeleteMenu(params: { idMenu: number }) {
+  async LibraryDeleteMenu(params: { idMenu: Int }) {
     this.startRequest();
     try {
       const out = await this.rawLibraryDeleteMenu(params);
@@ -1339,7 +1345,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessLibraryDeleteMenu(): void {}
 
-  protected async rawLibraryLoadReceipe(params: { idReceipe: number }) {
+  protected async rawLibraryLoadReceipe(params: { idReceipe: Int }) {
     const fullUrl = this.baseUrl + "/api/library/receipes";
     const rep: AxiosResponse<ReceipeExt> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
@@ -1349,7 +1355,7 @@ export abstract class AbstractAPI {
   }
 
   /** LibraryLoadReceipe wraps rawLibraryLoadReceipe and handles the error */
-  async LibraryLoadReceipe(params: { idReceipe: number }) {
+  async LibraryLoadReceipe(params: { idReceipe: Int }) {
     this.startRequest();
     try {
       const out = await this.rawLibraryLoadReceipe(params);
@@ -1404,7 +1410,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessLibraryUpdateReceipe(): void {}
 
-  protected async rawLibraryDeleteReceipe(params: { idReceipe: number }) {
+  protected async rawLibraryDeleteReceipe(params: { idReceipe: Int }) {
     const fullUrl = this.baseUrl + "/api/library/receipes";
     await Axios.delete(fullUrl, {
       headers: this.getHeaders(),
@@ -1414,7 +1420,7 @@ export abstract class AbstractAPI {
   }
 
   /** LibraryDeleteReceipe wraps rawLibraryDeleteReceipe and handles the error */
-  async LibraryDeleteReceipe(params: { idReceipe: number }) {
+  async LibraryDeleteReceipe(params: { idReceipe: Int }) {
     this.startRequest();
     try {
       const out = await this.rawLibraryDeleteReceipe(params);
@@ -1476,8 +1482,8 @@ export abstract class AbstractAPI {
   protected onSuccessLibraryUpdateReceipeIngredient(): void {}
 
   protected async rawLibraryDeleteReceipeIngredient(params: {
-    idReceipe: number;
-    idIngredient: number;
+    idReceipe: Int;
+    idIngredient: Int;
   }) {
     const fullUrl = this.baseUrl + "/api/library/receipes/ingredients";
     await Axios.delete(fullUrl, {
@@ -1492,8 +1498,8 @@ export abstract class AbstractAPI {
 
   /** LibraryDeleteReceipeIngredient wraps rawLibraryDeleteReceipeIngredient and handles the error */
   async LibraryDeleteReceipeIngredient(params: {
-    idReceipe: number;
-    idIngredient: number;
+    idReceipe: Int;
+    idIngredient: Int;
   }) {
     this.startRequest();
     try {
@@ -1552,8 +1558,8 @@ export abstract class AbstractAPI {
   protected onSuccessLibraryUpdateMenuIngredient(): void {}
 
   protected async rawLibraryDeleteMenuIngredient(params: {
-    idMenu: number;
-    idIngredient: number;
+    idMenu: Int;
+    idIngredient: Int;
   }) {
     const fullUrl = this.baseUrl + "/api/library/menus/ingredients";
     await Axios.delete(fullUrl, {
@@ -1568,8 +1574,8 @@ export abstract class AbstractAPI {
 
   /** LibraryDeleteMenuIngredient wraps rawLibraryDeleteMenuIngredient and handles the error */
   async LibraryDeleteMenuIngredient(params: {
-    idMenu: number;
-    idIngredient: number;
+    idMenu: Int;
+    idIngredient: Int;
   }) {
     this.startRequest();
     try {
@@ -1606,8 +1612,8 @@ export abstract class AbstractAPI {
   protected onSuccessLibraryAddMenuReceipe(data: Receipe): void {}
 
   protected async rawLibraryDeleteMenuReceipe(params: {
-    idMenu: number;
-    idReceipe: number;
+    idMenu: Int;
+    idReceipe: Int;
   }) {
     const fullUrl = this.baseUrl + "/api/library/menus/receipes";
     await Axios.delete(fullUrl, {
@@ -1621,10 +1627,7 @@ export abstract class AbstractAPI {
   }
 
   /** LibraryDeleteMenuReceipe wraps rawLibraryDeleteMenuReceipe and handles the error */
-  async LibraryDeleteMenuReceipe(params: {
-    idMenu: number;
-    idReceipe: number;
-  }) {
+  async LibraryDeleteMenuReceipe(params: { idMenu: Int; idReceipe: Int }) {
     this.startRequest();
     try {
       const out = await this.rawLibraryDeleteMenuReceipe(params);
@@ -1637,9 +1640,9 @@ export abstract class AbstractAPI {
 
   protected onSuccessLibraryDeleteMenuReceipe(): void {}
 
-  protected async rawOrderGetDays(params: { idSejour: number }) {
+  protected async rawOrderGetDays(params: { idSejour: Int }) {
     const fullUrl = this.baseUrl + "/api/order/days";
-    const rep: AxiosResponse<number[] | null> = await Axios.get(fullUrl, {
+    const rep: AxiosResponse<Int[] | null> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
       params: { idSejour: String(params["idSejour"]) },
     });
@@ -1647,7 +1650,7 @@ export abstract class AbstractAPI {
   }
 
   /** OrderGetDays wraps rawOrderGetDays and handles the error */
-  async OrderGetDays(params: { idSejour: number }) {
+  async OrderGetDays(params: { idSejour: Int }) {
     this.startRequest();
     try {
       const out = await this.rawOrderGetDays(params);
@@ -1658,7 +1661,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected onSuccessOrderGetDays(data: number[] | null): void {}
+  protected onSuccessOrderGetDays(data: Int[] | null): void {}
 
   protected async rawOrderCompileIngredients(params: CompileIngredientsIn) {
     const fullUrl = this.baseUrl + "/api/order/ingredients";
@@ -1751,7 +1754,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessOrderUpdateProfile(): void {}
 
-  protected async rawOrderDeleteProfile(params: { id: number }) {
+  protected async rawOrderDeleteProfile(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/order/profiles";
     await Axios.delete(fullUrl, {
       headers: this.getHeaders(),
@@ -1761,7 +1764,7 @@ export abstract class AbstractAPI {
   }
 
   /** OrderDeleteProfile wraps rawOrderDeleteProfile and handles the error */
-  async OrderDeleteProfile(params: { id: number }) {
+  async OrderDeleteProfile(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawOrderDeleteProfile(params);
@@ -1774,7 +1777,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessOrderDeleteProfile(): void {}
 
-  protected async rawOrderLoadProfile(params: { idProfile: number }) {
+  protected async rawOrderLoadProfile(params: { idProfile: Int }) {
     const fullUrl = this.baseUrl + "/api/order/profile/suppliers";
     const rep: AxiosResponse<Mapping> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
@@ -1784,7 +1787,7 @@ export abstract class AbstractAPI {
   }
 
   /** OrderLoadProfile wraps rawOrderLoadProfile and handles the error */
-  async OrderLoadProfile(params: { idProfile: number }) {
+  async OrderLoadProfile(params: { idProfile: Int }) {
     this.startRequest();
     try {
       const out = await this.rawOrderLoadProfile(params);
@@ -1839,7 +1842,7 @@ export abstract class AbstractAPI {
 
   protected onSuccessOrderUpdateSupplier(): void {}
 
-  protected async rawOrderDeleteSupplier(params: { id: number }) {
+  protected async rawOrderDeleteSupplier(params: { id: Int }) {
     const fullUrl = this.baseUrl + "/api/order/profile/suppliers";
     await Axios.delete(fullUrl, {
       headers: this.getHeaders(),
@@ -1849,7 +1852,7 @@ export abstract class AbstractAPI {
   }
 
   /** OrderDeleteSupplier wraps rawOrderDeleteSupplier and handles the error */
-  async OrderDeleteSupplier(params: { id: number }) {
+  async OrderDeleteSupplier(params: { id: Int }) {
     this.startRequest();
     try {
       const out = await this.rawOrderDeleteSupplier(params);
@@ -1936,7 +1939,7 @@ export abstract class AbstractAPI {
     const header = rep.headers["content-disposition"];
     const startIndex = header.indexOf("filename=") + 9;
     const endIndex = header.length;
-    const filename = header.substring(startIndex, endIndex);
+    const filename = decodeURIComponent(header.substring(startIndex, endIndex));
     return { blob: rep.data, filename: filename };
   }
 

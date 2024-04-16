@@ -21,7 +21,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-//go:generate /home/benoit/go/src/github.com/benoitkugler/gomacro/cmd/gomacro gomacro.json
+//go:generate /home/benoit/go/src/github.com/benoitkugler/gomacro/cmd/gomacro --config gomacro.json
 
 func connectDB(dev bool) (*sql.DB, error) {
 	var credentials pass.DB

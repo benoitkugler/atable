@@ -513,7 +513,7 @@ func DeleteMenuIngredientsByIdIngredients(tx DB, idIngredients_ ...IdIngredient)
 }
 
 // SelectMenuIngredientsByIdMenuAndIdIngredient selects the items matching the given fields.
-func SelectMenuIngredientsByIdMenuAndIdIngredient(tx DB, idMenu IdMenu, idIngredient IdIngredient) (item []MenuIngredient, err error) {
+func SelectMenuIngredientsByIdMenuAndIdIngredient(tx DB, idMenu IdMenu, idIngredient IdIngredient) (item MenuIngredients, err error) {
 	rows, err := tx.Query("SELECT * FROM menu_ingredients WHERE IdMenu = $1 AND IdIngredient = $2", idMenu, idIngredient)
 	if err != nil {
 		return nil, err
@@ -523,7 +523,7 @@ func SelectMenuIngredientsByIdMenuAndIdIngredient(tx DB, idMenu IdMenu, idIngred
 
 // DeleteMenuIngredientsByIdMenuAndIdIngredient deletes the item matching the given fields, returning
 // the deleted items.
-func DeleteMenuIngredientsByIdMenuAndIdIngredient(tx DB, idMenu IdMenu, idIngredient IdIngredient) (item []MenuIngredient, err error) {
+func DeleteMenuIngredientsByIdMenuAndIdIngredient(tx DB, idMenu IdMenu, idIngredient IdIngredient) (item MenuIngredients, err error) {
 	rows, err := tx.Query("DELETE FROM menu_ingredients WHERE IdMenu = $1 AND IdIngredient = $2 RETURNING *", idMenu, idIngredient)
 	if err != nil {
 		return nil, err
@@ -713,7 +713,7 @@ func DeleteMenuReceipesByIdReceipes(tx DB, idReceipes_ ...IdReceipe) (MenuReceip
 }
 
 // SelectMenuReceipesByIdMenuAndIdReceipe selects the items matching the given fields.
-func SelectMenuReceipesByIdMenuAndIdReceipe(tx DB, idMenu IdMenu, idReceipe IdReceipe) (item []MenuReceipe, err error) {
+func SelectMenuReceipesByIdMenuAndIdReceipe(tx DB, idMenu IdMenu, idReceipe IdReceipe) (item MenuReceipes, err error) {
 	rows, err := tx.Query("SELECT * FROM menu_receipes WHERE IdMenu = $1 AND IdReceipe = $2", idMenu, idReceipe)
 	if err != nil {
 		return nil, err
@@ -723,7 +723,7 @@ func SelectMenuReceipesByIdMenuAndIdReceipe(tx DB, idMenu IdMenu, idReceipe IdRe
 
 // DeleteMenuReceipesByIdMenuAndIdReceipe deletes the item matching the given fields, returning
 // the deleted items.
-func DeleteMenuReceipesByIdMenuAndIdReceipe(tx DB, idMenu IdMenu, idReceipe IdReceipe) (item []MenuReceipe, err error) {
+func DeleteMenuReceipesByIdMenuAndIdReceipe(tx DB, idMenu IdMenu, idReceipe IdReceipe) (item MenuReceipes, err error) {
 	rows, err := tx.Query("DELETE FROM menu_receipes WHERE IdMenu = $1 AND IdReceipe = $2 RETURNING *", idMenu, idReceipe)
 	if err != nil {
 		return nil, err
@@ -1060,7 +1060,7 @@ func DeleteReceipeIngredientsByIdIngredients(tx DB, idIngredients_ ...IdIngredie
 }
 
 // SelectReceipeIngredientsByIdReceipeAndIdIngredient selects the items matching the given fields.
-func SelectReceipeIngredientsByIdReceipeAndIdIngredient(tx DB, idReceipe IdReceipe, idIngredient IdIngredient) (item []ReceipeIngredient, err error) {
+func SelectReceipeIngredientsByIdReceipeAndIdIngredient(tx DB, idReceipe IdReceipe, idIngredient IdIngredient) (item ReceipeIngredients, err error) {
 	rows, err := tx.Query("SELECT * FROM receipe_ingredients WHERE IdReceipe = $1 AND IdIngredient = $2", idReceipe, idIngredient)
 	if err != nil {
 		return nil, err
@@ -1070,7 +1070,7 @@ func SelectReceipeIngredientsByIdReceipeAndIdIngredient(tx DB, idReceipe IdRecei
 
 // DeleteReceipeIngredientsByIdReceipeAndIdIngredient deletes the item matching the given fields, returning
 // the deleted items.
-func DeleteReceipeIngredientsByIdReceipeAndIdIngredient(tx DB, idReceipe IdReceipe, idIngredient IdIngredient) (item []ReceipeIngredient, err error) {
+func DeleteReceipeIngredientsByIdReceipeAndIdIngredient(tx DB, idReceipe IdReceipe, idIngredient IdIngredient) (item ReceipeIngredients, err error) {
 	rows, err := tx.Query("DELETE FROM receipe_ingredients WHERE IdReceipe = $1 AND IdIngredient = $2 RETURNING *", idReceipe, idIngredient)
 	if err != nil {
 		return nil, err

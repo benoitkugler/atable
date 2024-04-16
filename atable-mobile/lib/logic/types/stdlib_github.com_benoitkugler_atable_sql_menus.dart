@@ -63,6 +63,25 @@ extension _IngredientKindExt on IngredientKind {
   }
 }
 
+String ingredientKindLabel(IngredientKind v) {
+  switch (v) {
+    case IngredientKind.empty:
+      return "Autre";
+    case IngredientKind.legumes:
+      return "Fruits et légumes";
+    case IngredientKind.feculents:
+      return "Féculents";
+    case IngredientKind.viandes:
+      return "Viandes, poissons";
+    case IngredientKind.epicerie:
+      return "Épicerie";
+    case IngredientKind.laitages:
+      return "Laitages";
+    case IngredientKind.boulangerie:
+      return "Boulangerie";
+  }
+}
+
 IngredientKind ingredientKindFromJson(dynamic json) =>
     _IngredientKindExt.fromValue(json as int);
 
@@ -200,6 +219,19 @@ extension _PlatKindExt on PlatKind {
   }
 }
 
+String platKindLabel(PlatKind v) {
+  switch (v) {
+    case PlatKind.empty:
+      return "Autre";
+    case PlatKind.dessert:
+      return "Dessert";
+    case PlatKind.platPrincipal:
+      return "Plat principal";
+    case PlatKind.entree:
+      return "Entrée";
+  }
+}
+
 PlatKind platKindFromJson(dynamic json) => _PlatKindExt.fromValue(json as int);
 
 dynamic platKindToJson(PlatKind item) => item.toValue();
@@ -327,6 +359,21 @@ extension _UniteExt on Unite {
 
   int toValue() {
     return index;
+  }
+}
+
+String uniteLabel(Unite v) {
+  switch (v) {
+    case Unite.piece:
+      return "pièces";
+    case Unite.kg:
+      return "kg";
+    case Unite.g:
+      return "gr";
+    case Unite.l:
+      return "L";
+    case Unite.cL:
+      return "cL";
   }
 }
 
