@@ -246,7 +246,7 @@ func sortedTitle(chunks []platTitle) string {
 	if len(chunks) == 0 {
 		return ""
 	}
-	sort.Slice(chunks, func(i, j int) bool { return chunks[i].kind < chunks[j].kind })
+	sort.Slice(chunks, func(i, j int) bool { return chunks[i].kind > chunks[j].kind })
 	var s strings.Builder
 	for _, c := range chunks {
 		s.WriteString(", ")

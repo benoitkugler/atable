@@ -96,13 +96,11 @@
 
 <script setup lang="ts">
 import type {
-  Date_,
   ReceipeHeader,
   ResourceHeader,
   ResourceSearchOut,
 } from "@/logic/api_gen";
 import { PlatKindLabels } from "@/logic/api_gen";
-import { computed } from "vue";
 
 const props = defineProps<{
   resources: ResourceSearchOut;
@@ -114,10 +112,4 @@ const emit = defineEmits<{
   (e: "deleteMenu", m: ResourceHeader): void;
   (e: "deleteReceipe", m: ReceipeHeader): void;
 }>();
-
-const pageSize = computed(
-  () =>
-    (props.resources.Menus?.length || 0) +
-    (props.resources.Ingredients?.length || 0)
-);
 </script>
