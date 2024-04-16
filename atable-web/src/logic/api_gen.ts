@@ -470,6 +470,14 @@ export interface Sejour {
 }
 // github.com/benoitkugler/atable/sql/users.IdUser
 export type IdUser = Int;
+// github.com/benoitkugler/atable/sql/users.User
+export interface User {
+  Id: IdUser;
+  IsAdmin: boolean;
+  Mail: string;
+  Password: string;
+  Pseudo: string;
+}
 
 /** AbstractAPI provides auto-generated API calls and should be used 
 		as base class for an app controller.
@@ -579,6 +587,48 @@ export abstract class AbstractAPI {
   }
 
   protected onSuccessUserResetPassword(): void {}
+
+  protected async rawUserGetSettings() {
+    const fullUrl = this.baseUrl + "/api/settings";
+    const rep: AxiosResponse<User> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** UserGetSettings wraps rawUserGetSettings and handles the error */
+  async UserGetSettings() {
+    this.startRequest();
+    try {
+      const out = await this.rawUserGetSettings();
+      this.onSuccessUserGetSettings(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessUserGetSettings(data: User): void {}
+
+  protected async rawUserUpdateSettings(params: User) {
+    const fullUrl = this.baseUrl + "/api/settings";
+    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+    return true;
+  }
+
+  /** UserUpdateSettings wraps rawUserUpdateSettings and handles the error */
+  async UserUpdateSettings(params: User) {
+    this.startRequest();
+    try {
+      const out = await this.rawUserUpdateSettings(params);
+      this.onSuccessUserUpdateSettings();
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessUserUpdateSettings(): void {}
 
   protected async rawSejoursGet() {
     const fullUrl = this.baseUrl + "/api/sejours";

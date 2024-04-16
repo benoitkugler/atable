@@ -5,6 +5,7 @@ import Sejours from "@/views/Sejours.vue";
 import Agenda from "@/views/Agenda.vue";
 import Library from "@/views/Library.vue";
 import Order from "@/views/Order.vue";
+import Settings from "@/views/Settings.vue";
 
 const routes = [
   {
@@ -26,6 +27,11 @@ const routes = [
     path: "/library",
     name: "library",
     component: Library,
+  },
+  {
+    path: "/settings",
+    name: "settings",
+    component: Settings,
   },
 ];
 

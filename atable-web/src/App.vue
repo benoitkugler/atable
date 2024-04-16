@@ -65,6 +65,20 @@
           </template>
         </v-tooltip>
         <v-divider></v-divider>
+        <v-tooltip text="Réglages du compte.">
+          <template v-slot:activator="{ isActive, props }">
+            <v-list-item
+              v-on="{ isActive }"
+              v-bind="props"
+              color="secondary"
+              title="Préférences"
+              prepend-icon="mdi-cog"
+              :to="{ name: 'settings' }"
+            >
+            </v-list-item>
+          </template>
+        </v-tooltip>
+        <v-divider></v-divider>
         <v-list-item
           color="secondary"
           title="Se déconnecter"
@@ -135,6 +149,8 @@ const title = computed(() => {
     }
     case "library":
       return "Bibliothèque de menus favoris et recettes";
+    case "settings":
+      return "Préférences";
     default:
       return "";
   }

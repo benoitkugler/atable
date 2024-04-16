@@ -18,6 +18,10 @@ func setupWebAPI(e *echo.Echo, tvc *users.Controller, sej *sejours.Controller, l
 	e.GET("/api/reset", tvc.UserResetPassword)
 
 	gr := e.Group("", tvc.JWTMiddleware())
+
+	gr.GET("/api/settings", tvc.UserGetSettings)
+	gr.POST("/api/settings", tvc.UserUpdateSettings)
+
 	gr.GET("/api/sejours", sej.SejoursGet)
 	gr.PUT("/api/sejours", sej.SejoursCreate)
 	gr.POST("/api/sejours", sej.SejoursUpdate)
