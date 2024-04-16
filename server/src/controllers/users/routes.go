@@ -251,3 +251,42 @@ func (ct *Controller) resetPassword(mail string) error {
 
 	return nil
 }
+
+func (ct *Controller) UserGetSettings(c echo.Context) error {
+	uID := JWTUser(c)
+
+	user, err := us.SelectUser(ct.db, uID)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return c.JSON(200, user)
+}
+
+func (ct *Controller) UserUpdateSettings(c echo.Context) error {
+	uID := JWTUser(c)
+
+	var args us.User
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	if uID != args.Id {
+		return errors.New("access forbidden")
+	}
+
+	existing, err := us.SelectUser(ct.db, uID)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	existing.Mail = args.Mail
+	existing.Password = args.Password
+	existing.Pseudo = args.Pseudo
+	_, err = existing.Update(ct.db)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	return c.NoContent(200)
+}
