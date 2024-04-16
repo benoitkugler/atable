@@ -134,9 +134,12 @@
       <v-row no-gutters>
         <v-col>
           <v-list class="overflow-y-auto my-2" max-height="70vh">
-            <i v-if="props.searchPattern.length >= 2 && resourcesLength == 0">
+            <div
+              v-if="props.searchPattern.length >= 2 && resourcesLength == 0"
+              class="font-italic pa-2 text-center"
+            >
               Aucun résultat ne correspond à votre recherche.
-            </i>
+            </div>
             <list-page
               :resources="currentPage"
               @update-menu="(m) => emit('updateMenu', m)"
@@ -224,6 +227,7 @@ const currentPage = computed<ResourceSearchOut>(() => {
 async function search(s: string) {
   const res = await controller.MealsSearch({ search: s });
   if (res === undefined) return;
+  emit("update:pageIndex", 1);
   resources.value = res;
 }
 
