@@ -321,6 +321,11 @@ func (ct *Controller) searchResource(pattern string, uID us.IdUser) (out Resourc
 			})
 		}
 	}
+
+	menuAndReceipeOwners, err := us.SelectUsers(ct.db, append(receipes.Owners(), menus.Owners()...)...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
 	for _, receipe := range receipes {
 		if pattern == ":R" || strings.Contains(utils.Normalize(receipe.Name), pattern) {
 			out.Receipes = append(out.Receipes, lib.ReceipeHeader{
@@ -328,6 +333,7 @@ func (ct *Controller) searchResource(pattern string, uID us.IdUser) (out Resourc
 					Title:       receipe.Name,
 					ID:          int64(receipe.Id),
 					IsPersonnal: receipe.Owner == uID,
+					Owner:       menuAndReceipeOwners[receipe.Owner].Pseudo,
 				},
 				Plat: receipe.Plat,
 			})
@@ -357,6 +363,7 @@ func (ct *Controller) searchResource(pattern string, uID us.IdUser) (out Resourc
 				Title:       title,
 				ID:          int64(menu.Id),
 				IsPersonnal: menu.Owner == uID,
+				Owner:       menuAndReceipeOwners[menu.Owner].Pseudo,
 			})
 		}
 	}

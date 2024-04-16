@@ -111,6 +111,11 @@ func (ct *Controller) LibraryCreateMenu(c echo.Context) error {
 }
 
 func (ct *Controller) createMenu(uID us.IdUser) (out ResourceHeader, _ error) {
+	user, err := us.SelectUser(ct.db, uID)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
 	menu, err := men.Menu{Owner: uID, IsFavorite: true, Updated: men.Time(time.Now())}.Insert(ct.db)
 	if err != nil {
 		return out, utils.SQLError(err)
@@ -119,6 +124,7 @@ func (ct *Controller) createMenu(uID us.IdUser) (out ResourceHeader, _ error) {
 		Title:       "",
 		ID:          int64(menu.Id),
 		IsPersonnal: true,
+		Owner:       user.Pseudo,
 	}, nil
 }
 
@@ -135,6 +141,11 @@ func (ct *Controller) LibraryCreateReceipe(c echo.Context) error {
 }
 
 func (ct *Controller) createReceipe(uID us.IdUser) (out ReceipeHeader, _ error) {
+	user, err := us.SelectUser(ct.db, uID)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
 	rec, err := men.Receipe{
 		Owner:   uID,
 		Name:    fmt.Sprintf("Recette %d", time.Now().UnixMilli()),
@@ -148,6 +159,7 @@ func (ct *Controller) createReceipe(uID us.IdUser) (out ReceipeHeader, _ error) 
 			Title:       rec.Name,
 			ID:          int64(rec.Id),
 			IsPersonnal: true,
+			Owner:       user.Pseudo,
 		},
 		Plat: rec.Plat,
 	}, nil
@@ -723,7 +735,8 @@ func (ct *Controller) deleteMenuReceipe(idR men.IdMenu, idG men.IdReceipe, uID u
 type ResourceHeader struct {
 	Title       string
 	ID          int64
-	IsPersonnal bool // if false, it is owned by an other user
+	IsPersonnal bool   // if false, it is owned by an other user
+	Owner       string // Pseudo of the owner
 }
 
 type ReceipeHeader struct {
