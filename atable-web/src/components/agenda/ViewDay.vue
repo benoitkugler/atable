@@ -320,6 +320,7 @@ async function createMeal(horaire: Horaire) {
     },
     Ingredients: [],
     Receipes: [],
+    OwnerPseudo: "",
   };
   data.Menus = m;
 }
