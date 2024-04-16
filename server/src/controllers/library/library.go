@@ -182,7 +182,7 @@ func (ct *Controller) LibraryLoadReceipe(c echo.Context) error {
 }
 
 func (ct *Controller) loadReceipe(id men.IdReceipe) (ReceipeExt, error) {
-	m, err := loadReceipes(ct.db, []men.IdReceipe{id}, nil)
+	m, err := loadReceipes(ct.db, []men.IdReceipe{id}, nil, nil)
 	if err != nil {
 		return ReceipeExt{}, err
 	}
@@ -762,17 +762,21 @@ type ReceipeIngredientExt struct {
 type ReceipeExt struct {
 	Receipe     men.Receipe
 	Ingredients []ReceipeIngredientExt
+	OwnerPseudo string
 }
 
 type MenuExt struct {
 	Menu        men.Menu
 	Ingredients []MenuIngredientExt
 	Receipes    []men.Receipe
+	OwnerPseudo string
 }
 
 // resolve the receipe, and return the `additionalIngredients`
-// the Menu fields of the returned value are empty
-func loadReceipes(db men.DB, ids []men.IdReceipe, additionalIngredients []men.IdIngredient) (MenuTables, error) {
+// the Menu field of the returned value is empty,
+func loadReceipes(db men.DB, ids []men.IdReceipe,
+	additionalIngredients []men.IdIngredient, additionnalOwners []us.IdUser,
+) (MenuTables, error) {
 	receipes, err := men.SelectReceipes(db, ids...)
 	if err != nil {
 		return MenuTables{}, utils.SQLError(err)
@@ -788,10 +792,17 @@ func loadReceipes(db men.DB, ids []men.IdReceipe, additionalIngredients []men.Id
 		return MenuTables{}, utils.SQLError(err)
 	}
 
+	// load the users
+	users, err := us.SelectUsers(db, append(additionnalOwners, receipes.Owners()...)...)
+	if err != nil {
+		return MenuTables{}, utils.SQLError(err)
+	}
+
 	return MenuTables{
 		Ingredients:        ingredients,
 		Receipes:           receipes,
 		ReceipeIngredients: links,
+		users:              users,
 	}, nil
 }
 
@@ -813,7 +824,7 @@ func LoadMenus(db men.DB, ids []men.IdMenu) (MenuTables, error) {
 		return MenuTables{}, utils.SQLError(err)
 	}
 
-	mt, err := loadReceipes(db, links2.IdReceipes(), links1.IdIngredients())
+	mt, err := loadReceipes(db, links2.IdReceipes(), links1.IdIngredients(), menus.Owners())
 	if err != nil {
 		return MenuTables{}, err
 	}
@@ -839,6 +850,8 @@ type MenuTables struct {
 	Menus              men.Menus
 	MenuReceipes       men.MenuReceipes
 	MenuIngredients    men.MenuIngredients
+
+	users us.Users
 }
 
 // Compile resolve the link tables
@@ -851,6 +864,7 @@ func (mt MenuTables) Compile() (map[men.IdMenu]MenuExt, map[men.IdReceipe]Receip
 		item := ReceipeExt{
 			Receipe:     receipe,
 			Ingredients: make([]ReceipeIngredientExt, len(ings)),
+			OwnerPseudo: mt.users[receipe.Owner].Pseudo,
 		}
 		for i, link := range ings {
 			ing := mt.Ingredients[link.IdIngredient]
@@ -879,7 +893,7 @@ func (mt MenuTables) Compile() (map[men.IdMenu]MenuExt, map[men.IdReceipe]Receip
 		for i, link := range recs {
 			mReceipes[i] = receipeMap[link.IdReceipe].Receipe
 		}
-		menusMap[menu.Id] = MenuExt{menu, mIngredients, mReceipes}
+		menusMap[menu.Id] = MenuExt{menu, mIngredients, mReceipes, mt.users[menu.Owner].Pseudo}
 	}
 	return menusMap, receipeMap
 }

@@ -64,6 +64,7 @@ export interface MenuExt {
   Menu: Menu;
   Ingredients: MenuIngredientExt[] | null;
   Receipes: Receipe[] | null;
+  OwnerPseudo: string;
 }
 // github.com/benoitkugler/atable/controllers/library.MenuIngredientExt
 export interface MenuIngredientExt {
@@ -82,6 +83,7 @@ export interface Quantity {
 export interface ReceipeExt {
   Receipe: Receipe;
   Ingredients: ReceipeIngredientExt[] | null;
+  OwnerPseudo: string;
 }
 // github.com/benoitkugler/atable/controllers/library.ReceipeHeader
 export interface ReceipeHeader {

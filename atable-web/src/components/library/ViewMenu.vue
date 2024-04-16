@@ -12,7 +12,15 @@
       <v-col align-self="center">
         <v-card-title>
           Détails du menu
-          <v-icon v-if="isReadonly" size="small">mdi-lock</v-icon>
+
+          <v-tooltip v-if="isReadonly && inner != null">
+            <template v-slot:activator="{ isActive, props }">
+              <v-icon v-on="{ isActive }" v-bind="props" size="small"
+                >mdi-lock</v-icon
+              >
+            </template>
+            Ce menu appartient à <b>{{ inner.OwnerPseudo }}</b>
+          </v-tooltip>
         </v-card-title>
       </v-col>
       <v-col cols="3" align-self="center" class="text-right px-2">

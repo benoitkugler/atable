@@ -27,7 +27,7 @@
           >
             <v-icon color="red">mdi-delete</v-icon>
           </v-btn>
-          <v-tooltip v-else text="Ce menu appartient à un autre utilisateur.">
+          <v-tooltip v-else>
             <template v-slot:activator="{ isActive, props }">
               <v-icon
                 color="grey-lighten-1"
@@ -37,6 +37,7 @@
                 >mdi-lock</v-icon
               >
             </template>
+            Ce menu appartient à : <b>{{ item.Owner }}</b>
           </v-tooltip>
         </template>
 
@@ -69,10 +70,7 @@
           >
             <v-icon color="red">mdi-delete</v-icon>
           </v-btn>
-          <v-tooltip
-            v-else
-            text="Cette recette appartient à un autre utilisateur."
-          >
+          <v-tooltip v-else>
             <template v-slot:activator="{ isActive, props }">
               <v-icon
                 color="grey-lighten-1"
@@ -82,6 +80,8 @@
                 >mdi-lock</v-icon
               >
             </template>
+            Cette recette appartient à
+            <b>{{ item.Owner }}</b>
           </v-tooltip>
         </template>
 

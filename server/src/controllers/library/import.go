@@ -467,7 +467,7 @@ func (ct *Controller) exportReceipes(uID us.IdUser) ([]byte, error) {
 		return nil, utils.SQLError(err)
 	}
 
-	data, err := loadReceipes(ct.db, receipes.IDs(), nil)
+	data, err := loadReceipes(ct.db, receipes.IDs(), nil, nil)
 	if err != nil {
 		return nil, err
 	}
