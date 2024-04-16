@@ -179,6 +179,7 @@ export function formatDate(date: Date) {
 export function formatTime(date: Date) {
   if (isNaN(date.valueOf())) return "";
   return date.toLocaleTimeString("fr-FR", {
+    year: "numeric",
     weekday: "short",
     day: "numeric",
     month: "short",
