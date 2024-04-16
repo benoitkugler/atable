@@ -367,3 +367,12 @@ export function saveBlobAsFile(binaryData: Blob, filename: string) {
   link.click();
   window.URL.revokeObjectURL(url);
 }
+
+/** normalize returns s without space, accent and in lower case */
+export function normalize(s: string) {
+  return s
+    .replaceAll(" ", "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}

@@ -65,7 +65,7 @@
 <script setup lang="ts">
 import { Ingredient, IdIngredient } from "@/logic/api_gen";
 import { IngredientKindLabels, type Ingredients } from "@/logic/api_gen";
-import { controller, copy } from "@/logic/controller";
+import { controller, copy, normalize } from "@/logic/controller";
 import { computed } from "vue";
 import { onMounted } from "vue";
 import { ref } from "vue";
@@ -78,9 +78,9 @@ const emit = defineEmits<{}>();
 onMounted(fetchIngredients);
 
 const ingList = computed(() => {
-  const s = search.value.toLowerCase();
+  const s = normalize(search.value);
   const out = Object.values(ingredients.value || {}).filter((ing) => {
-    return s == "" || ing.Name.toLowerCase().includes(s);
+    return s == "" || normalize(ing.Name).includes(s);
   });
   out.sort((a, b) => a.Name.localeCompare(b.Name));
   return out;
