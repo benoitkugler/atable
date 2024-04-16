@@ -34,6 +34,7 @@
 <script lang="ts" setup>
 import ViewDay from "@/components/agenda/ViewDay.vue";
 import ViewWeek from "@/components/agenda/ViewWeek.vue";
+import { Int } from "@/logic/api_gen";
 import { controller } from "@/logic/controller";
 import { onMounted } from "vue";
 import { computed } from "vue";
@@ -44,7 +45,7 @@ const viewKind = computed<"week" | "day">(() =>
   router.currentRoute.value.query["dayOffset"] ? "day" : "week"
 );
 const dayOffset = computed(
-  () => Number(router.currentRoute.value.query["dayOffset"]) || 0
+  () => (Number(router.currentRoute.value.query["dayOffset"]) || 0) as Int
 );
 const viewGroupIndex = ref(-1);
 

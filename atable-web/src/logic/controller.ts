@@ -22,6 +22,7 @@ import {
   ProfileHeader,
   IdIngredient,
   IdSupplier,
+  Int,
 } from "./api_gen";
 
 function arrayBufferToString(buffer: ArrayBuffer) {
@@ -47,7 +48,7 @@ class Controller extends AbstractAPI {
       isDev ? devLogMeta.Token : ""
     );
     if (isDev) {
-      this.idUser = devLogMeta.IdUser;
+      this.idUser = devLogMeta.IdUser as Int;
     }
   }
 
@@ -223,7 +224,7 @@ export const horaireColors: { [key in Horaire]: string } = {
 };
 
 export interface MenuItem {
-  id: number;
+  id: Int;
   title: string;
   plat: PlatKind;
   isReceipe: boolean;
@@ -277,7 +278,7 @@ export function upperFirst(s: string) {
 }
 
 export interface MenuResource {
-  Id: number;
+  Id: Int;
   Title: string;
   Kind: "receipe" | "ingredient";
   IngredientKind?: IngredientKind;

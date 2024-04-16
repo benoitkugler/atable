@@ -130,7 +130,7 @@
 import CompiledIngredientsList from "@/components/order/CompiledIngredientsList.vue";
 import ExportMappingCard from "@/components/order/ExportMappingCard.vue";
 import ProfilesList from "@/components/order/ProfilesList.vue";
-import { CompileIngredientsOut } from "@/logic/api_gen";
+import { CompileIngredientsOut, Int } from "@/logic/api_gen";
 import {
   addDays,
   controller,
@@ -161,7 +161,7 @@ const selectedDays = ref<{ [key: number]: boolean }>({});
 const selectedDaysList = computed(() =>
   Object.entries(selectedDays.value)
     .filter((l) => l[1])
-    .map((v) => Number(v[0]))
+    .map((v) => Number(v[0]) as Int)
 );
 
 const allDaysSelected = computed(() => {
@@ -169,8 +169,8 @@ const allDaysSelected = computed(() => {
   if (selectedDaysList.value.length == 0) return false;
   return null;
 });
-function onSelectAll(b: boolean) {
-  dayItems.value.forEach((d) => (selectedDays.value[d.offset] = b));
+function onSelectAll(b: boolean | null) {
+  dayItems.value.forEach((d) => (selectedDays.value[d.offset] = b || false));
   compiledIngredients.value = null;
 }
 

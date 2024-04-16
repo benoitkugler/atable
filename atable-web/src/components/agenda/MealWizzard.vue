@@ -113,7 +113,7 @@
 </template>
 
 <script lang="ts" setup>
-import { AssistantMealsIn, SejourExt } from "@/logic/api_gen";
+import { AssistantMealsIn, Int, SejourExt } from "@/logic/api_gen";
 import { addDays, formatDate } from "@/logic/controller";
 import { computed } from "vue";
 import { watch } from "vue";
@@ -130,10 +130,10 @@ const emit = defineEmits<{
 
 watch(props, () => (args.value = defaultArgs()));
 
-function defaultArgs() {
+function defaultArgs(): AssistantMealsIn {
   return {
     IdSejour: props.sejour.Sejour.Id,
-    DaysNumber: 7,
+    DaysNumber: 7 as Int,
     Excursions: {},
     WithGouter: true,
     GroupsForCinquieme: [],
@@ -156,11 +156,11 @@ function dayForIndex(i: number) {
 }
 
 function excursionForIndex(i: number) {
-  return (args.value.Excursions || {})[i] || [];
+  return (args.value.Excursions || {})[i as Int] || [];
 }
-function setExcursionForIndex(ids: number[], i: number) {
+function setExcursionForIndex(ids: Int[], i: number) {
   const m = args.value.Excursions || {};
-  m[i] = ids;
+  m[i as Int] = ids;
   args.value.Excursions = m;
 }
 

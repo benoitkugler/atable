@@ -82,6 +82,7 @@ import {
   ImportReceipes1Out,
   Ingredient,
   IngredientKindLabels,
+  Int,
 } from "@/logic/api_gen";
 import { ref } from "vue";
 import ResourceSelector from "./ResourceSelector.vue";
@@ -114,17 +115,17 @@ function updateMap(index: number, ing: MenuResource) {
     Id: ing.Id,
     Name: ing.Title,
     Kind: ing.IngredientKind!,
-    Owner: -1,
+    Owner: -1 as Int,
   };
   indexToEdit.value = -1;
 }
 
 function updateMapNew(index: number, ing: Ingredient) {
   toMap.value[index].ing = {
-    Id: -1, // mark as new
+    Id: -1 as Int, // mark as new
     Name: ing.Name,
     Kind: ing.Kind,
-    Owner: -1,
+    Owner: -1 as Int,
   };
   indexToEdit.value = -1;
 }

@@ -168,6 +168,8 @@ import {
   type MenuExt,
   type IdGroup,
   type Group,
+  Int,
+  IdMeal,
 } from "@/logic/api_gen";
 import {
   DragKind,
@@ -190,9 +192,9 @@ const props = defineProps<{
 const emit = defineEmits<{
   (event: "delete"): void;
   (event: "update"): void;
-  (event: "move", idGroup: number, from: number): void;
+  (event: "move", idGroup: IdGroup, from: IdMeal): void;
   (event: "addResource", payload: ResourceDrag): void;
-  (event: "removeItem", id: number, isReceipe: boolean): void;
+  (event: "removeItem", id: Int, isReceipe: boolean): void;
   (event: "updateMenuIngredient", id: IdIngredient): void;
   (event: "markFavorite"): void;
   (event: "goToMenu"): void;
@@ -234,7 +236,7 @@ function onDrop(event: DragEvent) {
 
   const data = event.dataTransfer!;
   if (data.types.includes("json/move-group")) {
-    const val: { idGroup: number; from: number } = JSON.parse(
+    const val: { idGroup: IdGroup; from: IdMeal } = JSON.parse(
       data.getData("json/move-group")
     );
     emit("move", val.idGroup, val.from);

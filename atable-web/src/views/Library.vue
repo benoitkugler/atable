@@ -58,10 +58,10 @@ onMounted(() => {
   const idMenu = route.query["id-menu"];
   const idReceipe = route.query["id-receipe"];
   if (idMenu) {
-    currentMenu.value = Number(idMenu);
+    currentMenu.value = Number(idMenu) as IdMenu;
     viewMode.value = "menu";
   } else if (idReceipe) {
-    currentReceipe.value = Number(idReceipe);
+    currentReceipe.value = Number(idReceipe) as IdReceipe;
     viewMode.value = "receipe";
   }
 });

@@ -72,6 +72,8 @@ import type {
   Supplier,
   IdIngredient,
   IdSupplier,
+  Int,
+  IdProfile,
 } from "@/logic/api_gen";
 import { controller } from "@/logic/controller";
 import { computed } from "vue";
@@ -133,7 +135,11 @@ const columns = computed(() => {
   });
   return [
     {
-      supplier: { Id: -1, Name: "Sans fournisseur", IdProfile: 0 },
+      supplier: {
+        Id: -1 as Int,
+        Name: "Sans fournisseur",
+        IdProfile: 0 as IdProfile,
+      },
       ingredients: Object.values(allIngredients.value || {}).filter(
         (ing) => !associated.has(ing.Id)
       ),
@@ -145,7 +151,7 @@ async function addSupplier() {
   const res = await controller.OrderAddSupplier({
     Name: "Fournisseur",
     IdProfile: props.profile.Profile.Id,
-    Id: 0,
+    Id: 0 as Int,
   });
   if (res === undefined) return;
 

@@ -232,6 +232,7 @@ import {
   type Ingredient,
   IngredientKind,
   Time,
+  Int,
 } from "@/logic/api_gen";
 import ResourceSearch from "./ResourceSearch.vue";
 import IngredientEditor from "@/components/IngredientEditor.vue";
@@ -256,7 +257,7 @@ import { reactive } from "vue";
 import { watch } from "vue";
 
 const props = defineProps<{
-  offset: number;
+  offset: Int;
 }>();
 
 const emit = defineEmits<{
@@ -414,7 +415,7 @@ async function setMenu(id: IdMenu, target: Meal) {
   m.Meal.Menu = id;
 }
 
-async function removeItem(id: number, isReceipe: boolean, from: Meal) {
+async function removeItem(id: Int, isReceipe: boolean, from: Meal) {
   const res = await controller.MealsRemoveItem({
     IdMenu: from.Menu,
     ID: id,
@@ -476,9 +477,9 @@ const ingToCreate = ref<Ingredient | null>(null);
 function showCreateIngredient(name: string) {
   ingToCreate.value = {
     Name: name,
-    Id: -1,
+    Id: -1 as Int,
     Kind: IngredientKind.I_Empty,
-    Owner: -1,
+    Owner: -1 as Int,
   };
 }
 async function createIngredient(ing: Ingredient) {

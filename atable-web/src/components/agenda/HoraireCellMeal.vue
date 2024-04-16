@@ -52,6 +52,7 @@ import type {
   Group,
   IdGroup,
   IdMeal,
+  Int,
   MealExt,
   MenuExt,
   ResourceHeader,
@@ -99,7 +100,7 @@ function onDrop(event: DragEvent) {
   if (types?.includes("json/swap-meals")) {
     const idSource = JSON.parse(
       event.dataTransfer?.getData("json/swap-meals") || ""
-    ) as number;
+    ) as Int;
     const idTarget = props.meal.Meal.Id;
     if (idSource == idTarget) return;
     emit("swapMeals", idSource, idTarget);

@@ -162,6 +162,7 @@ import {
   PlatKind,
   IdReceipe,
   Ingredient,
+  Int,
 } from "@/logic/api_gen";
 import {
   MenuResource,
@@ -251,7 +252,7 @@ async function addIngredient(idIngredient: IdIngredient) {
   const res = await controller.LibraryAddReceipeIngredient({
     IdReceipe: props.receipe,
     IdIngredient: idIngredient,
-    InitialFor: for_ == null ? 0 : for_,
+    InitialFor: for_ == null ? (0 as Int) : for_,
   });
   if (res == undefined) return;
 
