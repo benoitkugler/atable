@@ -15,10 +15,8 @@
             Détails de la recette
 
             <v-tooltip v-if="isReadonly && inner != null">
-              <template v-slot:activator="{ isActive, props }">
-                <v-icon v-on="{ isActive }" v-bind="props" size="small"
-                  >mdi-lock</v-icon
-                >
+              <template v-slot:activator="{ props }">
+                <v-icon v-bind="props" size="small">mdi-lock</v-icon>
               </template>
               Cette recette appartient à <b>{{ inner.OwnerPseudo }}</b>
             </v-tooltip>

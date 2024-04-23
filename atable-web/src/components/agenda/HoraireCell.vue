@@ -1,6 +1,6 @@
 <template>
   <div class="ma-1 text-center">
-    <v-row no-gutters justify="stretch" style="height: 100%">
+    <v-row no-gutters style="height: 100%">
       <template v-for="(meal, index) in props.meals" :key="index">
         <v-col cols="auto" v-if="index != 0" class="bg-black mx-1">
           <div style="width: 1px"></div>

@@ -11,12 +11,12 @@
     "dependencies": {
         "@mdi/font": "7.0.96",
         "axios": "^1.6.8",
-        "core-js": "^3.36.1",
+        "core-js": "^3.37.0",
         "qrcode-vue3": "^1.6.8",
         "roboto-fontface": "^0.10.0",
-        "vue": "^3.2.0",
-        "vue-router": "^4.3.0",
-        "vuetify": "^3.5.15",
+        "vue": "3.4.4",
+        "vue-router": "^4.3.2",
+        "vuetify": "^3.5.16",
         "webfontloader": "^1.6.28"
     },
     "devDependencies": {

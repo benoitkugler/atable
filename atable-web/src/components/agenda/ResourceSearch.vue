@@ -139,7 +139,12 @@ async function search(pattern: string) {
 
 function dragStart(event: DragEvent, item: ResourceHeader, kind: DragKind) {
   const payload: ResourceDrag = { item, kind };
-  event.dataTransfer?.setData("json/add-resource", JSON.stringify(payload));
+
+  event.dataTransfer!.effectAllowed = "copy";
   event.dataTransfer!.dropEffect = "copy";
+  event.dataTransfer?.setData("json/add-resource", JSON.stringify(payload));
+  if (kind == DragKind.menu) {
+    event.dataTransfer?.setData("private/is-menu", "1");
+  }
 }
 </script>

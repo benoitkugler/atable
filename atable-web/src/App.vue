@@ -13,9 +13,8 @@
 
       <v-list>
         <v-tooltip text="Vue d'ensemble des séjours et des groupes.">
-          <template v-slot:activator="{ isActive, props }">
+          <template v-slot:activator="{ props }">
             <v-list-item
-              v-on="{ isActive }"
               v-bind="props"
               title="Séjours"
               prepend-icon="mdi-account-group"
@@ -26,9 +25,8 @@
           </template>
         </v-tooltip>
         <v-tooltip text="Organisation du séjour courant.">
-          <template v-slot:activator="{ isActive, props }">
+          <template v-slot:activator="{ props }">
             <v-list-item
-              v-on="{ isActive }"
               v-bind="props"
               color="secondary"
               title="Agenda"
@@ -39,9 +37,8 @@
           </template>
         </v-tooltip>
         <v-tooltip text="Bibliothèque de menus et recettes">
-          <template v-slot:activator="{ isActive, props }">
+          <template v-slot:activator="{ props }">
             <v-list-item
-              v-on="{ isActive }"
               v-bind="props"
               color="secondary"
               title="Bibliothèque"
@@ -52,9 +49,8 @@
           </template>
         </v-tooltip>
         <v-tooltip text="Ingrédients requis et commandes.">
-          <template v-slot:activator="{ isActive, props }">
+          <template v-slot:activator="{ props }">
             <v-list-item
-              v-on="{ isActive }"
               v-bind="props"
               color="secondary"
               title="Commandes"
@@ -66,9 +62,8 @@
         </v-tooltip>
         <v-divider></v-divider>
         <v-tooltip text="Réglages du compte.">
-          <template v-slot:activator="{ isActive, props }">
+          <template v-slot:activator="{ props }">
             <v-list-item
-              v-on="{ isActive }"
               v-bind="props"
               color="secondary"
               title="Préférences"

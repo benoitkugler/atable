@@ -216,11 +216,7 @@ function onDragover(event: DragEvent) {
   const data = event.dataTransfer!;
   // we want to prevent modification of favorite menu
   if (data.types.includes("json/add-resource")) {
-    const val: ResourceDrag = JSON.parse(data.getData("json/add-resource"));
-    if (
-      (val.kind == DragKind.ingredient || val.kind == DragKind.receipe) &&
-      props.menu.Menu.IsFavorite
-    ) {
+    if (!data.types.includes("private/is-menu") && props.menu.Menu.IsFavorite) {
       return;
     }
   }

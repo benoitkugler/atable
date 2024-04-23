@@ -28,12 +28,8 @@
             <v-icon color="red">mdi-delete</v-icon>
           </v-btn>
           <v-tooltip v-else>
-            <template v-slot:activator="{ isActive, props }">
-              <v-icon
-                color="grey-lighten-1"
-                v-on="{ isActive }"
-                v-bind="props"
-                class="mr-1"
+            <template v-slot:activator="{ props }">
+              <v-icon color="grey-lighten-1" v-bind="props" class="mr-1"
                 >mdi-lock</v-icon
               >
             </template>
@@ -71,12 +67,8 @@
             <v-icon color="red">mdi-delete</v-icon>
           </v-btn>
           <v-tooltip v-else>
-            <template v-slot:activator="{ isActive, props }">
-              <v-icon
-                color="grey-lighten-1"
-                v-on="{ isActive }"
-                v-bind="props"
-                class="mr-1"
+            <template v-slot:activator="{ props }">
+              <v-icon color="grey-lighten-1" v-bind="props" class="mr-1"
                 >mdi-lock</v-icon
               >
             </template>

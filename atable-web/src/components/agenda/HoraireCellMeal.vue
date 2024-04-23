@@ -16,8 +16,8 @@
       content-class="ma-0 pa-0 rounded-lg"
       :disabled="props.groups.size <= 1"
     >
-      <template v-slot:activator="{ isActive, props: innerProps }">
-        <div v-on="{ isActive }" v-bind="innerProps">
+      <template v-slot:activator="{ props: innerProps }">
+        <div v-bind="innerProps">
           <!-- visually optimize common cases -->
           <template v-if="props.showExpanded">
             <small v-if="!content.length" class="text-grey">Menu vide.</small>
