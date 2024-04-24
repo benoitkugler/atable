@@ -22,6 +22,7 @@ func TestCookbook(t *testing.T) {
 							{Name: "Comcome", Quantite: "3kg"},
 							{Name: "Sel", Quantite: "3kg"},
 							{Name: "Tomates", Quantite: "3kg"},
+							{Name: "Avec accent : é à ", Quantite: "3kg"},
 						},
 					},
 					{

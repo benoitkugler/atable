@@ -3,7 +3,7 @@ module github.com/benoitkugler/atable
 go 1.19
 
 require (
-	github.com/benoitkugler/go-weasyprint v0.0.5
+	github.com/benoitkugler/go-weasyprint v0.0.6
 	github.com/benoitkugler/textprocessing v0.0.3
 	github.com/benoitkugler/webrender v0.0.8
 	github.com/golang-jwt/jwt v3.2.2+incompatible
