@@ -18,6 +18,27 @@ const (
 	I_Boulangerie                       // Boulangerie
 )
 
+func (ik IngredientKind) String() string {
+	switch ik {
+	case I_Empty:
+		return "Autre"
+	case I_Legumes:
+		return "Fruits et légumes"
+	case I_Feculents:
+		return "Féculents"
+	case I_Viandes:
+		return "Viandes, poissons"
+	case I_Epicerie:
+		return "Épicerie"
+	case I_Laitages:
+		return "Laitages"
+	case I_Boulangerie:
+		return "Boulangerie"
+	default:
+		return ""
+	}
+}
+
 type PlatKind uint8
 
 func (pk PlatKind) String() string {

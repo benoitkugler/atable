@@ -16,18 +16,35 @@ import (
 
 type IngredientMapping map[men.IdIngredient]ord.IdSupplier
 
+// use ingredient categories instead of real suppliers
+func ingredientKindMapping(ings []IngredientQuantities) (ord.Suppliers, IngredientMapping) {
+	suppliers := ord.Suppliers{}
+	for c := men.I_Empty; c <= men.I_Boulangerie; c++ {
+		id := ord.IdSupplier(c)
+		suppliers[id] = ord.Supplier{Id: id, Name: c.String()}
+	}
+
+	mapping := make(IngredientMapping)
+	for _, ing := range ings {
+		idSupplier := ord.IdSupplier(ing.Ingredient.Kind)
+		mapping[ing.Ingredient.Id] = idSupplier
+	}
+
+	return suppliers, mapping
+}
+
 type exportExcel struct {
 	CompileIngredientsOut
-	Sejour    sejours.Sejour
-	Suppliers ord.Suppliers
-	Mapping   IngredientMapping
+	sejour    sejours.Sejour
+	suppliers ord.Suppliers
+	mapping   IngredientMapping
 }
 
 func (ee exportExcel) sheetName(id ord.IdSupplier) string {
 	if id == -1 {
 		return "Sans fournisseur"
 	}
-	sup := ee.Suppliers[id]
+	sup := ee.suppliers[id]
 	return fmt.Sprintf("%s (%d)", sup.Name, sup.Id)
 }
 
@@ -40,7 +57,7 @@ type supplierSheet struct {
 func (ee exportExcel) supplierSheets() []supplierSheet {
 	bySupplier := map[ord.IdSupplier][]IngredientQuantities{}
 	for _, ing := range ee.Ingredients {
-		idSupplier, ok := ee.Mapping[ing.Ingredient.Id]
+		idSupplier, ok := ee.mapping[ing.Ingredient.Id]
 		if !ok {
 			idSupplier = -1
 		}
@@ -135,8 +152,8 @@ func (ee exportExcel) fillSheet(f cursor, sName string, sheet supplierSheet, sho
 		f.SetCellStr(sName, fmt.Sprintf("B%d", row), ee.formatQuantities(ing.total()))
 		f.SetCellStyle(sName, fmt.Sprintf("A%d", row), fmt.Sprintf("B%d", row), f.styles[styleSpec{greyBg: greyBg, borderTop: true, borderBottom: len(ing.Quantities) == 1}])
 		// add the supplier
-		if idSupplier, ok := ee.Mapping[ing.Ingredient.Id]; showSupplierCol && ok {
-			sup := ee.Suppliers[idSupplier]
+		if idSupplier, ok := ee.mapping[ing.Ingredient.Id]; showSupplierCol && ok {
+			sup := ee.suppliers[idSupplier]
 			f.SetCellStr(sName, fmt.Sprintf("C%d", row), sup.Name)
 		}
 		row++
@@ -145,7 +162,7 @@ func (ee exportExcel) fillSheet(f cursor, sName string, sheet supplierSheet, sho
 		if len(ing.Quantities) >= 2 {
 			for j, mealQu := range ing.Quantities {
 				meal := ee.Meals[mealQu.Origin]
-				f.SetCellStr(sName, fmt.Sprintf("A%d", row), fmt.Sprintf("%s - %s", utils.FormatDate(ee.Sejour.DayAt(meal.Jour)), meal.Horaire.String()))
+				f.SetCellStr(sName, fmt.Sprintf("A%d", row), fmt.Sprintf("%s - %s", utils.FormatDate(ee.sejour.DayAt(meal.Jour)), meal.Horaire.String()))
 				f.SetCellStr(sName, fmt.Sprintf("B%d", row), ee.formatQuantities([]lib.Quantity{mealQu.Quantity}))
 				f.SetCellStyle(sName, fmt.Sprintf("A%d", row), fmt.Sprintf("B%d", row), f.styles[styleSpec{greyBg: greyBg, small: true, borderBottom: j == len(ing.Quantities)-1}])
 				row++

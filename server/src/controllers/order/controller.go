@@ -219,18 +219,23 @@ func (ct *Controller) exportExcel(args ExportExcelIn, uID uID) ([]byte, string, 
 		return nil, "", err
 	}
 
-	// load the suppliers
-	suppliers, err := orders.SelectAllSuppliers(ct.db)
-	if err != nil {
-		return nil, "", utils.SQLError(err)
-	}
-
 	ee := exportExcel{
 		CompileIngredientsOut: args.Data,
-		Mapping:               args.Mapping,
-		Sejour:                sejour,
-		Suppliers:             suppliers,
+		sejour:                sejour,
 	}
+
+	// default to ingredient kind
+	if len(args.Mapping) == 0 {
+		ee.suppliers, ee.mapping = ingredientKindMapping(args.Data.Ingredients)
+	} else {
+		// load the suppliers
+		suppliers, err := orders.SelectAllSuppliers(ct.db)
+		if err != nil {
+			return nil, "", utils.SQLError(err)
+		}
+		ee.suppliers, ee.mapping = suppliers, args.Mapping
+	}
+
 	buf, err := ee.ToExcel()
 	if err != nil {
 		return nil, "", err

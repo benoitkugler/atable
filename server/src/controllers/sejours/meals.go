@@ -1075,6 +1075,11 @@ func (ct *Controller) previewQuantities(idMeal sej.IdMeal) (out PreviewQuantitie
 
 	out.NbPeople = forNb
 	out.Quantities = menu.QuantitiesFor(forNb, rm)
+
+	// sort by kind
+	sort.Slice(out.Quantities, func(i, j int) bool { return out.Quantities[i].Ingredient.Name < out.Quantities[j].Ingredient.Name })
+	sort.SliceStable(out.Quantities, func(i, j int) bool { return out.Quantities[i].Ingredient.Kind < out.Quantities[j].Ingredient.Kind })
+
 	return out, nil
 }
 
