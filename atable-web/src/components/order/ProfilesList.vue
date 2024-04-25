@@ -1,6 +1,6 @@
 <template>
   <v-card
-    title="Fournisseurs"
+    title="Liste des fournisseurs"
     subtitle="Les fournisseurs sont regroupés par profil, et un profil peut être associé au séjour courant."
   >
     <v-dialog
@@ -131,22 +131,17 @@
 </template>
 
 <script lang="ts" setup>
-import type {
-  ProfileHeader,
-  Profile,
-  Suppliers,
-  IdProfile,
-} from "@/logic/api_gen";
+import type { ProfileHeader, Profile, IdProfile } from "@/logic/api_gen";
 import { controller, copy, formatSuppliers } from "@/logic/controller";
 import { onMounted } from "vue";
 import { ref } from "vue";
 import ProfileMapping from "./ProfileMapping.vue";
-import { computed } from "vue";
-import { id } from "vuetify/lib/locale/index.mjs";
 
 // const props = defineProps<{}>();
 
-const emit = defineEmits<{}>();
+const emit = defineEmits<{
+  (e: "update", l: ProfileHeader[]): void;
+}>();
 
 const profiles = ref<ProfileHeader[]>([]);
 
@@ -181,6 +176,8 @@ async function updateProfile() {
 
   const toUpdate = profiles.value.find((pro) => pro.Profile.Id == pr.Id)!;
   toUpdate.Profile = pr;
+
+  emit("update", profiles.value);
 }
 
 const toDelete = ref<ProfileHeader | null>(null);
@@ -196,6 +193,8 @@ async function deleteProfile() {
   profiles.value = profiles.value.filter(
     (pro) => pro.Profile.Id != pr.Profile.Id
   );
+
+  emit("update", profiles.value);
 }
 
 const toShowDetails = ref<ProfileHeader | null>(null);

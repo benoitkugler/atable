@@ -1,42 +1,52 @@
 <template>
-  <v-dialog v-model="showEditMap" max-width="800px">
-    <v-card
-      title="Fournisseurs"
-      subtitle="Choisir les fournisseurs pour cet export."
-    >
-      <v-card-text>
-        <v-select
-          class="mt-2"
-          variant="outlined"
-          density="compact"
-          label="Profil de base"
-          :items="
-            profiles.map((pr) => ({
-              title: pr.Profile.Name,
-              value: pr,
-            }))
-          "
-          v-model="mapping.baseProfile"
-          @update:model-value="syncProfileContent"
-        >
-        </v-select>
-        <v-expansion-panels>
-          <v-expansion-panel v-if="mapping.baseProfile != null">
-            <template v-slot:title>
-              Associations personnalisées
-              <v-badge
-                class="ml-2"
-                inline
-                :content="mapping.customMapping.size"
-              >
-              </v-badge>
+  <v-card
+    title="Fournisseurs"
+    subtitle="Vous pouvez associer à chaque ingrédient un fournisseur."
+  >
+    <v-card-text>
+      <v-row>
+        <v-col cols="5">
+          <v-select
+            clearable
+            persistent-hint
+            :hint="
+              mapping.baseProfile == null
+                ? `Aucun fournisseur : les ingrédients sont regroupés par catégorie.`
+                : `Fournisseurs: ${formatSuppliers(suppliers)}`
+            "
+            class="mt-2"
+            variant="outlined"
+            density="compact"
+            label="Choix des fournisseurs"
+            :items="
+              profiles.map((pr) => ({
+                title: pr.Profile.Name,
+                value: pr,
+              }))
+            "
+            v-model="mapping.baseProfile"
+            @update:model-value="syncProfileContent"
+          >
+          </v-select>
+        </v-col>
+
+        <v-col>
+          <v-card
+            v-if="mapping.baseProfile != null"
+            subtitle="Associations ingrédients / fournisseurs"
+          >
+            <template v-slot:append>
+              <v-chip size="small" color="secondary">
+                {{ mapping.customMapping.size }} choix personnalisés
+              </v-chip>
             </template>
-            <template v-slot:text>
-              <v-list>
+            <v-card-text>
+              <v-list max-height="55vh" class="overflow-y-auto">
                 <v-list-item title="Ingrédient">
                   <template v-slot:append> Fournisseur </template>
                 </v-list-item>
                 <v-list-item
+                  density="compact"
                   rounded
                   v-for="(ingredient, index) in sortedIngredients"
                   :key="index"
@@ -52,7 +62,11 @@
                   <template v-slot:append>
                     <v-menu>
                       <template v-slot:activator="{ isActive, props }">
-                        <v-chip v-on="{ isActive }" v-bind="props">
+                        <v-chip
+                          v-on="{ isActive }"
+                          v-bind="props"
+                          elevation="2"
+                        >
                           {{ supplierFor(ingredient.Id) }}
                         </v-chip>
                       </template>
@@ -68,46 +82,15 @@
                   </template>
                 </v-list-item>
               </v-list>
-            </template>
-          </v-expansion-panel>
-        </v-expansion-panels>
-      </v-card-text>
-    </v-card>
-  </v-dialog>
-
-  <v-card
-    title="Exporter"
-    subtitle="Associer les fournisseurs et exporter au format Excel"
-  >
-    <v-card-text>
-      <v-list-item
-        class="bg-secondary-lighten"
-        @click="showEditMap = true"
-        rounded
-        :title="
-          mapping.baseProfile
-            ? mapping.baseProfile.Profile.Name
-            : 'Aucun profil'
-        "
-        :subtitle="
-          mapping.baseProfile
-            ? formatSuppliers(mapping.baseProfile.Suppliers)
-            : ''
-        "
-      >
-        <template v-slot:append>
-          <v-badge
-            inline
-            v-if="mapping.customMapping.size"
-            :content="`+ ${mapping.customMapping.size}`"
-          >
-          </v-badge>
-        </template>
-      </v-list-item>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
     </v-card-text>
+
     <v-card-actions>
       <v-spacer> </v-spacer>
-      <v-btn @click="downloadExcel" :disabled="sejour == null">Exporter</v-btn>
+      <v-btn @click="downloadExcel" color="success">Exporter</v-btn>
     </v-card-actions>
   </v-card>
 </template>
@@ -119,6 +102,7 @@ import {
   IdIngredient,
   IdSupplier,
   CompileIngredientsOut,
+  Int,
 } from "@/logic/api_gen";
 import {
   OrderIngredientMapping,
@@ -133,9 +117,12 @@ import { ref } from "vue";
 
 const props = defineProps<{
   compiledIngredients: CompileIngredientsOut;
+  days: Int[];
 }>();
 
-const emit = defineEmits<{}>();
+const emit = defineEmits<{
+  (e: "done"): void;
+}>();
 
 onMounted(async () => {
   await fetchProfiles();
@@ -160,8 +147,6 @@ const sortedIngredients = computed(() => {
   );
   return out;
 });
-
-const showEditMap = ref(false);
 
 const mapping = reactive<OrderIngredientMapping>({
   baseProfile: null,
@@ -191,14 +176,6 @@ async function syncProfileContent() {
       currentProfileContent.value.set(idIngredient, idSupplier);
     });
   });
-}
-
-const profiles = ref<ProfileHeader[]>([]);
-
-async function fetchProfiles() {
-  const res = await controller.OrderGetProfiles();
-  if (res === undefined) return;
-  profiles.value = res || [];
 }
 
 function supplierFor(id: IdIngredient) {
@@ -238,9 +215,18 @@ async function downloadExcel() {
   });
   if (res === undefined) return;
 
+  emit("done");
+
   controller.showMessage("Fichier téléchargé avec succès.");
 
   saveBlobAsFile(res.blob, res.filename);
+}
+
+const profiles = ref<ProfileHeader[]>([]);
+async function fetchProfiles() {
+  const res = await controller.OrderGetProfiles();
+  if (res === undefined) return;
+  profiles.value = res || [];
 }
 </script>
 

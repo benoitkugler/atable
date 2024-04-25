@@ -4,6 +4,15 @@
       <ProfilesList></ProfilesList>
     </v-dialog>
 
+    <v-dialog v-model="showExportExcel" max-width="1200px">
+      <ExportExcel
+        v-if="compiledIngredients != null"
+        :compiledIngredients="compiledIngredients"
+        :days="selectedDaysList"
+        @done="showExportExcel = false"
+      ></ExportExcel>
+    </v-dialog>
+
     <v-card
       title="Bilan des ingrédients"
       subtitle="Fiches de cuisine et commandes"
@@ -32,7 +41,7 @@
             </v-col>
           </v-row>
         </v-alert>
-        <v-row v-else>
+        <v-row v-else justify="space-between">
           <v-col cols="auto" align-self="center">
             <v-list>
               <v-list-subheader> Sélectionner les jours </v-list-subheader>
@@ -80,7 +89,7 @@
             <v-icon>mdi-chevron-right</v-icon>
           </v-col>
           <v-col
-            :cols="compiledIngredients != null ? 5 : 9"
+            :cols="compiledIngredients != null ? 4 : 9"
             align-self="center"
           >
             <div class="text-center" v-if="compiledIngredients == null">
@@ -89,15 +98,7 @@
                   <v-btn
                     :disabled="!selectedDaysList.length"
                     @click="compileIngredients"
-                    >Calculer les ingrédients nécessaires</v-btn
-                  >
-                </v-col>
-                <v-col cols="12">
-                  <v-btn
-                    class="mt-4"
-                    :disabled="!selectedDaysList.length"
-                    @click="downloadCookbook"
-                    >Exporter les fiches de cuisine</v-btn
+                    >Exporter les ingrédients nécessaires</v-btn
                   >
                 </v-col>
               </v-row>
@@ -114,11 +115,46 @@
           >
             <v-icon>mdi-chevron-right</v-icon>
           </v-col>
-          <v-col align-self="center">
-            <ExportMappingCard
-              v-if="compiledIngredients != null"
-              :compiledIngredients="compiledIngredients"
-            ></ExportMappingCard>
+          <v-col
+            align-self="center"
+            cols="auto"
+            v-if="compiledIngredients != null"
+          >
+            <v-card>
+              <v-card-text>
+                <v-row justify="center">
+                  <v-col cols="12">
+                    <v-list-item
+                      title="Exporter les fiches de cuisine"
+                      subtitle="Fichier PDF, une page par repas"
+                      class="bg-secondary-lighten"
+                      prepend-icon="mdi-file-pdf-box"
+                      elevation="4"
+                      link
+                      rounded
+                      @click="downloadCookbook"
+                    >
+                    </v-list-item>
+                  </v-col>
+                </v-row>
+
+                <v-row justify="center">
+                  <v-col cols="12">
+                    <v-list-item
+                      title="Exporter un tableau de courses"
+                      subtitle="Fichier Excel, tri par fournisseurs"
+                      class="bg-secondary-lighten"
+                      prepend-icon="mdi-file-excel-box"
+                      elevation="4"
+                      link
+                      rounded
+                      @click="showExportExcel = true"
+                    >
+                    </v-list-item>
+                  </v-col>
+                </v-row>
+              </v-card-text>
+            </v-card>
           </v-col>
         </v-row>
       </v-card-text>
@@ -128,7 +164,7 @@
 
 <script lang="ts" setup>
 import CompiledIngredientsList from "@/components/order/CompiledIngredientsList.vue";
-import ExportMappingCard from "@/components/order/ExportMappingCard.vue";
+import ExportExcel from "@/components/order/ExportExcel.vue";
 import ProfilesList from "@/components/order/ProfilesList.vue";
 import { CompileIngredientsOut, Int } from "@/logic/api_gen";
 import {
@@ -193,8 +229,10 @@ async function downloadCookbook() {
   });
   if (res === undefined) return;
 
-  controller.showMessage("Fichier téléchargé avec succès.");
+  controller.showMessage("Fiches cuisines téléchargées avec succès.");
 
   saveBlobAsFile(res.blob, res.filename);
 }
+
+const showExportExcel = ref(false);
 </script>

@@ -53,7 +53,7 @@
             <v-list-item
               v-bind="props"
               color="secondary"
-              title="Commandes"
+              title="Export"
               prepend-icon="mdi-cart"
               :to="{ name: 'order' }"
             >

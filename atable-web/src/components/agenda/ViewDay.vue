@@ -462,9 +462,7 @@ const previewQuantities = ref<PreviewQuantitiesOut | null>(null);
 async function showPreviewQuantities(idMeal: IdMeal) {
   const res = await controller.MealsPreviewQuantities({ idMeal });
   if (res === undefined) return;
-  const l = res.Quantities || [];
-  l.sort((a, b) => a.Ingredient.Name.localeCompare(b.Ingredient.Name));
-  previewQuantities.value = { NbPeople: res.NbPeople, Quantities: l };
+  previewQuantities.value = res;
 }
 
 function formatQuantities(qus: Quantity[]) {
