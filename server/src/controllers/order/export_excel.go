@@ -63,7 +63,7 @@ func (ee exportExcel) perSupplierSheets() []sheet {
 		name := "Sans fournisseur"
 		if idSupplier != -1 {
 			sup := ee.suppliers[idSupplier]
-			name = fmt.Sprintf("%s (%d)", sup.Name, sup.Id)
+			name = sup.Name
 		}
 		out = append(out, sheet{key: int(idSupplier), name: name, list: list})
 	}
