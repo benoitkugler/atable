@@ -128,5 +128,5 @@ var days = [...]string{
 }
 
 func FormatDate(day time.Time) string {
-	return fmt.Sprintf("%s %d/%d", days[day.Weekday()], day.Day(), day.Month())
+	return fmt.Sprintf("%s %d-%02d", days[day.Weekday()], day.Day(), day.Month())
 }

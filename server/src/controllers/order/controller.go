@@ -180,8 +180,8 @@ func (ct *Controller) compileIngredients(args CompileIngredientsIn, uID uID) (ou
 
 	out.Meals = meals
 	out.Ingredients = make([]IngredientQuantities, 0, len(tmp))
-	for i, qus := range tmp {
-		out.Ingredients = append(out.Ingredients, IngredientQuantities{Ingredient: mt.Ingredients[i], Quantities: qus})
+	for id, qus := range tmp {
+		out.Ingredients = append(out.Ingredients, IngredientQuantities{Ingredient: mt.Ingredients[id], Quantities: qus})
 	}
 	// sort by categorie
 	sort.Slice(out.Ingredients, func(i, j int) bool { return out.Ingredients[i].Ingredient.Kind < out.Ingredients[j].Ingredient.Kind })

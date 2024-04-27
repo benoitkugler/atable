@@ -40,21 +40,14 @@ type exportExcel struct {
 	mapping   IngredientMapping
 }
 
-func (ee exportExcel) sheetName(id ord.IdSupplier) string {
-	if id == -1 {
-		return "Sans fournisseur"
-	}
-	sup := ee.suppliers[id]
-	return fmt.Sprintf("%s (%d)", sup.Name, sup.Id)
-}
-
-type supplierSheet struct {
-	ord.IdSupplier // -1 for not associated
-	list           []IngredientQuantities
+type sheet struct {
+	name string
+	list []IngredientQuantities
+	key  int // used to sort
 }
 
 // including the ingredients without supplier
-func (ee exportExcel) supplierSheets() []supplierSheet {
+func (ee exportExcel) perSupplierSheets() []sheet {
 	bySupplier := map[ord.IdSupplier][]IngredientQuantities{}
 	for _, ing := range ee.Ingredients {
 		idSupplier, ok := ee.mapping[ing.Ingredient.Id]
@@ -63,15 +56,47 @@ func (ee exportExcel) supplierSheets() []supplierSheet {
 		}
 		bySupplier[idSupplier] = append(bySupplier[idSupplier], ing)
 	}
-	out := make([]supplierSheet, 0, len(bySupplier))
+	out := make([]sheet, 0, len(bySupplier))
 	for idSupplier, list := range bySupplier {
 		sort.Slice(list, func(i, j int) bool { return list[i].Ingredient.Name < list[j].Ingredient.Name })
 
-		out = append(out, supplierSheet{IdSupplier: idSupplier, list: list})
+		name := "Sans fournisseur"
+		if idSupplier != -1 {
+			sup := ee.suppliers[idSupplier]
+			name = fmt.Sprintf("%s (%d)", sup.Name, sup.Id)
+		}
+		out = append(out, sheet{key: int(idSupplier), name: name, list: list})
 	}
 
-	sort.Slice(out, func(i, j int) bool { return out[i].IdSupplier < out[j].IdSupplier })
+	sort.Slice(out, func(i, j int) bool { return out[i].key < out[j].key })
 
+	return out
+}
+
+func (ee exportExcel) perDaySheets() []sheet {
+	byDay := map[int]map[men.Ingredient][]QuantityMeal{} // per day offset
+	for _, item := range ee.Ingredients {
+		for _, use := range item.Quantities {
+			day := ee.Meals[use.Origin].Jour
+			if byDay[day] == nil { // initialize map
+				byDay[day] = make(map[men.Ingredient][]QuantityMeal)
+			}
+			mapDay := byDay[day]
+			mapDay[item.Ingredient] = append(mapDay[item.Ingredient], use)
+		}
+	}
+
+	out := make([]sheet, 0, len(byDay))
+	for day, m := range byDay {
+		var list []IngredientQuantities
+		for ing, qu := range m {
+			list = append(list, IngredientQuantities{Ingredient: ing, Quantities: qu})
+		}
+
+		out = append(out, sheet{key: day, name: utils.FormatDate(ee.sejour.DayAt(day)), list: list})
+	}
+
+	sort.Slice(out, func(i, j int) bool { return out[i].key < out[j].key })
 	return out
 }
 
@@ -111,7 +136,7 @@ func newCursor() (cursor, error) {
 						excelStyle.Font = &excelize.Font{Italic: true, Size: 8}
 					}
 					if grey {
-						excelStyle.Fill = excelize.Fill{Type: "pattern", Color: []string{"DDDDDD"}, Pattern: 1}
+						excelStyle.Fill = excelize.Fill{Type: "pattern", Color: []string{"EFEFEF"}, Pattern: 1}
 					}
 					if borderTop {
 						excelStyle.Border = append(excelStyle.Border, excelize.Border{Type: "top", Color: "000000", Style: 1})
@@ -133,28 +158,28 @@ func newCursor() (cursor, error) {
 	return cursor{f, styles}, nil
 }
 
-func (ee exportExcel) fillSheet(f cursor, sName string, sheet supplierSheet, showSupplierCol bool) {
+func (ee exportExcel) fillSheet(f cursor, sheetName string, ingredients []IngredientQuantities, showSupplierCol bool) {
 	const colWith = 30
-	f.SetCellStr(sName, "A1", "Ingrédient")
-	f.SetCellStr(sName, "B1", "Quantité")
+	f.SetCellStr(sheetName, "A1", "Ingrédient")
+	f.SetCellStr(sheetName, "B1", "Quantité")
 	if showSupplierCol {
-		f.SetCellStr(sName, "C1", "Fournisseur")
+		f.SetCellStr(sheetName, "C1", "Fournisseur")
 	}
 
-	f.SetColWidth(sName, "A", "C", colWith)
+	f.SetColWidth(sheetName, "A", "C", colWith)
 
 	row := 2
-	for i, ing := range sheet.list {
+	for i, ing := range ingredients {
 		greyBg := i%2 == 0
 
 		// add the total
-		f.SetCellStr(sName, fmt.Sprintf("A%d", row), ing.Ingredient.Name)
-		f.SetCellStr(sName, fmt.Sprintf("B%d", row), ee.formatQuantities(ing.total()))
-		f.SetCellStyle(sName, fmt.Sprintf("A%d", row), fmt.Sprintf("B%d", row), f.styles[styleSpec{greyBg: greyBg, borderTop: true, borderBottom: len(ing.Quantities) == 1}])
+		f.SetCellStr(sheetName, fmt.Sprintf("A%d", row), ing.Ingredient.Name)
+		f.SetCellStr(sheetName, fmt.Sprintf("B%d", row), ee.formatQuantities(ing.total()))
+		f.SetCellStyle(sheetName, fmt.Sprintf("A%d", row), fmt.Sprintf("B%d", row), f.styles[styleSpec{greyBg: greyBg, borderTop: true, borderBottom: len(ing.Quantities) == 1}])
 		// add the supplier
 		if idSupplier, ok := ee.mapping[ing.Ingredient.Id]; showSupplierCol && ok {
 			sup := ee.suppliers[idSupplier]
-			f.SetCellStr(sName, fmt.Sprintf("C%d", row), sup.Name)
+			f.SetCellStr(sheetName, fmt.Sprintf("C%d", row), sup.Name)
 		}
 		row++
 
@@ -162,9 +187,9 @@ func (ee exportExcel) fillSheet(f cursor, sName string, sheet supplierSheet, sho
 		if len(ing.Quantities) >= 2 {
 			for j, mealQu := range ing.Quantities {
 				meal := ee.Meals[mealQu.Origin]
-				f.SetCellStr(sName, fmt.Sprintf("A%d", row), fmt.Sprintf("%s - %s", utils.FormatDate(ee.sejour.DayAt(meal.Jour)), meal.Horaire.String()))
-				f.SetCellStr(sName, fmt.Sprintf("B%d", row), ee.formatQuantities([]lib.Quantity{mealQu.Quantity}))
-				f.SetCellStyle(sName, fmt.Sprintf("A%d", row), fmt.Sprintf("B%d", row), f.styles[styleSpec{greyBg: greyBg, small: true, borderBottom: j == len(ing.Quantities)-1}])
+				f.SetCellStr(sheetName, fmt.Sprintf("A%d", row), fmt.Sprintf("%s - %s", utils.FormatDate(ee.sejour.DayAt(meal.Jour)), meal.Horaire.String()))
+				f.SetCellStr(sheetName, fmt.Sprintf("B%d", row), ee.formatQuantities([]lib.Quantity{mealQu.Quantity}))
+				f.SetCellStyle(sheetName, fmt.Sprintf("A%d", row), fmt.Sprintf("B%d", row), f.styles[styleSpec{greyBg: greyBg, small: true, borderBottom: j == len(ing.Quantities)-1}])
 				row++
 			}
 		}
@@ -180,20 +205,28 @@ func (ee exportExcel) ToExcel() (*bytes.Buffer, error) {
 		return nil, err
 	}
 
-	supplierSheets := ee.supplierSheets()
-
 	// create a summary ...
 	f.SetSheetName("Sheet1", summaryName)
 
 	sort.Slice(ee.Ingredients, func(i, j int) bool { return ee.Ingredients[i].Ingredient.Name < ee.Ingredients[j].Ingredient.Name })
-	ee.fillSheet(f, summaryName, supplierSheet{IdSupplier: -1, list: ee.Ingredients}, true)
+	ee.fillSheet(f, summaryName, ee.Ingredients, true)
 
-	// ... and one sheet per supplier
-	for _, supplier := range supplierSheets {
-		sName := ee.sheetName(supplier.IdSupplier)
-		f.NewSheet(sName)
+	// ... one sheet per supplier ...
+	for _, sheet := range ee.perSupplierSheets() {
+		_, err = f.NewSheet(sheet.name)
+		if err != nil {
+			return nil, err
+		}
+		ee.fillSheet(f, sheet.name, sheet.list, false)
+	}
 
-		ee.fillSheet(f, sName, supplier, false)
+	// ... and one sheet per days ...
+	for _, sheet := range ee.perDaySheets() {
+		_, err = f.NewSheet(sheet.name)
+		if err != nil {
+			return nil, err
+		}
+		ee.fillSheet(f, sheet.name, sheet.list, true)
 	}
 
 	out, err := f.WriteToBuffer()
