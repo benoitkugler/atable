@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/benoitkugler/atable/sql/sejours"
 	tu "github.com/benoitkugler/atable/utils/testutils"
 )
 
@@ -14,7 +15,7 @@ func TestCookbook(t *testing.T) {
 		Pages: []cookbookPage{
 			{
 				Date:        "ven. 2 avril",
-				Horaire:     "Gouter",
+				Horaire:     sejours.Gouter.String(),
 				NbPersonnes: 50,
 				Receipes: []cookbookReceipe{
 					{
