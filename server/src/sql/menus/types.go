@@ -1,6 +1,7 @@
 package menus
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/benoitkugler/atable/sql/users"
@@ -17,6 +18,10 @@ const (
 	I_Laitages                          // Laitages
 	I_Boulangerie                       // Boulangerie
 )
+
+// By default a slice of IngredientKind is marshalled as string
+// by Go, which is not recognized by Dart
+func (ik IngredientKind) MarshalJSON() ([]byte, error) { return json.Marshal(uint8(ik)) }
 
 func (ik IngredientKind) String() string {
 	switch ik {

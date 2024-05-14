@@ -79,3 +79,27 @@ CREATE TABLE sejours (
     IdProfile integer
 );
 
+CREATE TABLE ingredient_suppliers (
+    IdIngredient integer NOT NULL,
+    IdSupplier integer NOT NULL,
+    IdProfile integer NOT NULL
+);
+
+CREATE TABLE ingredientkind_suppliers (
+    Kind integer CHECK (Kind IN (0, 1, 2, 3, 4, 5, 6)) NOT NULL,
+    IdSupplier integer NOT NULL,
+    IdProfile integer NOT NULL
+);
+
+CREATE TABLE profiles (
+    Id serial PRIMARY KEY,
+    IdOwner integer NOT NULL,
+    Name text NOT NULL
+);
+
+CREATE TABLE suppliers (
+    Id serial PRIMARY KEY,
+    IdProfile integer NOT NULL,
+    Name text NOT NULL
+);
+

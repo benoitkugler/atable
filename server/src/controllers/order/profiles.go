@@ -12,12 +12,13 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type MappingItem struct {
-	K ord.IdSupplier
-	V []menus.IdIngredient
+type SupplierExt struct {
+	Id          ord.IdSupplier
+	Kinds       []menus.IngredientKind
+	Ingredients []menus.IdIngredient
 }
 
-type Mapping []MappingItem
+type ProfileExt []SupplierExt
 
 type ProfileHeader struct {
 	Profile   ord.Profile
@@ -67,23 +68,30 @@ func (ct *Controller) OrderLoadProfile(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (ct *Controller) loadProfile(id ord.IdProfile) (Mapping, error) {
+func (ct *Controller) loadProfile(id ord.IdProfile) (ProfileExt, error) {
 	suppliers, err := ord.SelectSuppliersByIdProfiles(ct.db, id)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
-	links, err := ord.SelectIngredientSuppliersByIdProfiles(ct.db, id)
+	links1, err := ord.SelectIngredientkindSuppliersByIdProfiles(ct.db, id)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
-	m := links.ByIdSupplier()
+	m1 := links1.ByIdSupplier()
 
-	out := make(Mapping, 0, len(suppliers))
+	links2, err := ord.SelectIngredientSuppliersByIdProfiles(ct.db, id)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	m2 := links2.ByIdSupplier()
+
+	out := make(ProfileExt, 0, len(suppliers))
 	for _, supplier := range suppliers {
-		out = append(out, MappingItem{
-			K: supplier.Id,
-			V: m[supplier.Id].IdIngredients(),
+		out = append(out, SupplierExt{
+			Id:          supplier.Id,
+			Kinds:       m1[supplier.Id].Kinds(),
+			Ingredients: m2[supplier.Id].IdIngredients(),
 		})
 	}
 	return out, nil
@@ -271,29 +279,34 @@ func (ct *Controller) deleteSupplier(id ord.IdSupplier, uID uID) error {
 	return nil
 }
 
-type UpdateProfileMapIn struct {
+type UpdateProfileMapIngIn struct {
 	IdProfile   ord.IdProfile
 	Ingredients []menus.IdIngredient
 	NewSupplier ord.IdSupplier // -1 to remove the supplier
 }
 
-func (ct *Controller) OrderUpdateProfileMap(c echo.Context) error {
-	uID := users.JWTUser(c)
+func (ct *Controller) OrderUpdateProfileMapIng(c echo.Context) error {
+	user := users.JWTUser(c)
 
-	var args UpdateProfileMapIn
+	var args UpdateProfileMapIngIn
 	if err := c.Bind(&args); err != nil {
 		return err
 	}
 
-	err := ct.updateProfileMap(args, uID)
+	err := ct.updateProfileMapIng(args, user)
 	if err != nil {
 		return err
 	}
 
-	return c.NoContent(200)
+	out, err := ct.loadProfile(args.IdProfile)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
 }
 
-func (ct *Controller) updateProfileMap(args UpdateProfileMapIn, uID uID) error {
+func (ct *Controller) updateProfileMapIng(args UpdateProfileMapIngIn, uID uID) error {
 	if _, err := ct.checkProfileOwner(args.IdProfile, uID); err != nil {
 		return err
 	}
@@ -313,6 +326,125 @@ func (ct *Controller) updateProfileMap(args UpdateProfileMapIn, uID uID) error {
 				return utils.SQLError(err)
 			}
 		}
+
+		return nil
+	})
+
+	return err
+}
+
+type UpdateProfileMapKindIn struct {
+	IdProfile ord.IdProfile
+	Supplier  ord.IdSupplier
+	Kinds     []menus.IngredientKind
+}
+
+func (ct *Controller) OrderUpdateProfileMapKind(c echo.Context) error {
+	user := users.JWTUser(c)
+
+	var args UpdateProfileMapKindIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	err := ct.updateProfileMapKind(args, user)
+	if err != nil {
+		return err
+	}
+
+	out, err := ct.loadProfile(args.IdProfile)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+func (ct *Controller) updateProfileMapKind(args UpdateProfileMapKindIn, uID uID) error {
+	if _, err := ct.checkProfileOwner(args.IdProfile, uID); err != nil {
+		return err
+	}
+
+	err := ct.inTx(func(tx *sql.Tx) error {
+		err := ord.RemoveSupplierForKinds(tx, args.Kinds, args.IdProfile)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+		links := make(ord.IngredientkindSuppliers, len(args.Kinds))
+		for i, k := range args.Kinds {
+			links[i] = ord.IngredientkindSupplier{Kind: k, IdSupplier: args.Supplier, IdProfile: args.IdProfile}
+		}
+		err = ord.InsertManyIngredientkindSuppliers(tx, links...)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+
+		return nil
+	})
+
+	return err
+}
+
+type TidyIn struct {
+	Id ord.IdProfile
+}
+
+func (ct *Controller) OrderTidyMapping(c echo.Context) error {
+	user := users.JWTUser(c)
+
+	var args TidyIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	err := ct.tidyProfileMapping(args.Id, user)
+	if err != nil {
+		return err
+	}
+
+	out, err := ct.loadProfile(args.Id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, out)
+}
+
+// remove individual ingredients already mapped by a kind
+// DO NOT commit/rollback
+func (ct *Controller) tidyProfileMapping(id ord.IdProfile, user uID) error {
+	if _, err := ct.checkProfileOwner(id, user); err != nil {
+		return err
+	}
+
+	err := ct.inTx(func(tx *sql.Tx) error {
+		links1, err := ord.SelectIngredientkindSuppliersByIdProfiles(tx, id)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+		byKind := links1.ByKind()
+
+		links2, err := ord.SelectIngredientSuppliersByIdProfiles(tx, id)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+
+		ingredients, err := menus.SelectIngredients(tx, links2.IdIngredients()...)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+
+		for _, link := range links2 {
+			kind := ingredients[link.IdIngredient].Kind
+			// do we already hame the same kind -> supplier mapping ?
+			if byKind[kind] == link.IdSupplier {
+				_, err = ord.DeleteIngredientSuppliersByIdProfileAndIdIngredient(tx, link.IdProfile, link.IdIngredient)
+				if err != nil {
+					return utils.SQLError(err)
+				}
+			}
+		}
+
 		return nil
 	})
 	return err
@@ -380,15 +512,35 @@ func (ct *Controller) defaultMapping(args DefaultMappingIn) (IngredientMapping, 
 		return nil, nil
 	}
 
-	// load the profile
-	links, err := ord.SelectIngredientSuppliersByIdProfiles(ct.db, args.Profile.IdProfile)
+	// load the ingredient kinds
+	ingredients, err := menus.SelectIngredients(ct.db, args.Ingredients...)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 
-	out := make(IngredientMapping)
-	for idIng, supps := range links.ByIdIngredient() {
-		out[idIng] = supps[0].IdSupplier // valid thanks to a unique constraint
+	// load the profile
+	links1, err := ord.SelectIngredientkindSuppliersByIdProfiles(ct.db, args.Profile.IdProfile)
+	if err != nil {
+		return nil, utils.SQLError(err)
 	}
+	byKind := links1.ByKind()
+
+	links2, err := ord.SelectIngredientSuppliersByIdProfiles(ct.db, args.Profile.IdProfile)
+	if err != nil {
+		return nil, utils.SQLError(err)
+	}
+	byIngredient := links2.ByIdIngredient()
+
+	out := make(IngredientMapping)
+	for _, idIng := range args.Ingredients {
+		kind := ingredients[idIng].Kind
+		// individual exceptions takes priority
+		if supplier, ok := byIngredient[idIng]; ok {
+			out[idIng] = supplier[0].IdSupplier // valid thanks to a unique constraint
+		} else if supplier, ok := byKind[kind]; ok {
+			out[idIng] = supplier
+		}
+	}
+
 	return out, nil
 }

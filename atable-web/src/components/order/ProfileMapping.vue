@@ -1,7 +1,7 @@
 <template>
   <v-card
     title="Associations ingrédients fournisseurs"
-    subtitle="Cliquer-déplacer des ingrédients pour les associer à un fournisseur."
+    subtitle="Cliquer-déplacer des ingrédients ou des catégories pour les associer à un fournisseur."
   >
     <v-dialog
       :model-value="toDelete != null"
@@ -24,6 +24,15 @@
     </v-dialog>
 
     <template v-slot:append>
+      <v-btn
+        icon="mdi-adjust"
+        size="small"
+        class="mx-2"
+        title="Supprimer les redondances"
+        @click="tidyMapping"
+      >
+      </v-btn>
+      <v-divider vertical></v-divider>
       <v-btn @click="addSupplier" :disabled="isReadonly"
         >Ajouter un fournisseur
         <template v-slot:prepend>
@@ -51,11 +60,13 @@
         >
           <ProfileColumn
             :supplier="column.supplier"
+            :kinds="column.kinds"
             :ingredients="column.ingredients"
             :readonly="isReadonly"
             @update="(name) => updateSupplier(column.supplier, name)"
             @delete="toDelete = column.supplier"
             @moveIngredients="moveIngredients"
+            @moveKind="moveKind"
           ></ProfileColumn>
         </v-col>
       </v-row>
@@ -64,9 +75,8 @@
 </template>
 
 <script lang="ts" setup>
-import type {
+import {
   ProfileHeader,
-  Mapping,
   Ingredients,
   Ingredient,
   Supplier,
@@ -74,6 +84,8 @@ import type {
   IdSupplier,
   Int,
   IdProfile,
+  ProfileExt,
+  IngredientKind,
 } from "@/logic/api_gen";
 import { controller } from "@/logic/controller";
 import { computed } from "vue";
@@ -95,7 +107,7 @@ const isReadonly = computed(
 );
 
 const suppliers = reactive(props.profile.Suppliers || {});
-const content = ref<Mapping>([]);
+const content = ref<ProfileExt>([]);
 const allIngredients = ref<Ingredients>({});
 
 onMounted(() => {
@@ -118,6 +130,7 @@ async function fetchProfile() {
 
 interface column {
   supplier: Supplier;
+  kinds: IngredientKind[];
   ingredients: Ingredient[];
 }
 
@@ -125,14 +138,21 @@ interface column {
 // ingredients not associated yet
 const columns = computed(() => {
   const cols: column[] = [];
-  const associated = new Set<number>();
+  // compute the non associated values
+  const associatedIng = new Set<IdIngredient>();
+  const associatedKind = new Set<IngredientKind>();
   (content.value || []).forEach((item) => {
-    (item.V || []).forEach((ing) => associated.add(ing));
+    (item.Kinds || []).forEach((kind) => associatedKind.add(kind));
+    (item.Ingredients || []).forEach((ing) => associatedIng.add(ing));
     cols.push({
-      supplier: (suppliers || {})[item.K],
-      ingredients: (item.V || []).map((id) => (allIngredients.value || {})[id]),
+      supplier: (suppliers || {})[item.Id],
+      kinds: item.Kinds || [],
+      ingredients: (item.Ingredients || []).map(
+        (id) => (allIngredients.value || {})[id]
+      ),
     });
   });
+  cols.sort((a, b) => a.supplier.Id - b.supplier.Id);
   return [
     {
       supplier: {
@@ -140,8 +160,11 @@ const columns = computed(() => {
         Name: "Sans fournisseur",
         IdProfile: 0 as IdProfile,
       },
+      kinds: Object.values(IngredientKind).filter(
+        (kind) => !associatedKind.has(Number(kind) as IngredientKind)
+      ),
       ingredients: Object.values(allIngredients.value || {}).filter(
-        (ing) => !associated.has(ing.Id)
+        (ing) => !associatedIng.has(ing.Id)
       ),
     },
   ].concat(...cols);
@@ -181,7 +204,7 @@ async function deleteSupplier() {
   controller.showMessage("Fournisseur supprimé avec succès.");
 
   delete suppliers[sup.Id];
-  content.value = content.value!.filter((item) => item.K != sup.Id);
+  content.value = content.value!.filter((item) => item.Id != sup.Id);
 }
 
 async function moveIngredients(
@@ -189,7 +212,7 @@ async function moveIngredients(
   from: IdSupplier,
   to: IdSupplier
 ) {
-  const res = await controller.OrderUpdateProfileMap({
+  const res = await controller.OrderUpdateProfileMapIng({
     IdProfile: props.profile.Profile.Id,
     Ingredients: idIngredients,
     NewSupplier: to,
@@ -198,14 +221,34 @@ async function moveIngredients(
 
   controller.showMessage("Associations modifiées avec succès.");
 
-  if (from != -1) {
-    const fromL = content.value?.find((v) => v.K == from)!;
-    fromL.V = fromL?.V?.filter((id) => !idIngredients.includes(id)) || [];
-  }
-  if (to != -1) {
-    const toL = content.value?.find((v) => v.K == to)!;
-    toL.V = (toL.V || []).concat(...idIngredients);
-  }
+  content.value = res || [];
+}
+
+async function moveKind(
+  kinds: IngredientKind[],
+  from: IdSupplier,
+  to: IdSupplier
+) {
+  const res = await controller.OrderUpdateProfileMapKind({
+    IdProfile: props.profile.Profile.Id,
+    Kinds: kinds,
+    Supplier: to,
+  });
+  if (res === undefined) return;
+
+  controller.showMessage("Associations modifiées avec succès.");
+
+  content.value = res || [];
+}
+
+async function tidyMapping() {
+  const res = await controller.OrderTidyMapping({
+    Id: props.profile.Profile.Id,
+  });
+  if (res === undefined) return;
+  controller.showMessage("Associations simplifiées avec succès.");
+
+  content.value = res || [];
 }
 </script>
 

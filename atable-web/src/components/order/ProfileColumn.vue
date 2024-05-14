@@ -54,6 +54,27 @@
         </v-btn>
       </v-col>
     </v-row>
+    <v-row class="mx-2 mb-2" justify="center">
+      <v-col v-if="!props.kinds.length" cols="auto">
+        <small class="font-italic">Déposer une catégorie...</small>
+      </v-col>
+      <v-col
+        v-for="kind in props.kinds"
+        :key="kind"
+        cols="auto"
+        class="px-1 py-1"
+      >
+        <v-chip
+          link
+          elevation="1"
+          size="small"
+          :style="!props.readonly ? 'cursor:  grab' : ''"
+          :draggable="!props.readonly"
+          @dragstart=" (ev: DragEvent) => ondragKind(ev, kind) "
+          >{{ IngredientKindLabels[kind] }}</v-chip
+        >
+      </v-col>
+    </v-row>
     <v-card-text class="py-1 pr-3 pl-1">
       <div style="max-height: 79vh" class="overflow-y-auto">
         <v-list-item
@@ -68,21 +89,36 @@
             :draggable="!props.readonly"
             @dragstart=" (ev: DragEvent) => ondragCategorie(ev, item[0])  "
           >
+            <template v-slot:append>
+              <v-btn
+                variant="flat"
+                size="small"
+                :icon="
+                  expandState.get(item[0])
+                    ? 'mdi-chevron-up'
+                    : 'mdi-chevron-down'
+                "
+                @click="expandState.set(item[0], !expandState.get(item[0]))"
+              >
+              </v-btn>
+            </template>
           </v-list-item>
 
-          <div
-            v-for="(ingredient, j) in item[1]"
-            :key="j"
-            :style="!props.readonly ? 'cursor:  grab' : ''"
-            :draggable="!props.readonly"
-            @dragstart=" (ev: DragEvent) => ondragIngredient(ev, ingredient.Id) "
-          >
-            <v-list-item
-              :subtitle="ingredient.Name"
-              :value="ingredient.Id"
-              class="my-1"
+          <div v-show="expandState.get(item[0])">
+            <div
+              v-for="(ingredient, j) in item[1]"
+              :key="j"
+              :style="!props.readonly ? 'cursor:  grab' : ''"
+              :draggable="!props.readonly"
+              @dragstart=" (ev: DragEvent) => ondragIngredient(ev, ingredient.Id) "
             >
-            </v-list-item>
+              <v-list-item
+                :subtitle="ingredient.Name"
+                :value="ingredient.Id"
+                class="my-1"
+              >
+              </v-list-item>
+            </div>
           </div>
         </template>
       </div>
@@ -99,10 +135,12 @@ import {
   IngredientKindLabels,
   Supplier,
 } from "@/logic/api_gen";
+import { reactive } from "vue";
 import { computed, ref } from "vue";
 
 const props = defineProps<{
   supplier: Supplier;
+  kinds: IngredientKind[];
   ingredients: Ingredient[];
   readonly: boolean;
 }>();
@@ -113,6 +151,12 @@ const emit = defineEmits<{
   (
     e: "moveIngredients",
     ingredients: IdIngredient[],
+    from: IdSupplier,
+    to: IdSupplier
+  ): void;
+  (
+    e: "moveKind",
+    newKinds: IngredientKind[],
     from: IdSupplier,
     to: IdSupplier
   ): void;
@@ -130,6 +174,8 @@ const byCategorie = computed(() => {
   out.forEach((l) => l.sort((a, b) => a.Name.localeCompare(b.Name)));
   return out;
 });
+
+const expandState = reactive(new Map<IngredientKind, boolean>());
 
 const toEdit = ref<string | null>(null);
 function onBlur() {
@@ -154,10 +200,18 @@ function ondragCategorie(event: DragEvent, cat: IngredientKind) {
   );
   event.dataTransfer!.dropEffect = "move";
 }
+function ondragKind(event: DragEvent, kind: IngredientKind) {
+  event.dataTransfer?.setData(
+    "json/move-kind",
+    JSON.stringify({ kind: kind, from: props.supplier.Id })
+  );
+  event.dataTransfer!.dropEffect = "move";
+}
 
 const isDraggingOver = ref(false);
 function onDragover(event: DragEvent) {
-  if (event.dataTransfer?.types?.includes("json/move-ingredients")) {
+  const l = event.dataTransfer?.types || [];
+  if (l.includes("json/move-ingredients") || l.includes("json/move-kind")) {
     event.preventDefault();
     event.dataTransfer!.dropEffect = "move";
     isDraggingOver.value = true;
@@ -165,14 +219,24 @@ function onDragover(event: DragEvent) {
 }
 
 function onDrop(event: DragEvent) {
-  const data: { idIngredients: IdIngredient[]; from: IdSupplier } = JSON.parse(
-    event.dataTransfer?.getData("json/move-ingredients") || ""
-  );
-  isDraggingOver.value = false;
-  const idSource = data.from;
   const idTarget = props.supplier.Id;
-  if (idSource == idTarget) return; // avoid useless moves
-  emit("moveIngredients", data.idIngredients, idSource, idTarget);
+  isDraggingOver.value = false;
+
+  const l = event.dataTransfer?.types || [];
+  if (l.includes("json/move-ingredients")) {
+    const data: { idIngredients: IdIngredient[]; from: IdSupplier } =
+      JSON.parse(event.dataTransfer?.getData("json/move-ingredients") || "");
+    const idSource = data.from;
+    if (idSource == idTarget) return; // avoid useless moves
+    emit("moveIngredients", data.idIngredients, idSource, idTarget);
+  } else {
+    const data: { kind: IngredientKind; from: IdSupplier } = JSON.parse(
+      event.dataTransfer?.getData("json/move-kind") || ""
+    );
+    const idSource = data.from;
+    if (idSource == idTarget) return; // avoid useless moves
+    emit("moveKind", props.kinds.concat(data.kind), idSource, idTarget);
+  }
 }
 </script>
 

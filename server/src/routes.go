@@ -90,7 +90,9 @@ func setupWebAPI(e *echo.Echo, tvc *users.Controller, sej *sejours.Controller, l
 	gr.POST("/api/order/profile/suppliers", ord.OrderUpdateSupplier)
 	gr.DELETE("/api/order/profile/suppliers", ord.OrderDeleteSupplier)
 
-	gr.POST("/api/order/profile/map", ord.OrderUpdateProfileMap)
+	gr.POST("/api/order/profile/map-ing", ord.OrderUpdateProfileMapIng)
+	gr.POST("/api/order/profile/map-kind", ord.OrderUpdateProfileMapKind)
+	gr.POST("/api/order/profile/tidy", ord.OrderTidyMapping)
 	gr.POST("/api/order/profile/default-map", ord.OrderGetDefaultMapping)
 	gr.POST("/api/order/profile/default", ord.OrderSetDefaultProfile)
 	gr.POST("/api/order/export", ord.OrderExportExcel)

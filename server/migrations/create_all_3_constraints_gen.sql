@@ -77,3 +77,39 @@ ALTER TABLE meal_groups
 ALTER TABLE meal_groups
     ADD FOREIGN KEY (IdGroup) REFERENCES GROUPS ON DELETE CASCADE;
 
+ALTER TABLE suppliers
+    ADD UNIQUE (Id, IdProfile);
+
+ALTER TABLE suppliers
+    ADD FOREIGN KEY (IdProfile) REFERENCES profiles ON DELETE CASCADE;
+
+ALTER TABLE profiles
+    ADD FOREIGN KEY (IdOwner) REFERENCES users ON DELETE CASCADE;
+
+ALTER TABLE ingredientkind_suppliers
+    ADD UNIQUE (IdProfile, Kind);
+
+ALTER TABLE ingredientkind_suppliers
+    ADD FOREIGN KEY (IdSupplier, IdProfile) REFERENCES Suppliers (Id, IdProfile) ON DELETE CASCADE;
+
+ALTER TABLE ingredientkind_suppliers
+    ADD FOREIGN KEY (IdSupplier) REFERENCES suppliers ON DELETE CASCADE;
+
+ALTER TABLE ingredientkind_suppliers
+    ADD FOREIGN KEY (IdProfile) REFERENCES profiles ON DELETE CASCADE;
+
+ALTER TABLE ingredient_suppliers
+    ADD UNIQUE (IdProfile, IdIngredient);
+
+ALTER TABLE ingredient_suppliers
+    ADD FOREIGN KEY (IdSupplier, IdProfile) REFERENCES Suppliers (Id, IdProfile) ON DELETE CASCADE;
+
+ALTER TABLE ingredient_suppliers
+    ADD FOREIGN KEY (IdIngredient) REFERENCES ingredients ON DELETE CASCADE;
+
+ALTER TABLE ingredient_suppliers
+    ADD FOREIGN KEY (IdSupplier) REFERENCES suppliers ON DELETE CASCADE;
+
+ALTER TABLE ingredient_suppliers
+    ADD FOREIGN KEY (IdProfile) REFERENCES profiles ON DELETE CASCADE;
+

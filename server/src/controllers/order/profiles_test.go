@@ -11,7 +11,7 @@ import (
 	tu "github.com/benoitkugler/atable/utils/testutils"
 )
 
-func TestCRUDProfiles(t *testing.T) {
+func setup(t *testing.T) (_ tu.TestDB, _ sejours.Sejour, i1, i2, i3 menus.Ingredient) {
 	db := tu.NewTestDB(t, "../../sql/users/gen_create.sql", "../../sql/menus/gen_create.sql", "../../sql/orders/gen_create.sql", "../../sql/sejours/gen_create.sql")
 
 	user, err := users.User{IsAdmin: true, Mail: "test@free.fr", Password: "a"}.Insert(db)
@@ -20,25 +20,31 @@ func TestCRUDProfiles(t *testing.T) {
 	sej, err := sejours.Sejour{Owner: user.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
 
-	ct := NewController(db.DB)
-
 	// setup some ingredients
-	ing1, err := menus.Ingredient{Name: "1", Owner: user.Id}.Insert(ct.db)
+	i1, err = menus.Ingredient{Name: "1", Owner: user.Id, Kind: menus.I_Boulangerie}.Insert(db)
 	tu.AssertNoErr(t, err)
-	ing2, err := menus.Ingredient{Name: "2", Owner: user.Id}.Insert(ct.db)
+	i2, err = menus.Ingredient{Name: "2", Owner: user.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
-	ing3, err := menus.Ingredient{Name: "3", Owner: user.Id}.Insert(ct.db)
+	i3, err = menus.Ingredient{Name: "3", Owner: user.Id}.Insert(db)
 	tu.AssertNoErr(t, err)
+
+	return db, sej, i1, i2, i3
+}
+
+func TestCRUDProfiles(t *testing.T) {
+	db, sej, ing1, ing2, ing3 := setup(t)
+	user := sej.Owner
+	ct := NewController(db.DB)
 
 	profiles, err := ct.getProfiles()
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(profiles) == 0)
 
-	profile, err := ct.createProfile(user.Id)
+	profile, err := ct.createProfile(user)
 	tu.AssertNoErr(t, err)
 
 	profile.Name = "Super colo !"
-	err = ct.updateProfile(profile, user.Id)
+	err = ct.updateProfile(profile, user)
 	tu.AssertNoErr(t, err)
 
 	profiles, err = ct.getProfiles()
@@ -46,40 +52,72 @@ func TestCRUDProfiles(t *testing.T) {
 	tu.Assert(t, len(profiles) == 1)
 
 	// update suppliers
-	sup, err := ct.addSupplier(orders.Supplier{IdProfile: profile.Id, Name: "Test"}, user.Id)
+	sup, err := ct.addSupplier(orders.Supplier{IdProfile: profile.Id, Name: "Test"}, user)
 	tu.AssertNoErr(t, err)
 
 	sup.Name = "New name"
-	err = ct.updateSupplier(sup, user.Id)
+	err = ct.updateSupplier(sup, user)
 	tu.AssertNoErr(t, err)
 
-	err = ct.updateProfileMap(UpdateProfileMapIn{
+	err = ct.updateProfileMapIng(UpdateProfileMapIngIn{
 		IdProfile:   profile.Id,
 		Ingredients: []menus.IdIngredient{ing1.Id, ing2.Id, ing3.Id},
 		NewSupplier: sup.Id,
-	}, user.Id)
+	}, user)
 	tu.AssertNoErr(t, err)
-	err = ct.updateProfileMap(UpdateProfileMapIn{
+	err = ct.updateProfileMapIng(UpdateProfileMapIngIn{
 		IdProfile:   profile.Id,
 		Ingredients: []menus.IdIngredient{ing2.Id},
 		NewSupplier: -1,
-	}, user.Id)
+	}, user)
 	tu.AssertNoErr(t, err)
 
 	ma, err := ct.defaultMapping(DefaultMappingIn{Ingredients: []menus.IdIngredient{ing1.Id, ing2.Id, ing3.Id}, Profile: sejours.NewOptionnalIdProfile(profile.Id)})
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, reflect.DeepEqual(ma, IngredientMapping{ing1.Id: sup.Id, ing3.Id: sup.Id}))
 
-	err = ct.setDefaultProfile(SetDefaultProfile{IdSejour: sej.Id, IdProfile: profile.Id}, user.Id)
+	err = ct.setDefaultProfile(SetDefaultProfile{IdSejour: sej.Id, IdProfile: profile.Id}, user)
 	tu.AssertNoErr(t, err)
 
-	err = ct.deleteSupplier(sup.Id, user.Id)
+	err = ct.deleteSupplier(sup.Id, user)
 	tu.AssertNoErr(t, err)
 
-	err = ct.deleteProfile(profile.Id, user.Id)
+	err = ct.deleteProfile(profile.Id, user)
 	tu.AssertNoErr(t, err)
 
 	profiles, err = ct.getProfiles()
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, len(profiles) == 0)
+}
+
+func TestNormalizeProfile(t *testing.T) {
+	db, sej, ing1, ing2, ing3 := setup(t)
+	user := sej.Owner
+	ct := NewController(db.DB)
+
+	profile, err := ct.createProfile(user)
+	tu.AssertNoErr(t, err)
+
+	sup, err := ct.addSupplier(orders.Supplier{IdProfile: profile.Id, Name: "Test"}, user)
+	tu.AssertNoErr(t, err)
+
+	err = ct.updateProfileMapIng(UpdateProfileMapIngIn{
+		IdProfile:   profile.Id,
+		Ingredients: []menus.IdIngredient{ing1.Id, ing2.Id, ing3.Id},
+		NewSupplier: sup.Id,
+	}, user)
+	tu.AssertNoErr(t, err)
+	err = ct.updateProfileMapKind(UpdateProfileMapKindIn{
+		IdProfile: profile.Id,
+		Supplier:  sup.Id,
+		Kinds:     []menus.IngredientKind{menus.I_Boulangerie},
+	}, user)
+	tu.AssertNoErr(t, err)
+
+	err = ct.tidyProfileMapping(profile.Id, user)
+	tu.AssertNoErr(t, err)
+
+	l, err := orders.SelectAllIngredientSuppliers(ct.db)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(l) == 2) // ing1 in boulangerie is redundant
 }

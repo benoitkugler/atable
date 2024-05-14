@@ -143,13 +143,8 @@ export interface IngredientQuantities {
   Ingredient: Ingredient;
   Quantities: QuantityMeal[] | null;
 }
-// github.com/benoitkugler/atable/controllers/order.Mapping
-export type Mapping = MappingItem[] | null;
-// github.com/benoitkugler/atable/controllers/order.MappingItem
-export interface MappingItem {
-  K: IdSupplier;
-  V: IdIngredient[] | null;
-}
+// github.com/benoitkugler/atable/controllers/order.ProfileExt
+export type ProfileExt = SupplierExt[] | null;
 // github.com/benoitkugler/atable/controllers/order.ProfileHeader
 export interface ProfileHeader {
   Profile: Profile;
@@ -165,11 +160,27 @@ export interface SetDefaultProfile {
   IdSejour: IdSejour;
   IdProfile: IdProfile;
 }
-// github.com/benoitkugler/atable/controllers/order.UpdateProfileMapIn
-export interface UpdateProfileMapIn {
+// github.com/benoitkugler/atable/controllers/order.SupplierExt
+export interface SupplierExt {
+  Id: IdSupplier;
+  Kinds: IngredientKind[] | null;
+  Ingredients: IdIngredient[] | null;
+}
+// github.com/benoitkugler/atable/controllers/order.TidyIn
+export interface TidyIn {
+  Id: IdProfile;
+}
+// github.com/benoitkugler/atable/controllers/order.UpdateProfileMapIngIn
+export interface UpdateProfileMapIngIn {
   IdProfile: IdProfile;
   Ingredients: IdIngredient[] | null;
   NewSupplier: IdSupplier;
+}
+// github.com/benoitkugler/atable/controllers/order.UpdateProfileMapKindIn
+export interface UpdateProfileMapKindIn {
+  IdProfile: IdProfile;
+  Supplier: IdSupplier;
+  Kinds: IngredientKind[] | null;
 }
 // github.com/benoitkugler/atable/controllers/sejours.AddIngredientIn
 export interface AddIngredientIn {
@@ -1831,7 +1842,7 @@ export abstract class AbstractAPI {
 
   protected async rawOrderLoadProfile(params: { idProfile: Int }) {
     const fullUrl = this.baseUrl + "/api/order/profile/suppliers";
-    const rep: AxiosResponse<Mapping> = await Axios.get(fullUrl, {
+    const rep: AxiosResponse<ProfileExt> = await Axios.get(fullUrl, {
       headers: this.getHeaders(),
       params: { idProfile: String(params["idProfile"]) },
     });
@@ -1850,7 +1861,7 @@ export abstract class AbstractAPI {
     }
   }
 
-  protected onSuccessOrderLoadProfile(data: Mapping): void {}
+  protected onSuccessOrderLoadProfile(data: ProfileExt): void {}
 
   protected async rawOrderAddSupplier(params: Supplier) {
     const fullUrl = this.baseUrl + "/api/order/profile/suppliers";
@@ -1917,25 +1928,71 @@ export abstract class AbstractAPI {
 
   protected onSuccessOrderDeleteSupplier(): void {}
 
-  protected async rawOrderUpdateProfileMap(params: UpdateProfileMapIn) {
-    const fullUrl = this.baseUrl + "/api/order/profile/map";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
+  protected async rawOrderUpdateProfileMapIng(params: UpdateProfileMapIngIn) {
+    const fullUrl = this.baseUrl + "/api/order/profile/map-ing";
+    const rep: AxiosResponse<ProfileExt> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
   }
 
-  /** OrderUpdateProfileMap wraps rawOrderUpdateProfileMap and handles the error */
-  async OrderUpdateProfileMap(params: UpdateProfileMapIn) {
+  /** OrderUpdateProfileMapIng wraps rawOrderUpdateProfileMapIng and handles the error */
+  async OrderUpdateProfileMapIng(params: UpdateProfileMapIngIn) {
     this.startRequest();
     try {
-      const out = await this.rawOrderUpdateProfileMap(params);
-      this.onSuccessOrderUpdateProfileMap();
+      const out = await this.rawOrderUpdateProfileMapIng(params);
+      this.onSuccessOrderUpdateProfileMapIng(out);
       return out;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessOrderUpdateProfileMap(): void {}
+  protected onSuccessOrderUpdateProfileMapIng(data: ProfileExt): void {}
+
+  protected async rawOrderUpdateProfileMapKind(params: UpdateProfileMapKindIn) {
+    const fullUrl = this.baseUrl + "/api/order/profile/map-kind";
+    const rep: AxiosResponse<ProfileExt> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** OrderUpdateProfileMapKind wraps rawOrderUpdateProfileMapKind and handles the error */
+  async OrderUpdateProfileMapKind(params: UpdateProfileMapKindIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawOrderUpdateProfileMapKind(params);
+      this.onSuccessOrderUpdateProfileMapKind(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessOrderUpdateProfileMapKind(data: ProfileExt): void {}
+
+  protected async rawOrderTidyMapping(params: TidyIn) {
+    const fullUrl = this.baseUrl + "/api/order/profile/tidy";
+    const rep: AxiosResponse<ProfileExt> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  /** OrderTidyMapping wraps rawOrderTidyMapping and handles the error */
+  async OrderTidyMapping(params: TidyIn) {
+    this.startRequest();
+    try {
+      const out = await this.rawOrderTidyMapping(params);
+      this.onSuccessOrderTidyMapping(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessOrderTidyMapping(data: ProfileExt): void {}
 
   protected async rawOrderGetDefaultMapping(params: DefaultMappingIn) {
     const fullUrl = this.baseUrl + "/api/order/profile/default-map";

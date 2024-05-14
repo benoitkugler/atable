@@ -234,10 +234,214 @@ func DeleteIngredientSuppliersByIdProfiles(tx DB, idProfiles_ ...IdProfile) (Ing
 	return ScanIngredientSuppliers(rows)
 }
 
+// SelectIngredientSuppliersByIdProfileAndIdIngredient selects the items matching the given fields.
+func SelectIngredientSuppliersByIdProfileAndIdIngredient(tx DB, idProfile IdProfile, idIngredient menus.IdIngredient) (item IngredientSuppliers, err error) {
+	rows, err := tx.Query("SELECT * FROM ingredient_suppliers WHERE IdProfile = $1 AND IdIngredient = $2", idProfile, idIngredient)
+	if err != nil {
+		return nil, err
+	}
+	return ScanIngredientSuppliers(rows)
+}
+
+// DeleteIngredientSuppliersByIdProfileAndIdIngredient deletes the item matching the given fields, returning
+// the deleted items.
+func DeleteIngredientSuppliersByIdProfileAndIdIngredient(tx DB, idProfile IdProfile, idIngredient menus.IdIngredient) (item IngredientSuppliers, err error) {
+	rows, err := tx.Query("DELETE FROM ingredient_suppliers WHERE IdProfile = $1 AND IdIngredient = $2 RETURNING *", idProfile, idIngredient)
+	if err != nil {
+		return nil, err
+	}
+	return ScanIngredientSuppliers(rows)
+}
+
 // SelectIngredientSupplierByIdProfileAndIdIngredient return zero or one item, thanks to a UNIQUE SQL constraint.
 func SelectIngredientSupplierByIdProfileAndIdIngredient(tx DB, idProfile IdProfile, idIngredient menus.IdIngredient) (item IngredientSupplier, found bool, err error) {
 	row := tx.QueryRow("SELECT * FROM ingredient_suppliers WHERE IdProfile = $1 AND IdIngredient = $2", idProfile, idIngredient)
 	item, err = ScanIngredientSupplier(row)
+	if err == sql.ErrNoRows {
+		return item, false, nil
+	}
+	return item, true, err
+}
+
+func scanOneIngredientkindSupplier(row scanner) (IngredientkindSupplier, error) {
+	var item IngredientkindSupplier
+	err := row.Scan(
+		&item.Kind,
+		&item.IdSupplier,
+		&item.IdProfile,
+	)
+	return item, err
+}
+
+func ScanIngredientkindSupplier(row *sql.Row) (IngredientkindSupplier, error) {
+	return scanOneIngredientkindSupplier(row)
+}
+
+// SelectAll returns all the items in the ingredientkind_suppliers table.
+func SelectAllIngredientkindSuppliers(db DB) (IngredientkindSuppliers, error) {
+	rows, err := db.Query("SELECT * FROM ingredientkind_suppliers")
+	if err != nil {
+		return nil, err
+	}
+	return ScanIngredientkindSuppliers(rows)
+}
+
+type IngredientkindSuppliers []IngredientkindSupplier
+
+func ScanIngredientkindSuppliers(rs *sql.Rows) (IngredientkindSuppliers, error) {
+	var (
+		item IngredientkindSupplier
+		err  error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(IngredientkindSuppliers, 0, 16)
+	for rs.Next() {
+		item, err = scanOneIngredientkindSupplier(rs)
+		if err != nil {
+			return nil, err
+		}
+		structs = append(structs, item)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+func InsertIngredientkindSupplier(db DB, item IngredientkindSupplier) error {
+	_, err := db.Exec(`INSERT INTO ingredientkind_suppliers (
+			kind, idsupplier, idprofile
+			) VALUES (
+			$1, $2, $3
+			);
+			`, item.Kind, item.IdSupplier, item.IdProfile)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Insert the links IngredientkindSupplier in the database.
+// It is a no-op if 'items' is empty.
+func InsertManyIngredientkindSuppliers(tx *sql.Tx, items ...IngredientkindSupplier) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("ingredientkind_suppliers",
+		"kind",
+		"idsupplier",
+		"idprofile",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.Kind, item.IdSupplier, item.IdProfile)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link IngredientkindSupplier from the database.
+// Only the foreign keys IdSupplier, IdProfile fields are used in 'item'.
+func (item IngredientkindSupplier) Delete(tx DB) error {
+	_, err := tx.Exec(`DELETE FROM ingredientkind_suppliers WHERE IdSupplier = $1 AND IdProfile = $2;`, item.IdSupplier, item.IdProfile)
+	return err
+}
+
+// ByIdSupplier returns a map with 'IdSupplier' as keys.
+func (items IngredientkindSuppliers) ByIdSupplier() map[IdSupplier]IngredientkindSuppliers {
+	out := make(map[IdSupplier]IngredientkindSuppliers)
+	for _, target := range items {
+		out[target.IdSupplier] = append(out[target.IdSupplier], target)
+	}
+	return out
+}
+
+// IdSuppliers returns the list of ids of IdSupplier
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items IngredientkindSuppliers) IdSuppliers() []IdSupplier {
+	out := make([]IdSupplier, len(items))
+	for index, target := range items {
+		out[index] = target.IdSupplier
+	}
+	return out
+}
+
+func SelectIngredientkindSuppliersByIdSuppliers(tx DB, idSuppliers_ ...IdSupplier) (IngredientkindSuppliers, error) {
+	rows, err := tx.Query("SELECT * FROM ingredientkind_suppliers WHERE idsupplier = ANY($1)", IdSupplierArrayToPQ(idSuppliers_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIngredientkindSuppliers(rows)
+}
+
+func DeleteIngredientkindSuppliersByIdSuppliers(tx DB, idSuppliers_ ...IdSupplier) (IngredientkindSuppliers, error) {
+	rows, err := tx.Query("DELETE FROM ingredientkind_suppliers WHERE idsupplier = ANY($1) RETURNING *", IdSupplierArrayToPQ(idSuppliers_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIngredientkindSuppliers(rows)
+}
+
+// ByIdProfile returns a map with 'IdProfile' as keys.
+func (items IngredientkindSuppliers) ByIdProfile() map[IdProfile]IngredientkindSuppliers {
+	out := make(map[IdProfile]IngredientkindSuppliers)
+	for _, target := range items {
+		out[target.IdProfile] = append(out[target.IdProfile], target)
+	}
+	return out
+}
+
+// IdProfiles returns the list of ids of IdProfile
+// contained in this link table.
+// They are not garanteed to be distinct.
+func (items IngredientkindSuppliers) IdProfiles() []IdProfile {
+	out := make([]IdProfile, len(items))
+	for index, target := range items {
+		out[index] = target.IdProfile
+	}
+	return out
+}
+
+func SelectIngredientkindSuppliersByIdProfiles(tx DB, idProfiles_ ...IdProfile) (IngredientkindSuppliers, error) {
+	rows, err := tx.Query("SELECT * FROM ingredientkind_suppliers WHERE idprofile = ANY($1)", IdProfileArrayToPQ(idProfiles_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIngredientkindSuppliers(rows)
+}
+
+func DeleteIngredientkindSuppliersByIdProfiles(tx DB, idProfiles_ ...IdProfile) (IngredientkindSuppliers, error) {
+	rows, err := tx.Query("DELETE FROM ingredientkind_suppliers WHERE idprofile = ANY($1) RETURNING *", IdProfileArrayToPQ(idProfiles_))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIngredientkindSuppliers(rows)
+}
+
+// SelectIngredientkindSupplierByIdProfileAndKind return zero or one item, thanks to a UNIQUE SQL constraint.
+func SelectIngredientkindSupplierByIdProfileAndKind(tx DB, idProfile IdProfile, kind menus.IngredientKind) (item IngredientkindSupplier, found bool, err error) {
+	row := tx.QueryRow("SELECT * FROM ingredientkind_suppliers WHERE IdProfile = $1 AND Kind = $2", idProfile, kind)
+	item, err = ScanIngredientkindSupplier(row)
 	if err == sql.ErrNoRows {
 		return item, false, nil
 	}
