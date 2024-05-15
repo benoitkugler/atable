@@ -86,8 +86,15 @@ func TestSejours(t *testing.T) {
 	err = ct.updateSejour(sejour.Sejour, user.Id)
 	tu.AssertNoErr(t, err)
 
+	_, err = ct.createMeal(MealCreateIn{IdSejour: sejour.Sejour.Id, Day: 1, Horaire: sej.Cinquieme}, user.Id)
+	tu.AssertNoErr(t, err)
+
 	group, err := ct.createGroup(sejour.Sejour.Id, user.Id)
 	tu.AssertNoErr(t, err)
+
+	meals, err := ct.loadMeals(sejour.Sejour.Id, optionnalInt{}, user.Id)
+	tu.AssertNoErr(t, err)
+	tu.Assert(t, len(meals.Meals[0].Groups) == 2)
 
 	group.Name = "AHH"
 	group.Size = 2

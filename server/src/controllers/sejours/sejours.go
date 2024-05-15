@@ -238,7 +238,8 @@ func (ct *Controller) deleteSejour(id sej.IdSejour, uID us.IdUser) error {
 	return nil
 }
 
-// SejoursCreateGroupe adds a [Group] to the given sejour
+// SejoursCreateGroupe adds a [Group] to the given sejour,
+// also adding this group to all existing meals.
 func (ct *Controller) SejoursCreateGroupe(c echo.Context) error {
 	uID := users.JWTUser(c)
 
@@ -266,7 +267,23 @@ func (ct *Controller) createGroup(idSejour sej.IdSejour, uID us.IdUser) (sej.Gro
 		return sej.Group{}, utils.SQLError(err)
 	}
 
-	return group, nil
+	err = utils.InTx(ct.db, func(tx *sql.Tx) error {
+		meals, err := sej.SelectMealsBySejours(tx, idSejour)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+		var links sej.MealGroups
+		for _, meal := range meals {
+			links = append(links, sej.MealGroup{IdMeal: meal.Id, IdGroup: group.Id})
+		}
+		err = sej.InsertManyMealGroups(tx, links...)
+		if err != nil {
+			return utils.SQLError(err)
+		}
+		return nil
+	})
+
+	return group, err
 }
 
 func (ct *Controller) SejoursUpdateGroupe(c echo.Context) error {
