@@ -92,6 +92,9 @@ func (ee exportExcel) perDaySheets() []sheet {
 		for ing, qu := range m {
 			list = append(list, IngredientQuantities{Ingredient: ing, Quantities: qu})
 		}
+		// sort by supplier then name
+		sort.Slice(list, func(i, j int) bool { return list[i].Ingredient.Name < list[j].Ingredient.Name })
+		sort.SliceStable(list, func(i, j int) bool { return ee.mapping[list[i].Ingredient.Id] < ee.mapping[list[j].Ingredient.Id] })
 
 		out = append(out, sheet{key: day, name: utils.FormatDate(ee.sejour.DayAt(day)), list: list})
 	}
@@ -206,10 +209,14 @@ func (ee exportExcel) ToExcel() (*bytes.Buffer, error) {
 	}
 
 	// create a summary ...
-	f.SetSheetName("Sheet1", summaryName)
-
-	sort.Slice(ee.Ingredients, func(i, j int) bool { return ee.Ingredients[i].Ingredient.Name < ee.Ingredients[j].Ingredient.Name })
-	ee.fillSheet(f, summaryName, ee.Ingredients, true)
+	total := ee.Ingredients
+	sort.Slice(total, func(i, j int) bool { return total[i].Ingredient.Name < total[j].Ingredient.Name })
+	sort.SliceStable(total, func(i, j int) bool { return ee.mapping[total[i].Ingredient.Id] < ee.mapping[total[j].Ingredient.Id] })
+	err = f.SetSheetName("Sheet1", summaryName)
+	if err != nil {
+		return nil, err
+	}
+	ee.fillSheet(f, summaryName, total, true)
 
 	// ... one sheet per supplier ...
 	for _, sheet := range ee.perSupplierSheets() {
