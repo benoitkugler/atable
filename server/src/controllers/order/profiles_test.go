@@ -72,7 +72,7 @@ func TestCRUDProfiles(t *testing.T) {
 	}, user)
 	tu.AssertNoErr(t, err)
 
-	ma, err := ct.defaultMapping(DefaultMappingIn{Ingredients: []menus.IdIngredient{ing1.Id, ing2.Id, ing3.Id}, Profile: sejours.NewOptionnalIdProfile(profile.Id)})
+	ma, err := ct.defaultMapping(DefaultMappingIn{Ingredients: []menus.IdIngredient{ing1.Id, ing2.Id, ing3.Id}, Profile: profile.Id})
 	tu.AssertNoErr(t, err)
 	tu.Assert(t, reflect.DeepEqual(ma, IngredientMapping{ing1.Id: sup.Id, ing3.Id: sup.Id}))
 

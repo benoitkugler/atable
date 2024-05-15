@@ -37,7 +37,9 @@
           >
             <template v-slot:append>
               <v-chip size="small" color="secondary">
-                {{ mapping.customMapping.size }} choix personnalisés
+                {{ mapping.customMapping.size }} choix personnalisé{{
+                  mapping.customMapping.size > 1 ? "s" : ""
+                }}
               </v-chip>
             </template>
             <v-card-text>
@@ -110,10 +112,7 @@ import {
   formatSuppliers,
   saveBlobAsFile,
 } from "@/logic/controller";
-import { computed } from "vue";
-import { reactive } from "vue";
-import { onMounted } from "vue";
-import { ref } from "vue";
+import { computed, reactive, onMounted, ref } from "vue";
 
 const props = defineProps<{
   compiledIngredients: CompileIngredientsOut;
@@ -165,17 +164,17 @@ async function syncProfileContent() {
   const bp = mapping.baseProfile;
   if (bp == null) return;
 
-  const res = await controller.OrderLoadProfile({
-    idProfile: bp.Profile.Id,
+  const res = await controller.OrderGetDefaultMapping({
+    Profile: bp.Profile.Id,
+    Ingredients:
+      props.compiledIngredients.Ingredients?.map((ing) => ing.Ingredient.Id) ||
+      [],
   });
   if (res == undefined) return;
 
-  res.forEach((item) => {
-    const idSupplier = item.K;
-    item.V?.forEach((idIngredient) => {
-      currentProfileContent.value.set(idIngredient, idSupplier);
-    });
-  });
+  Object.entries(res).forEach((e) =>
+    currentProfileContent.value.set(Number(e[0]) as Int, e[1])
+  );
 }
 
 function supplierFor(id: IdIngredient) {

@@ -128,7 +128,7 @@ export interface CompileIngredientsOut {
 // github.com/benoitkugler/atable/controllers/order.DefaultMappingIn
 export interface DefaultMappingIn {
   Ingredients: IdIngredient[] | null;
-  Profile: OptionnalIdProfile;
+  Profile: IdProfile;
 }
 // github.com/benoitkugler/atable/controllers/order.ExportExcelIn
 export interface ExportExcelIn {

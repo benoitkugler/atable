@@ -488,7 +488,7 @@ func (ct *Controller) setDefaultProfile(args SetDefaultProfile, uID uID) error {
 
 type DefaultMappingIn struct {
 	Ingredients []menus.IdIngredient
-	Profile     sej.OptionnalIdProfile
+	Profile     ord.IdProfile
 }
 
 func (ct *Controller) OrderGetDefaultMapping(c echo.Context) error {
@@ -508,10 +508,6 @@ func (ct *Controller) OrderGetDefaultMapping(c echo.Context) error {
 }
 
 func (ct *Controller) defaultMapping(args DefaultMappingIn) (IngredientMapping, error) {
-	if !args.Profile.Valid {
-		return nil, nil
-	}
-
 	// load the ingredient kinds
 	ingredients, err := menus.SelectIngredients(ct.db, args.Ingredients...)
 	if err != nil {
@@ -519,13 +515,13 @@ func (ct *Controller) defaultMapping(args DefaultMappingIn) (IngredientMapping, 
 	}
 
 	// load the profile
-	links1, err := ord.SelectIngredientkindSuppliersByIdProfiles(ct.db, args.Profile.IdProfile)
+	links1, err := ord.SelectIngredientkindSuppliersByIdProfiles(ct.db, args.Profile)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
 	byKind := links1.ByKind()
 
-	links2, err := ord.SelectIngredientSuppliersByIdProfiles(ct.db, args.Profile.IdProfile)
+	links2, err := ord.SelectIngredientSuppliersByIdProfiles(ct.db, args.Profile)
 	if err != nil {
 		return nil, utils.SQLError(err)
 	}
