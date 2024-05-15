@@ -333,6 +333,13 @@ function uniquifyQuantity(qu: Quantity): Quantity {
   return qu;
 }
 
+function formatFloat(v: number): string {
+  if (Math.ceil(v) == v) {
+    return `${v}`;
+  }
+  return v.toFixed(2);
+}
+
 export function formatQuantity(qu: Quantity): string {
   if (qu.Unite == Unite.U_Kg && qu.Val < 1) {
     qu = { Unite: Unite.U_G, Val: qu.Val * 1000 };
@@ -343,7 +350,7 @@ export function formatQuantity(qu: Quantity): string {
   } else if (qu.Unite == Unite.U_CL && qu.Val > 100) {
     qu = { Unite: Unite.U_L, Val: qu.Val / 100 };
   }
-  return `${qu.Val} ${UniteLabels[qu.Unite]}`;
+  return `${formatFloat(qu.Val)} ${UniteLabels[qu.Unite]}`;
 }
 
 export function formatSuppliers(suppliers: Suppliers) {
