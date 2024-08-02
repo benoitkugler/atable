@@ -138,7 +138,7 @@ class _MealListState extends State<MealList> {
       });
     }
 
-    _scrollToClosest();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToClosest());
   }
 
   void _editMeal(int oldMealIndex, MealM newMeal) async {
