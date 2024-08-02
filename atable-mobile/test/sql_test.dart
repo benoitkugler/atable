@@ -1,3 +1,4 @@
+import 'package:atable/logic/env.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_sejours.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
@@ -13,21 +14,21 @@ Future main() async {
     databaseFactory = databaseFactoryFfi;
   });
   test('SQL API', () async {
-    final db = await DBApi.open(dbPath: inMemoryDatabasePath);
-    final ing1 = await db
-        .insertIngredient(const Ingredient(0, "INg1", IngredientKind.epicerie));
+    final db = await DBApi.open(BuildMode.prod, dbPath: inMemoryDatabasePath);
+    final ing1 = await db.insertIngredient(
+        const Ingredient(0, "INg1", IngredientKind.epicerie, 1));
 
     final got1 = (await db.getIngredients()).map((e) => e.toString());
     expect(got1, [ing1.toString()]); // Check content
 
-    final ing2 = await db
-        .insertIngredient(const Ingredient(0, "INg1", IngredientKind.laitages));
+    final ing2 = await db.insertIngredient(
+        const Ingredient(0, "INg1", IngredientKind.laitages, 1));
     final got2 = (await db.getIngredients()).map((e) => e.toString());
     expect(got2, [ing1.toString(), ing2.toString()]); // Check content
 
     // nouveau menu
-    final menu1 = await db.db
-        .insert("menus", const Menu(-1, 0, false, false).toSQLMap(true));
+    final menu1 = await db.db.insert(
+        "menus", Menu(-1, 0, false, false, DateTime.now()).toSQLMap(true));
     final meal1 = await db.db
         .insert("meals", MealM(0, menu1, "", DateTime.now(), 7).toSQLMap(true));
 
@@ -48,8 +49,8 @@ Future main() async {
     final allMeals = await db.getMeals();
     expect(allMeals.length, 0);
 
-    final menu2 = await db.db
-        .insert("menus", const Menu(0, 0, false, false).toSQLMap(true));
+    final menu2 = await db.db.insert(
+        "menus", Menu(0, 0, false, false, DateTime.now()).toSQLMap(true));
     await db.db.insert(
         "meals", MealM(0, menu2, "", DateTime.now(), 50).toSQLMap(true));
 
@@ -57,15 +58,16 @@ Future main() async {
   });
 
   test('SQL API - Receipes', () async {
-    final db = await DBApi.open(dbPath: inMemoryDatabasePath);
-    final ing1 = await db
-        .insertIngredient(const Ingredient(0, "INg1", IngredientKind.epicerie));
-    final ing2 = await db
-        .insertIngredient(const Ingredient(0, "INg1", IngredientKind.laitages));
+    final db = await DBApi.open(BuildMode.dev, dbPath: inMemoryDatabasePath);
+    final ing1 = await db.insertIngredient(
+        const Ingredient(0, "INg1", IngredientKind.epicerie, 1));
+    final ing2 = await db.insertIngredient(
+        const Ingredient(0, "INg1", IngredientKind.laitages, 1));
 
     final receipe1 = await db.db.insert(
         "receipes",
-        const Receipe(-1, 0, PlatKind.entree, "", "Cuisson : 20min", false)
+        Receipe(-1, 0, PlatKind.entree, "", "Cuisson : 20min", false,
+                DateTime.now())
             .toSQLMap(true));
 
     await db.insertReceipeIngredient(ReceipeIngredient(

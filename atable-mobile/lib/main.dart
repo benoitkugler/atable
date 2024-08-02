@@ -9,8 +9,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart';
 
-const env = Env(BuildMode.prod);
-// const env = Env(BuildMode.dev);
+// const env = Env(BuildMode.prod);
+const env = Env(BuildMode.dev);
 
 void main() async {
   runApp(MaterialApp.router(
@@ -77,7 +77,7 @@ class __HomeState extends State<_Home> {
   }
 
   _openDB() async {
-    final db = await DBApi.open();
+    final db = await DBApi.open(env.bm);
     setState(() {
       this.db = db;
       loadState = _LoadState.completed;
