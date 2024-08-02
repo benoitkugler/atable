@@ -1,7 +1,10 @@
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
+import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_users.dart';
 import 'package:atable/logic/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+const IdUser idUser = 1;
 
 class IngredientSelector extends StatefulWidget {
   final List<Ingredient> candidatesIngredients;
@@ -149,7 +152,7 @@ class _IngredientSelectorState extends State<IngredientSelector> {
 
   // crée un nouvel ingrédient
   void _addNewIngredient() {
-    widget.onDone(Ingredient(-1, name.text, kind));
+    widget.onDone(Ingredient(-1, name.text, kind, idUser));
   }
 }
 

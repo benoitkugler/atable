@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:atable/logic/env.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_sejours.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_shop-session.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
@@ -14,15 +16,19 @@ const _createSQLStatements = [
   CREATE TABLE ingredients(
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
-    kind INTEGER NOT NULL
+    kind INTEGER NOT NULL,
+    owner int NOT NULL
   );
   """,
   """
   CREATE TABLE receipes(
     id INTEGER PRIMARY KEY, 
+    owner int NOT NULL,
     plat INTEGER NOT NULL,
     name TEXT NOT NULL,
-    description TEXT NOT NULL
+    description TEXT NOT NULL,
+    isPublished INTEGER NOT NULL,
+    updated TEXT NOT NULL
   );
   """,
   """
@@ -37,7 +43,10 @@ const _createSQLStatements = [
   """
   CREATE TABLE menus(
     id INTEGER PRIMARY KEY,
-    owner INTEGER NOT NULL
+    owner INTEGER NOT NULL,
+    isFavorite INTEGER NOT NULL,
+    isPublished INTEGER NOT NULL,
+    updated TEXT NOT NULL
   );
   """,
   """
@@ -78,6 +87,7 @@ extension I on Ingredient {
       map["id"],
       map["name"],
       IngredientKind.values[map["kind"]],
+      map["owner"],
     );
   }
 
@@ -85,6 +95,7 @@ extension I on Ingredient {
     final out = {
       "name": name,
       "kind": kind.index,
+      "owner": owner,
     };
     if (!ignoreID) {
       out["id"] = id;
@@ -96,8 +107,14 @@ extension I on Ingredient {
     int? id,
     String? name,
     IngredientKind? kind,
+    int? owner,
   }) {
-    return Ingredient(id ?? this.id, name ?? this.name, kind ?? this.kind);
+    return Ingredient(
+      id ?? this.id,
+      name ?? this.name,
+      kind ?? this.kind,
+      owner ?? this.owner,
+    );
   }
 }
 
@@ -105,19 +122,23 @@ extension R on Receipe {
   static Receipe fromSQLMap(Map<String, dynamic> map) {
     return Receipe(
       map["id"],
-      0,
+      map["owner"],
       PlatKind.values[map["plat"]],
       map["name"],
       map["description"],
-      false,
+      map["isPublished"] == 1,
+      DateTime.parse(map["updated"]),
     );
   }
 
   Map<String, dynamic> toSQLMap(bool ignoreID) {
     final out = {
+      "owner": owner,
       "plat": plat.index,
       "name": name,
       "description": description,
+      "isPublished": isPublished ? 1 : 0,
+      "updated": updated.toIso8601String(),
     };
     if (!ignoreID) {
       out["id"] = id;
@@ -132,14 +153,17 @@ extension R on Receipe {
     String? name,
     String? description,
     bool? isPublished,
+    DateTime? updated,
   }) {
     return Receipe(
-        id ?? this.id,
-        owner ?? this.owner,
-        plat ?? this.plat,
-        name ?? this.name,
-        description ?? this.description,
-        isPublished ?? this.isPublished);
+      id ?? this.id,
+      owner ?? this.owner,
+      plat ?? this.plat,
+      name ?? this.name,
+      description ?? this.description,
+      isPublished ?? this.isPublished,
+      updated ?? this.updated,
+    );
   }
 }
 
@@ -176,12 +200,21 @@ extension RI on ReceipeIngredient {
 
 extension M on Menu {
   static Menu fromSQLMap(Map<String, dynamic> map) {
-    return Menu(map["id"], map["owner"], false, false);
+    return Menu(
+      map["id"],
+      map["owner"],
+      map["isFavorite"] == 1,
+      map["isPublished"] == 1,
+      DateTime.parse(map["updated"]),
+    );
   }
 
   Map<String, dynamic> toSQLMap(bool ignoreID) {
     final out = <String, dynamic>{
       "owner": owner,
+      "isFavorite": isFavorite ? 1 : 0,
+      "isPublished": isPublished ? 1 : 0,
+      "updated": updated.toIso8601String(),
     };
     if (!ignoreID) {
       out["id"] = id;
@@ -442,17 +475,19 @@ class DBApi {
 
   /// [open] open a connection, creating the DB if needed
   /// [dbPath] may be adjusted in tests
-  static Future<DBApi> open({String? dbPath}) async {
+  static Future<DBApi> open(BuildMode mode, {String? dbPath}) async {
     WidgetsFlutterBinding.ensureInitialized(); // required by sqflite
 
     dbPath ??= await _defaultPath();
 
     // DEV MODE only : reset DB at start
-    // final fi = File(dbPath);
-    // if (await fi.exists()) {
-    //   await fi.delete();
-    //   print("DB deleted");
-    // }
+    if (mode == BuildMode.dev) {
+      final fi = File(dbPath);
+      if (await fi.exists()) {
+        await fi.delete();
+        print("DB deleted");
+      }
+    }
 
     // open/create the database
     final database = await openDatabase(dbPath, version: _apiVersion,
@@ -464,6 +499,8 @@ class DBApi {
       }
       ba.commit();
     }, singleInstance: false);
+
+    if (mode == BuildMode.dev) await _insertDevMeals(database);
 
     return DBApi._(database);
   }
@@ -804,4 +841,20 @@ class UtilisationsIngredient {
   final int receipes;
   final int menus;
   const UtilisationsIngredient(this.receipes, this.menus);
+}
+
+/// only used in dev mode
+Future<void> _insertDevMeals(Database db) async {
+  final idMenu = await db.insert(
+      "menus", Menu(0, 1, true, false, DateTime.now()).toSQLMap(true));
+
+  final batch = db.batch();
+  final startTime = DateTime.now().subtract(const Duration(minutes: 20));
+  for (var i = 0; i < 40; i++) {
+    batch.insert(
+        "meals",
+        MealM(0, idMenu, "test", startTime.add(Duration(minutes: i)), 24)
+            .toSQLMap(true));
+  }
+  await batch.commit();
 }
