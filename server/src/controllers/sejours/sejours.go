@@ -81,6 +81,8 @@ type SejourExt struct {
 
 	// URL for a JSON file, to use in the client mobile app
 	ExportClientURL string
+
+	Label string // name and year
 }
 
 func (ct *Controller) newSejourExt(sejour sej.Sejour, groups sej.Groups) SejourExt {
@@ -101,6 +103,7 @@ func (ct *Controller) newSejourExt(sejour sej.Sejour, groups sej.Groups) SejourE
 		Sejour:          sejour,
 		Groups:          groupList,
 		ExportClientURL: clientURL,
+		Label:           sejour.Label(),
 	}
 }
 

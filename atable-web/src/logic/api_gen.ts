@@ -250,6 +250,7 @@ export interface SejourExt {
   Sejour: Sejour;
   Groups: Group[] | null;
   ExportClientURL: string;
+  Label: string;
 }
 // github.com/benoitkugler/atable/controllers/sejours.SetMenuIn
 export interface SetMenuIn {
