@@ -8,9 +8,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-// const env = Env(BuildMode.prod);
-const env = Env(BuildMode.dev);
+const env = Env(BuildMode.prod);
+// const env = Env(BuildMode.dev);
 
 void main() async {
   runApp(MaterialApp.router(
@@ -60,6 +61,8 @@ class _Home extends StatefulWidget {
 
 enum _LoadState { completed, openingDB, downloadingSejour, importingSejour }
 
+const _importLinkSaveKey = "import-sejour-link";
+
 class __HomeState extends State<_Home> {
   DBApi? db;
   _LoadState loadState = _LoadState.openingDB;
@@ -90,30 +93,50 @@ class __HomeState extends State<_Home> {
     }
   }
 
-  void _showImportDialogFromClipboard() async {
-    final link = await Clipboard.getData("text/plain");
-    final url = Uri.tryParse(link?.text ?? "");
+  void _showImportDialogFromApp() async {
+    // first, try to read the saved path
+    final prefs = await SharedPreferences.getInstance();
+
+    var link = prefs.getString(_importLinkSaveKey) ?? "";
+    if (link.isEmpty) {
+      // default to clipboard
+      final cp = await Clipboard.getData("text/plain");
+      link = cp?.text ?? "";
+    }
+
+    final url = Uri.tryParse(link);
     _showImportDialog(url);
   }
 
   /// if [url] is null, shows a notice
   void _showImportDialog(Uri? url) async {
+    // save the link for futur use
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_importLinkSaveKey, url?.toString() ?? "");
+
     final db = this.db!;
     final hasMeals = (await db.getMeals()).isNotEmpty;
     if (!mounted) return;
+
+    final String content;
+    if (url == null) {
+      content =
+          "Vous pouvez importer un séjour depuis l'application Web en copiant le lien ou en scannant le QR code.";
+    } else {
+      final sejour = url.queryParameters["sejour"] ?? "";
+      content = """Importer le séjour $sejour : 
+
+${url.toString()}
+
+${hasMeals ? 'Attention, les repas en cours seront effacés.' : ''}
+            """;
+    }
 
     final doImport = await showDialog<Uri>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Importer un séjour"),
-        content: Text(url != null
-            ? """Importer depuis le lien : 
-
-${url.toString()}
-
-${hasMeals ? 'Attention, les repas en cours seront effacés.' : ''}
-            """
-            : "Vous pouvez importer un séjour depuis l'application Web en copiant le lien ou en scannant le QR code."),
+        content: Text(content),
         actions: [
           ElevatedButton(
             onPressed:
@@ -172,7 +195,7 @@ ${hasMeals ? 'Attention, les repas en cours seront effacés.' : ''}
       case _LoadState.completed:
         return NotificationListener<ImportSejourNotification>(
             onNotification: (_) {
-              _showImportDialogFromClipboard();
+              _showImportDialogFromApp();
               return false;
             },
             child: MealList(env, db!));

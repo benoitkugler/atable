@@ -92,7 +92,10 @@ func (ct *Controller) newSejourExt(sejour sej.Sejour, groups sej.Groups) SejourE
 
 	cryptedID := ct.key.EncryptID(int64(sejour.Id))
 	clientURL := utils.BuildUrl(ct.host, ClientEnpoint,
-		map[string]string{clientQueryParam: string(cryptedID)})
+		map[string]string{
+			clientQueryParam:       string(cryptedID),
+			clientQueryParamSejour: sejour.Label(),
+		})
 
 	return SejourExt{
 		Sejour:          sejour,

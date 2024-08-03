@@ -14,8 +14,9 @@ import (
 
 // Mobile API
 const (
-	ClientEnpoint    = "/import-sejour"
-	clientQueryParam = "id"
+	ClientEnpoint          = "/import-sejour"
+	clientQueryParam       = "id"
+	clientQueryParamSejour = "sejour"
 )
 
 // SejoursExportToClient returns a list of the [Meal]s registred

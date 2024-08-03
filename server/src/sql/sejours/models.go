@@ -1,6 +1,7 @@
 package sejours
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/benoitkugler/atable/sql/menus"
@@ -35,6 +36,10 @@ const day = 24 * time.Hour
 
 func (sej *Sejour) DayAt(offset int) time.Time {
 	return sej.Start.T().Add(time.Duration(offset) * day)
+}
+
+func (sej *Sejour) Label() string {
+	return fmt.Sprintf("%s %d", sej.Name, sej.Start.T().Year)
 }
 
 // Group is a group of people in a [Sejour].
