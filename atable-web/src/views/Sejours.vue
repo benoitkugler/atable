@@ -87,12 +87,29 @@
     <v-responsive class="align-center fill-height">
       <v-card color="grey-lighten-4" title="Séjours">
         <template v-slot:append>
-          <v-btn class="mr-2" @click="createSejour">
-            <template v-slot:prepend="">
-              <v-icon color="green">mdi-plus</v-icon>
+          <v-menu>
+            <template v-slot:activator="{ isActive, props }">
+              <v-btn class="mr-2" v-on="{ isActive }" v-bind="props">
+                <template v-slot:prepend="">
+                  <v-icon color="green">mdi-plus</v-icon>
+                </template>
+                Ajouter un séjour
+              </v-btn>
             </template>
-            Ajouter un séjour
-          </v-btn>
+            <v-list>
+              <v-list-item @click="createSejour"
+                >Créer un séjour vierge</v-list-item
+              >
+              <v-list-item
+                :disabled="rc.activeSejour == null"
+                @click="duplicateSejour"
+                >Dupliquer le séjour
+                <i>{{
+                  rc.activeSejour == null ? "" : rc.activeSejour?.Label
+                }}</i></v-list-item
+              >
+            </v-list>
+          </v-menu>
         </template>
         <v-card-text>
           <v-card class="mt-2" elevation="0">
@@ -207,6 +224,20 @@ async function createSejour() {
   if (res === undefined) return;
 
   controller.showMessage("Séjour ajouté avec succès.");
+  sejours.value.push(res);
+
+  rc.activeSejour = res;
+  sejourToEdit.value = res;
+}
+
+async function duplicateSejour() {
+  if (rc.activeSejour == null) return;
+  const res = await controller.SejoursDuplicate({
+    "id-sejour": rc.activeSejour.Sejour.Id,
+  });
+  if (res === undefined) return;
+
+  controller.showMessage("Séjour dupliqué avec succès.");
   sejours.value.push(res);
 
   rc.activeSejour = res;

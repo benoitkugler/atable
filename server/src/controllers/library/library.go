@@ -1066,3 +1066,38 @@ func (ct *Controller) deleteIngredient(id men.IdIngredient, userID us.IdUser) (D
 
 	return out, nil
 }
+
+// Do not COMMIT or ROLLBACK
+func DuplicateMenu(tx *sql.Tx, old men.Menu) (out men.Menu, err error) {
+	links1, err := men.SelectMenuIngredientsByIdMenus(tx, old.Id)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	links2, err := men.SelectMenuReceipesByIdMenus(tx, old.Id)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
+	// create a new record
+	out, err = old.Insert(tx)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	// adjust links
+	for i := range links1 {
+		links1[i].IdMenu = out.Id
+	}
+	for i := range links2 {
+		links2[i].IdMenu = out.Id
+	}
+	err = men.InsertManyMenuIngredients(tx, links1...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+	err = men.InsertManyMenuReceipes(tx, links2...)
+	if err != nil {
+		return out, utils.SQLError(err)
+	}
+
+	return out, nil
+}

@@ -172,7 +172,6 @@ import {
   IdMeal,
 } from "@/logic/api_gen";
 import {
-  DragKind,
   ResourceDrag,
   formatHoraire,
   platColors,

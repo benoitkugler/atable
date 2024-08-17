@@ -464,6 +464,8 @@ func (ct *Controller) loadMeals(idSejour sej.IdSejour, day optionnalInt, uID us.
 		out.Meals = append(out.Meals, item)
 	}
 
+	sort.Slice(out.Meals, func(i, j int) bool { return out.Meals[i].Meal.Jour < out.Meals[j].Meal.Jour })
+
 	return out, nil
 }
 

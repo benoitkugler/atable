@@ -729,6 +729,29 @@ export abstract class AbstractAPI {
 
   protected onSuccessSejoursDelete(): void {}
 
+  protected async rawSejoursDuplicate(params: { "id-sejour": Int }) {
+    const fullUrl = this.baseUrl + "/api/sejours/duplicate";
+    const rep: AxiosResponse<SejourExt> = await Axios.get(fullUrl, {
+      headers: this.getHeaders(),
+      params: { "id-sejour": String(params["id-sejour"]) },
+    });
+    return rep.data;
+  }
+
+  /** SejoursDuplicate wraps rawSejoursDuplicate and handles the error */
+  async SejoursDuplicate(params: { "id-sejour": Int }) {
+    this.startRequest();
+    try {
+      const out = await this.rawSejoursDuplicate(params);
+      this.onSuccessSejoursDuplicate(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected onSuccessSejoursDuplicate(data: SejourExt): void {}
+
   protected async rawSejoursCreateGroupe(params: { "id-sejour": Int }) {
     const fullUrl = this.baseUrl + "/api/sejours/groups";
     const rep: AxiosResponse<Group> = await Axios.put(fullUrl, null, {

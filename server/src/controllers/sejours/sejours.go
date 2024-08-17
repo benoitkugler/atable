@@ -11,8 +11,10 @@ import (
 	"sort"
 	"time"
 
+	"github.com/benoitkugler/atable/controllers/library"
 	"github.com/benoitkugler/atable/controllers/users"
 	"github.com/benoitkugler/atable/pass"
+	men "github.com/benoitkugler/atable/sql/menus"
 	sej "github.com/benoitkugler/atable/sql/sejours"
 	us "github.com/benoitkugler/atable/sql/users"
 	"github.com/benoitkugler/atable/utils"
@@ -363,4 +365,118 @@ func (ct *Controller) deleteGroup(id sej.IdGroup, uID us.IdUser) error {
 	}
 
 	return nil
+}
+
+// SejoursDuplicate duplicate a sejour and all the associated meals and (private) menus
+func (ct *Controller) SejoursDuplicate(c echo.Context) error {
+	uID := users.JWTUser(c)
+
+	id_, err := utils.QueryParamInt64(c, "id-sejour")
+	if err != nil {
+		return err
+	}
+
+	sejour, err := ct.duplicateSejour(sej.IdSejour(id_), uID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(200, sejour)
+}
+
+func (ct *Controller) duplicateSejour(id sej.IdSejour, uID us.IdUser) (SejourExt, error) {
+	origin, err := ct.checkSejourOwner(id, uID)
+	if err != nil {
+		return SejourExt{}, err
+	}
+
+	// deep copy
+	tx, err := ct.db.Begin()
+	if err != nil {
+		return SejourExt{}, utils.SQLError(err)
+	}
+	newSejour, newGroups, err := duplicateSejour(origin, tx)
+	if err != nil {
+		_ = tx.Rollback()
+		return SejourExt{}, err
+	}
+	err = tx.Commit()
+	if err != nil {
+		return SejourExt{}, utils.SQLError(err)
+	}
+
+	return ct.newSejourExt(newSejour, newGroups), nil
+}
+
+// do not COMMIT or ROLLBACK
+func duplicateSejour(origin sej.Sejour, tx *sql.Tx) (sej.Sejour, sej.Groups, error) {
+	newSejour, err := origin.Insert(tx)
+	if err != nil {
+		return sej.Sejour{}, nil, utils.SQLError(err)
+	}
+
+	groups, err := sej.SelectGroupsBySejours(tx, origin.Id)
+	if err != nil {
+		return sej.Sejour{}, nil, utils.SQLError(err)
+	}
+	meals, err := sej.SelectMealsBySejours(tx, origin.Id)
+	if err != nil {
+		return sej.Sejour{}, nil, utils.SQLError(err)
+	}
+	links, err := sej.SelectMealGroupsByIdMeals(tx, meals.IDs()...)
+	if err != nil {
+		return sej.Sejour{}, nil, utils.SQLError(err)
+	}
+	mealGroups := links.ByIdMeal()
+	menus, err := men.SelectMenus(tx, meals.Menus()...)
+	if err != nil {
+		return sej.Sejour{}, nil, utils.SQLError(err)
+	}
+
+	// groups :
+	// adjust the ID and stores the old -> new mapping
+	mapping := map[sej.IdGroup]sej.IdGroup{}
+	newGroups := sej.Groups{}
+	for _, oldGroup := range groups {
+		newGroup := oldGroup
+		newGroup.Sejour = newSejour.Id
+		newGroup, err = newGroup.Insert(tx)
+		if err != nil {
+			return sej.Sejour{}, nil, utils.SQLError(err)
+		}
+		mapping[oldGroup.Id] = newGroup.Id
+		newGroups[newGroup.Id] = newGroup
+	}
+
+	// meals :
+	// adjust the ID and create the links
+	var newLinks sej.MealGroups
+	for _, oldMeal := range meals {
+		menu := menus[oldMeal.Menu]
+		if !menu.IsFavorite { // the menu is hidden : duplicate
+			menu, err = library.DuplicateMenu(tx, menu)
+			if err != nil {
+				return sej.Sejour{}, nil, utils.SQLError(err)
+			}
+		}
+
+		newMeal := oldMeal
+		newMeal.Menu = menu.Id // needed if [menu] has been duplicated
+		newMeal.Sejour = newSejour.Id
+		newMeal, err = newMeal.Insert(tx)
+		if err != nil {
+			return sej.Sejour{}, nil, utils.SQLError(err)
+		}
+		for _, oldGroup := range mealGroups[oldMeal.Id] {
+			newGroup := mapping[oldGroup.IdGroup]
+			newLinks = append(newLinks, sej.MealGroup{IdMeal: newMeal.Id, IdGroup: newGroup})
+		}
+	}
+
+	err = sej.InsertManyMealGroups(tx, newLinks...)
+	if err != nil {
+		return sej.Sejour{}, nil, utils.SQLError(err)
+	}
+
+	return newSejour, newGroups, nil
 }

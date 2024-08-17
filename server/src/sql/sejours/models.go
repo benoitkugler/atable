@@ -39,7 +39,7 @@ func (sej *Sejour) DayAt(offset int) time.Time {
 }
 
 func (sej *Sejour) Label() string {
-	return fmt.Sprintf("%s %d", sej.Name, sej.Start.T().Year)
+	return fmt.Sprintf("%s %d", sej.Name, sej.Start.T().Year())
 }
 
 // Group is a group of people in a [Sejour].

@@ -27,6 +27,8 @@ func setupWebAPI(e *echo.Echo, tvc *users.Controller, sej *sejours.Controller, l
 	gr.POST("/api/sejours", sej.SejoursUpdate)
 	gr.DELETE("/api/sejours", sej.SejoursDelete)
 
+	gr.GET("/api/sejours/duplicate", sej.SejoursDuplicate)
+
 	gr.PUT("/api/sejours/groups", sej.SejoursCreateGroupe)
 	gr.POST("/api/sejours/groups", sej.SejoursUpdateGroupe)
 	gr.DELETE("/api/sejours/groups", sej.SejoursDeleteGroupe)

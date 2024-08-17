@@ -107,3 +107,30 @@ func TestSejours(t *testing.T) {
 	err = ct.deleteSejour(sejour.Sejour.Id, user.Id)
 	tu.AssertNoErr(t, err)
 }
+
+func TestDuplicateSejour(t *testing.T) {
+	db, user, menu := setup(t)
+	defer db.Remove()
+
+	ct := NewController(db.DB, "", user, pass.Encrypter{})
+
+	sejour, err := ct.createSejour(user.Id)
+	tu.AssertNoErr(t, err)
+	mealPrivate, err := ct.createMeal(MealCreateIn{IdSejour: sejour.Sejour.Id, Day: 1, Horaire: sej.Cinquieme}, user.Id)
+	tu.AssertNoErr(t, err)
+	mealPublic, err := ct.createMeal(MealCreateIn{IdSejour: sejour.Sejour.Id, Day: 2, Horaire: sej.Cinquieme}, user.Id)
+	tu.AssertNoErr(t, err)
+	_, err = ct.setMenu(SetMenuIn{IdMeal: mealPublic.Meal.Id, IdMenu: menu.Id}, user.Id)
+	tu.AssertNoErr(t, err)
+
+	newSejour, err := ct.duplicateSejour(sejour.Sejour.Id, user.Id)
+	tu.AssertNoErr(t, err)
+
+	meals, err := ct.loadMeals(newSejour.Sejour.Id, optionnalInt{}, user.Id)
+	tu.AssertNoErr(t, err)
+
+	tu.Assert(t, len(meals.Menus) == 2)
+	tu.Assert(t, len(meals.Meals) == 2)
+	tu.Assert(t, meals.Meals[0].Meal.Menu != mealPrivate.Meal.Menu) // private
+	tu.Assert(t, meals.Meals[1].Meal.Menu == menu.Id)               // public
+}
