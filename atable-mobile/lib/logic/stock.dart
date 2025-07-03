@@ -76,7 +76,13 @@ class StockEntry {
   }
 }
 
-typedef Stock = List<StockEntry>;
+class StockIngredient {
+  final Ingredient ingredient;
+  final List<StockQuantite> quantites;
+  const StockIngredient(this.ingredient, this.quantites);
+}
+
+typedef Stock = List<StockIngredient>;
 
 const stockSQLTable = """
   CREATE TABLE stock (

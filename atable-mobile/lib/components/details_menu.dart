@@ -109,7 +109,7 @@ class _DetailsMenuState extends State<DetailsMenu> {
     var for_ = 10;
     if (menu.ingredients.isNotEmpty) {
       for_ = menu.ingredients.last.link.quantity.for_;
-    } else if (menu.receipes.isEmpty) {
+    } else if (menu.receipes.isNotEmpty) {
       final receipe = menu.receipes.last;
       if (receipe.ingredients.isNotEmpty) {
         for_ = receipe.ingredients.last.link.quantity.for_;
