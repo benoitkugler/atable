@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:atable/logic/env.dart';
+import 'package:atable/logic/stock.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_sejours.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_shop-session.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
@@ -12,7 +13,7 @@ import 'package:sqflite/sqflite.dart';
 
 // à garder synchronisé avec types/xxx.dart
 const _createSQLStatements = [
-  """ 
+  """
   CREATE TABLE ingredients(
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
@@ -79,6 +80,7 @@ const _createSQLStatements = [
     FOREIGN KEY(idMenu) REFERENCES menus(id)
   );
  """,
+  stockSQLTable,
 ];
 
 extension I on Ingredient {
@@ -829,6 +831,48 @@ class DBApi {
     await db.update("menu_ingredients", ing.toSQLMap(),
         where: "idMenu = ? AND idIngredient = ?",
         whereArgs: [ing.idMenu, ing.idIngredient]);
+  }
+
+  Future<Stock> getStock() async {
+    return (await db.query("stock")).map(StockEntry.fromSQLMap).toList();
+  }
+
+  Future<void> insertStock(StockEntry entry) async {
+    await db.insert("stock", entry.toSQLMap());
+  }
+
+  Future<void> deleteStock(IdIngredient id) async {
+    await db.delete("stock", where: "idIngredient = ?", whereArgs: [id]);
+  }
+
+  Future<void> updateStock(StockEntry entry) async {
+    await db.update("stock", entry.toSQLMap(),
+        where: "idIngredient = ?", whereArgs: [entry.idIngredient]);
+  }
+
+  /// addStockFromShop adds every entry to the stock
+  Future<void> addStockFromShop(List<IngredientUses> list) async {
+    final current = (await getStock());
+    final byIngredient = Map.fromEntries(
+        current.map((entry) => MapEntry(entry.idIngredient, entry)));
+    final batch = db.batch();
+    for (var entry in list) {
+      final newQuantites = entry.quantites
+          .map((q) => StockQuantite(q.unite, q.quantite))
+          .toList();
+      final existing = byIngredient[entry.ingredient.id];
+      if (existing == null) {
+        // insert
+        batch.insert(
+            "stock", StockEntry(entry.ingredient.id, newQuantites).toSQLMap());
+      } else {
+        // merge and update
+        existing.quantites.addAll(newQuantites);
+        batch.update("stock", existing.toSQLMap(),
+            where: "idIngredient = ?", whereArgs: [entry.ingredient.id]);
+      }
+    }
+    await batch.commit();
   }
 }
 

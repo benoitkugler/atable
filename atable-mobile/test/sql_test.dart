@@ -1,6 +1,8 @@
 import 'package:atable/logic/env.dart';
 import 'package:atable/logic/sql.dart';
+import 'package:atable/logic/stock.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_sejours.dart';
+import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_shop-session.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -82,6 +84,56 @@ Future main() async {
       ing2.id,
       const QuantityR(0, Unite.piece, 0),
     ));
+
+    await db.close();
+  });
+
+  test("SQL API - Stock", () async {
+    final db = await DBApi.open(BuildMode.dev, dbPath: inMemoryDatabasePath);
+    final ing1 = await db.insertIngredient(
+        const Ingredient(0, "INg1", IngredientKind.epicerie, 1));
+    final ing2 = await db.insertIngredient(
+        const Ingredient(0, "INg1", IngredientKind.laitages, 1));
+
+    expect((await db.getStock()).length, 0);
+
+    await db.insertStock(StockEntry(ing1.id,
+        const [StockQuantite(Unite.cL, 23.3), StockQuantite(Unite.piece, 4)]));
+    await db.updateStock(StockEntry(ing1.id, []));
+
+    expect((await db.getStock()).length, 1);
+
+    await db.deleteStock(ing1.id);
+
+    expect((await db.getStock()).length, 0);
+
+    await db.insertStock(StockEntry(ing1.id, []));
+
+    await db.addStockFromShop([
+      IngredientUses(
+          ing1,
+          [
+            Quantite(2, Unite.kg, Origin(DateTime.now(), "", "")),
+            Quantite(2.3, Unite.l, Origin(DateTime.now(), "", "")),
+          ],
+          false),
+      IngredientUses(ing2, [], false),
+    ]);
+
+    expect((await db.getStock()).length, 2);
+
+    await db.addStockFromShop([
+      IngredientUses(
+          ing1,
+          [
+            Quantite(2, Unite.kg, Origin(DateTime.now(), "", "")),
+            Quantite(2.3, Unite.l, Origin(DateTime.now(), "", "")),
+          ],
+          false),
+      IngredientUses(ing2, [], false),
+    ]);
+
+    expect((await db.getStock()).length, 2);
 
     await db.close();
   });

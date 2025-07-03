@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:atable/components/details_menu.dart';
 import 'package:atable/components/shared.dart';
 import 'package:atable/components/shop_list.dart';
+import 'package:atable/components/stock.dart';
 import 'package:atable/logic/env.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_sejours.dart';
@@ -30,7 +31,7 @@ class _MealListState extends State<MealList> {
   final _scrollController = ItemScrollController();
 
   // indices into [meals]
-  Set<int> selectedMeal = {};
+  Set<int> selectedMeals = {};
 
   @override
   void initState() {
@@ -54,8 +55,9 @@ class _MealListState extends State<MealList> {
               onPressed: () => ImportSejourNotification().dispatch(context),
               icon: const Icon(Icons.download)),
           IconButton(
-              onPressed: selectedMeal.isEmpty ? null : _showShop,
-              icon: const Icon(Icons.store))
+              onPressed: selectedMeals.isEmpty ? null : _showShop,
+              icon: const Icon(Icons.shop)),
+          IconButton(onPressed: _showStore, icon: const Icon(Icons.store))
         ],
       ),
       body: meals.isEmpty
@@ -73,7 +75,7 @@ class _MealListState extends State<MealList> {
                     confirmDismiss: () => _confirmeDelete(meals[index]),
                     child: _MealCard(
                       meals[index],
-                      selectedMeal.contains(index),
+                      selectedMeals.contains(index),
                       () => _showMenuDetails(index),
                       () => _onSelectMeal(index),
                       (m) => _editMeal(index, m),
@@ -84,21 +86,21 @@ class _MealListState extends State<MealList> {
 
   void _onSelectMeal(int index) {
     // if the meal is currently selected, just unselect
-    final isSelected = selectedMeal.contains(index);
+    final isSelected = selectedMeals.contains(index);
     if (isSelected) {
-      setState(() => selectedMeal.remove(index));
+      setState(() => selectedMeals.remove(index));
     } else {
       // select the range between the previous selected, if any
-      final l = selectedMeal.where((element) => element < index).toList();
+      final l = selectedMeals.where((element) => element < index).toList();
       l.sort();
       if (l.isEmpty) {
         // no selected element before index
-        setState(() => selectedMeal.add(index));
+        setState(() => selectedMeals.add(index));
       } else {
         final start = l.last;
         setState(() {
           for (var i = start; i <= index; i++) {
-            selectedMeal.add(i);
+            selectedMeals.add(i);
           }
         });
       }
@@ -134,7 +136,7 @@ class _MealListState extends State<MealList> {
     if (mounted) {
       setState(() {
         meals = l;
-        selectedMeal = {};
+        selectedMeals = {};
       });
     }
 
@@ -181,7 +183,7 @@ class _MealListState extends State<MealList> {
   void _deleteMeal(MealExt meal) async {
     setState(() {
       meals.removeWhere((element) => element.meal.id == meal.meal.id);
-      selectedMeal = {}; // the indices have changed
+      selectedMeals = {}; // the indices have changed
     });
     await widget.db.deleteMeal(meal.meal.id);
 
@@ -208,13 +210,19 @@ class _MealListState extends State<MealList> {
   }
 
   void _showShop() async {
-    final selectedMealL = selectedMeal.map((e) => meals[e]).toList();
+    final selectedMealL = selectedMeals.map((e) => meals[e]).toList();
     await Navigator.of(context).push(MaterialPageRoute(
       builder: (context) => ShopSessionMaster(widget.env, selectedMealL),
     ));
     setState(() {
-      selectedMeal.clear();
+      selectedMeals.clear();
     });
+  }
+
+  void _showStore() async {
+    await Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => StockW(widget.env, widget.db),
+    ));
   }
 }
 
