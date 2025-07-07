@@ -5,5 +5,5 @@
 git pull && 
 echo "Removing unused files" && 
 # only keep server/static
-rm -rf atable/.git atable/atable-web atable/atable-mobile atable/server/src atable/server/migrations &&
+rm -rf atable/atable-web atable/atable-mobile atable/server/src atable/server/migrations &&
 echo "Done (pending uploading executable to atable/server)."
