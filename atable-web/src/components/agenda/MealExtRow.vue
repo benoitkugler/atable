@@ -23,7 +23,7 @@
                   :is-hovering="isHovering"
                   style="cursor: grab"
                   :draggable="true"
-                  @dragstart="(e) => onGroupDragStart(e, group.IdGroup)"
+                  @dragstart="(e: DragEvent) => onGroupDragStart(e, group.IdGroup)"
                   :is-mono-group="
                     props.groups.size == 1 && props.meal.Groups?.length == 1
                   "
