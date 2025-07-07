@@ -12,15 +12,6 @@
             <v-text-field
               variant="outlined"
               density="compact"
-              label="Pour tant de personnes"
-              type="number"
-              v-model.number="inner.Quantity.For_"
-            ></v-text-field>
-          </v-col>
-          <v-col>
-            <v-text-field
-              variant="outlined"
-              density="compact"
               label="Quantité"
               type="number"
               v-model.number="inner.Quantity.Val"
@@ -28,6 +19,15 @@
           </v-col>
           <v-col>
             <UniteSelect v-model="inner.Quantity.Unite"></UniteSelect>
+          </v-col>
+          <v-col>
+            <v-text-field
+              variant="outlined"
+              density="compact"
+              label="Pour tant de personnes"
+              type="number"
+              v-model.number="inner.Quantity.For_"
+            ></v-text-field>
           </v-col>
         </v-row>
       </v-form>
