@@ -203,7 +203,7 @@ onActivated(fetchSejours);
 
 const sejours = ref<SejourExt[]>([]);
 const selectItems = computed(() =>
-  sejours.value.map((s) => ({ title: s.Sejour.Name, value: s.Sejour.Id }))
+  sejours.value.map((s) => ({ title: s.Label, value: s.Sejour.Id }))
 );
 function updateActiveSejour(id: number) {
   rc.activeSejour = sejours.value.find((s) => s.Sejour.Id == id)!;
