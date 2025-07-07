@@ -7,6 +7,7 @@ import 'package:atable/components/shop_list.dart';
 import 'package:atable/components/stock.dart';
 import 'package:atable/logic/env.dart';
 import 'package:atable/logic/sql.dart';
+import 'package:atable/logic/stock.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_sejours.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
 import 'package:atable/logic/utils.dart';
@@ -28,6 +29,7 @@ class MealList extends StatefulWidget {
 
 class _MealListState extends State<MealList> {
   List<MealExt> meals = [];
+  Stock stock = const Stock([]);
   final _scrollController = ItemScrollController();
 
   // indices into [meals]
@@ -36,12 +38,14 @@ class _MealListState extends State<MealList> {
   @override
   void initState() {
     _loadMeals();
+    _loadStock();
     super.initState();
   }
 
   @override
   void didUpdateWidget(covariant MealList oldWidget) {
     _loadMeals();
+    _loadStock();
     super.didUpdateWidget(oldWidget);
   }
 
@@ -57,7 +61,7 @@ class _MealListState extends State<MealList> {
           IconButton(
               onPressed: selectedMeals.isEmpty ? null : _showShop,
               icon: const Icon(Icons.shop)),
-          IconButton(onPressed: _showStore, icon: const Icon(Icons.store))
+          IconButton(onPressed: _showStock, icon: const Icon(Icons.store))
         ],
       ),
       body: meals.isEmpty
@@ -74,6 +78,7 @@ class _MealListState extends State<MealList> {
                     onDissmissed: () => _deleteMeal(meals[index]),
                     confirmDismiss: () => _confirmeDelete(meals[index]),
                     child: _MealCard(
+                      stock,
                       meals[index],
                       selectedMeals.contains(index),
                       () => _showMenuDetails(index),
@@ -141,6 +146,11 @@ class _MealListState extends State<MealList> {
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToClosest());
+  }
+
+  void _loadStock() async {
+    final s = await widget.db.getStock();
+    setState(() => stock = s);
   }
 
   void _editMeal(int oldMealIndex, MealM newMeal) async {
@@ -219,14 +229,16 @@ class _MealListState extends State<MealList> {
     });
   }
 
-  void _showStore() async {
+  void _showStock() async {
     await Navigator.of(context).push(MaterialPageRoute(
       builder: (context) => StockW(widget.env, widget.db),
     ));
+    _loadStock();
   }
 }
 
 class _MealCard extends StatefulWidget {
+  final Stock stock;
   final MealExt meal;
   final bool isSelected;
 
@@ -234,8 +246,8 @@ class _MealCard extends StatefulWidget {
   final void Function() onLongPress;
   final void Function(MealM meal) onEdit;
 
-  const _MealCard(
-      this.meal, this.isSelected, this.onTap, this.onLongPress, this.onEdit,
+  const _MealCard(this.stock, this.meal, this.isSelected, this.onTap,
+      this.onLongPress, this.onEdit,
       {super.key});
 
   @override
@@ -249,8 +261,12 @@ class _MealCardState extends State<_MealCard> {
   @override
   Widget build(BuildContext context) {
     final meal = widget.meal.meal;
-    final plats = widget.meal.requiredQuantities().entries.toList();
+    final resolvedQuantities = widget.meal.requiredQuantities();
+
+    final plats = resolvedQuantities.entries.toList();
     plats.sort((a, b) => -(a.key.index - b.key.index));
+
+    final missing = widget.stock.missingFor(resolvedQuantities);
 
     return Card(
       color: widget.isSelected ? Colors.yellow.shade100 : Colors.white,
@@ -353,6 +369,15 @@ class _MealCardState extends State<_MealCard> {
                                     : const Icon(Icons.list)),
                             IconButton(
                                 onPressed: _copy, icon: const Icon(Icons.copy)),
+                            IconButton(
+                                onPressed: _showMissing,
+                                icon: missing.isEmpty
+                                    ? const Icon(
+                                        Icons.check,
+                                        color: Colors.green,
+                                      )
+                                    : const Icon(Icons.warning,
+                                        color: Colors.orange))
                           ],
                         )
                       ])
@@ -399,6 +424,25 @@ class _MealCardState extends State<_MealCard> {
     if (newDate == null) return;
     widget.onEdit(widget.meal.meal.copyWith(
         date: newDate.add(Duration(minutes: date.minute, hours: date.hour))));
+  }
+
+  void _showMissing() {
+    final resolvedQuantities = widget.meal.requiredQuantities();
+    final missing = widget.stock.missingFor(resolvedQuantities);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Stock manquant"),
+        content: ListView(
+            children: missing
+                .map((e) => ListTile(
+                      title: Text(e.ingredient.name),
+                      trailing: Text(e.quantites.join(" et ")),
+                    ))
+                .toList()),
+      ),
+    );
   }
 }
 

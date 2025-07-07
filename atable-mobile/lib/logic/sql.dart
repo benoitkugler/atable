@@ -411,6 +411,8 @@ class ResolvedQuantityIngredient {
   const ResolvedQuantityIngredient(this.ingredient, this.quantity);
 }
 
+typedef ResolvedMealQuantity = Map<PlatKind, List<ResolvedQuantityIngredient>>;
+
 class MealExt {
   final MealM meal;
   final MenuExt menu;
@@ -423,8 +425,8 @@ class MealExt {
 
   /// [requiredQuantities] resolve the quantities for the
   /// required number of people.
-  Map<PlatKind, List<ResolvedQuantityIngredient>> requiredQuantities() {
-    final out = <PlatKind, List<ResolvedQuantityIngredient>>{};
+  ResolvedMealQuantity requiredQuantities() {
+    final out = ResolvedMealQuantity();
     // resolve free ingredients
     for (var ing in menu.ingredients) {
       final quantite = ing.link.quantity.resolveFor(meal.for_);
@@ -837,10 +839,10 @@ class DBApi {
     final allIngredients = Map.fromEntries(
         (await getIngredients()).map((ing) => MapEntry(ing.id, ing)));
     final entries = (await db.query("stock")).map(StockEntry.fromSQLMap);
-    return entries
-        .map((entry) => StockIngredient(
+    return Stock(entries
+        .map((entry) => IngredientQuantiteAbs(
             allIngredients[entry.idIngredient]!, entry.quantites))
-        .toList();
+        .toList());
   }
 
   Future<void> insertStock(StockEntry entry) async {
@@ -863,9 +865,8 @@ class DBApi {
         current.map((entry) => MapEntry(entry.idIngredient, entry)));
     final batch = db.batch();
     for (var entry in list) {
-      final newQuantites = entry.quantites
-          .map((q) => StockQuantite(q.unite, q.quantite))
-          .toList();
+      final newQuantites =
+          entry.quantites.map(QuantityAbs.fromQuantite).toList();
       final existing = byIngredient[entry.ingredient.id];
       if (existing == null) {
         // insert

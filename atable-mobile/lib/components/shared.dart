@@ -1,4 +1,5 @@
 import 'package:atable/logic/sql.dart';
+import 'package:atable/logic/stock.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
 import 'package:atable/logic/utils.dart';
 import 'package:flutter/material.dart';
@@ -149,6 +150,61 @@ class _IngredientRowState<T extends QuantifiedIngI>
   }
 }
 
+class QuantityAbsEditor extends StatefulWidget {
+  final QuantityAbs initial;
+  final void Function(QuantityAbs) onChange;
+  const QuantityAbsEditor(this.initial, this.onChange, {super.key});
+
+  @override
+  State<QuantityAbsEditor> createState() => _QuantityAbsEditorState();
+}
+
+class _QuantityAbsEditorState extends State<QuantityAbsEditor> {
+  late QuantityAbs quantity;
+
+  @override
+  void initState() {
+    quantity = widget.initial;
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        SizedBox(
+          width: 80,
+          child: TextFormField(
+            initialValue: formatQuantite(quantity.val),
+            decoration: const InputDecoration(labelText: "Quantité"),
+            autofocus: true,
+            textAlign: TextAlign.center,
+            keyboardType: TextInputType.number,
+            onChanged: (value) {
+              final val = double.tryParse(value);
+              if (val == null) return;
+              widget.onChange(quantity.copyWith(val: val));
+            },
+          ),
+        ),
+        SizedBox(
+          width: 80,
+          child: DropdownButtonFormField<Unite>(
+            decoration: const InputDecoration(labelText: "Unité"),
+            value: quantity.unite,
+            onChanged: (u) => widget.onChange(quantity.copyWith(unite: u)),
+            items: Unite.values
+                .map((e) =>
+                    DropdownMenuItem(value: e, child: Text(formatUnite(e))))
+                .toList(),
+          ),
+        )
+      ],
+    );
+  }
+}
+
 extension on QuantityR {
   QuantityR copyWith({double? val, Unite? unite, int? for_}) =>
       QuantityR(val ?? this.val, unite ?? this.unite, for_ ?? this.for_);
@@ -192,39 +248,43 @@ class __QuantityEditorState extends State<_QuantityEditor> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              SizedBox(
-                width: 80,
-                child: TextFormField(
-                  initialValue: formatQuantite(quantity.val),
-                  decoration: const InputDecoration(labelText: "Quantité"),
-                  autofocus: true,
-                  textAlign: TextAlign.center,
-                  keyboardType: TextInputType.number,
-                  onChanged: (value) {
-                    final val = double.tryParse(value);
-                    if (val == null) return;
-                    setState(() => quantity = quantity.copyWith(val: val));
-                  },
-                ),
-              ),
-              SizedBox(
-                width: 80,
-                child: DropdownButtonFormField<Unite>(
-                  decoration: const InputDecoration(labelText: "Unité"),
-                  value: quantity.unite,
-                  onChanged: (u) =>
-                      setState(() => quantity = quantity.copyWith(unite: u)),
-                  items: Unite.values
-                      .map((e) => DropdownMenuItem(
-                          value: e, child: Text(formatUnite(e))))
-                      .toList(),
-                ),
-              )
-            ],
-          ),
+          QuantityAbsEditor(
+              QuantityAbs(quantity.unite, quantity.val),
+              (q) => setState(() =>
+                  quantity = quantity.copyWith(unite: q.unite, val: q.val))),
+          // Row(
+          //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          //   children: [
+          //     SizedBox(
+          //       width: 80,
+          //       child: TextFormField(
+          //         initialValue: formatQuantite(quantity.val),
+          //         decoration: const InputDecoration(labelText: "Quantité"),
+          //         autofocus: true,
+          //         textAlign: TextAlign.center,
+          //         keyboardType: TextInputType.number,
+          //         onChanged: (value) {
+          //           final val = double.tryParse(value);
+          //           if (val == null) return;
+          //           setState(() => quantity = quantity.copyWith(val: val));
+          //         },
+          //       ),
+          //     ),
+          //     SizedBox(
+          //       width: 80,
+          //       child: DropdownButtonFormField<Unite>(
+          //         decoration: const InputDecoration(labelText: "Unité"),
+          //         value: quantity.unite,
+          //         onChanged: (u) =>
+          //             setState(() => quantity = quantity.copyWith(unite: u)),
+          //         items: Unite.values
+          //             .map((e) => DropdownMenuItem(
+          //                 value: e, child: Text(formatUnite(e))))
+          //             .toList(),
+          //       ),
+          //     )
+          //   ],
+          // ),
           const SizedBox(height: 20),
           TextFormField(
             initialValue: quantity.for_.toString(),

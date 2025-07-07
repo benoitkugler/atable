@@ -95,17 +95,17 @@ Future main() async {
     final ing2 = await db.insertIngredient(
         const Ingredient(0, "INg1", IngredientKind.laitages, 1));
 
-    expect((await db.getStock()).length, 0);
+    expect((await db.getStock()).l.length, 0);
 
     await db.insertStock(StockEntry(ing1.id,
-        const [StockQuantite(Unite.cL, 23.3), StockQuantite(Unite.piece, 4)]));
+        const [QuantityAbs(Unite.cL, 23.3), QuantityAbs(Unite.piece, 4)]));
     await db.updateStock(StockEntry(ing1.id, []));
 
-    expect((await db.getStock()).length, 1);
+    expect((await db.getStock()).l.length, 1);
 
     await db.deleteStock(ing1.id);
 
-    expect((await db.getStock()).length, 0);
+    expect((await db.getStock()).l.length, 0);
 
     await db.insertStock(StockEntry(ing1.id, []));
 
@@ -120,7 +120,7 @@ Future main() async {
       IngredientUses(ing2, [], false),
     ]);
 
-    expect((await db.getStock()).length, 2);
+    expect((await db.getStock()).l.length, 2);
 
     await db.addStockFromShop([
       IngredientUses(
@@ -133,7 +133,7 @@ Future main() async {
       IngredientUses(ing2, [], false),
     ]);
 
-    expect((await db.getStock()).length, 2);
+    expect((await db.getStock()).l.length, 2);
 
     await db.close();
   });
