@@ -1,6 +1,6 @@
-# Build script to execute from www/
+# Build script to copy and execute from www/
 # static files are pulled from git; go executable should be
-# uploaded after cross compilation
+# uploaded after cross compilation (see deploy.sh)
 #
 echo "Removing current folder"
 rm -rf atable/ &&
