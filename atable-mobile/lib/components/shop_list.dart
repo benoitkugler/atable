@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:atable/logic/env.dart';
 import 'package:atable/logic/shop.dart';
 import 'package:atable/logic/sql.dart';
+import 'package:atable/logic/stock.dart';
 import 'package:atable/logic/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -12,9 +13,10 @@ import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_control
 /// par l'application maitre (mobile)
 class ShopSessionMaster extends StatefulWidget {
   final Env env;
+  final Stock stock;
   final List<MealExt> repass;
 
-  const ShopSessionMaster(this.env, this.repass, {super.key});
+  const ShopSessionMaster(this.env, this.stock, this.repass, {super.key});
 
   @override
   State<ShopSessionMaster> createState() => _ShopSessionMasterState();
@@ -25,44 +27,72 @@ class _ShopSessionMasterState extends State<ShopSessionMaster> {
 
   @override
   void initState() {
-    shopController = ShopControllerLocal(ShopListW.fromMeals(widget.repass));
+    shopController =
+        ShopControllerLocal(SL.fromMeals(widget.repass, widget.stock));
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: () async {
-        final ct = shopController;
-        if (ct is ShopControllerLocal) {
-          if (!ct.list.isStarted) return true;
-        }
+        onWillPop: () async {
+          final ct = shopController;
+          if (ct is ShopControllerLocal) {
+            if (!ct.list.isStarted) return true;
+          }
 
-        final res = await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-                    title: const Text("Confirmation"),
-                    content: const Text(
-                        "Souhaitez-vous vraiment quitter la session de courses ? Sa progression sera perdue."),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(true),
-                        style: TextButton.styleFrom(
-                            foregroundColor: Colors.orange),
-                        child: const Text("Quitter"),
-                      )
-                    ]));
-        return res ?? false;
-      },
-      child: Scaffold(
+          final res = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                      title: const Text("Confirmation"),
+                      content: const Text(
+                          "Souhaitez-vous vraiment quitter la session de courses ? Sa progression sera perdue."),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          style: TextButton.styleFrom(
+                              foregroundColor: Colors.orange),
+                          child: const Text("Quitter"),
+                        )
+                      ]));
+          return res ?? false;
+        },
+        child: Scaffold(
           appBar: AppBar(title: const Text("Liste de course"), actions: [
             IconButton(
               icon: const Icon(Icons.share),
               onPressed: _startSharing,
             )
           ]),
-          body: _ShopListImpl(shopController)),
-    );
+          body: Column(children: [
+            Expanded(child: _ShopListImpl(shopController)),
+            TextButton.icon(
+              onPressed: _confirmEndAndStore,
+              label: const Text("Terminer et stocker"),
+              icon: const Icon(Icons.store),
+            ),
+          ]),
+        ));
+  }
+
+  _confirmEndAndStore() async {
+    final res = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+                title: const Text("Confirmation"),
+                content: const Text(
+                    "Confirmez-vous la conclusion de la session ?\nLes ingrédients cochés seront ajoutés au stock."),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: const Text("Terminer"),
+                  )
+                ]));
+    if (res ?? false) {
+      final list = await shopController.fetchList();
+      if (!mounted) return;
+      Navigator.of(context).pop(list);
+    }
   }
 
   _startSharing() async {
@@ -211,7 +241,7 @@ class _ShopListImplState extends State<_ShopListImpl> {
   late final Timer timer;
   int nbFails = 0;
 
-  ShopListW list = ShopListW([]);
+  ShopList list = [];
 
   @override
   void initState() {

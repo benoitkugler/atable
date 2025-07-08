@@ -6,9 +6,11 @@ import 'package:atable/components/shared.dart';
 import 'package:atable/components/shop_list.dart';
 import 'package:atable/components/stock.dart';
 import 'package:atable/logic/env.dart';
+import 'package:atable/logic/shop.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:atable/logic/stock.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_sejours.dart';
+import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_shop-session.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
 import 'package:atable/logic/utils.dart';
 import 'package:flutter/material.dart';
@@ -29,7 +31,7 @@ class MealList extends StatefulWidget {
 
 class _MealListState extends State<MealList> {
   List<MealExt> meals = [];
-  Stock stock = const Stock([]);
+  Stock stock = const Stock({});
   final _scrollController = ItemScrollController();
 
   // indices into [meals]
@@ -221,9 +223,15 @@ class _MealListState extends State<MealList> {
 
   void _showShop() async {
     final selectedMealL = selectedMeals.map((e) => meals[e]).toList();
-    await Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => ShopSessionMaster(widget.env, selectedMealL),
+    final res = await Navigator.of(context).push(MaterialPageRoute<ShopList>(
+      builder: (context) => ShopSessionMaster(widget.env, stock, selectedMealL),
     ));
+    if (res != null) {
+      // add to the stock
+      await widget.db
+          .addStockFromShop(res.where((item) => item.checked).toList());
+      _loadStock();
+    }
     setState(() {
       selectedMeals.clear();
     });

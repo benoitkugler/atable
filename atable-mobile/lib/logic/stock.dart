@@ -1,8 +1,97 @@
 import 'dart:convert';
 
-import 'package:atable/logic/shop.dart';
 import 'package:atable/logic/sql.dart';
+import 'package:atable/logic/types/predefined.dart';
+import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_shop-session.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
+import 'package:atable/logic/utils.dart';
+
+class QuantitiesNorm {
+  final double pieces;
+  final double l;
+  final double kg;
+  const QuantitiesNorm({this.pieces = 0, this.l = 0, this.kg = 0});
+
+  @override
+  bool operator ==(Object other) =>
+      (other is QuantitiesNorm) &&
+      other.pieces == pieces &&
+      other.l == l &&
+      other.kg == kg;
+
+  @override
+  int get hashCode => pieces.hashCode + l.hashCode + kg.hashCode;
+
+  Map<String, dynamic> toJson() {
+    return {
+      "pieces": doubleToJson(pieces),
+      "l": doubleToJson(l),
+      "kg": doubleToJson(kg),
+    };
+  }
+
+  factory QuantitiesNorm.fromJson(dynamic json_) {
+    final json = (json_ as Map<String, dynamic>);
+    return QuantitiesNorm(
+      pieces: doubleFromJson(json['pieces']),
+      l: doubleFromJson(json['l']),
+      kg: doubleFromJson(json['kg']),
+    );
+  }
+
+  QuantitiesNorm copyWith({
+    double? pieces,
+    double? l,
+    double? kg,
+  }) =>
+      QuantitiesNorm(
+          pieces: pieces ?? this.pieces, l: l ?? this.l, kg: kg ?? this.kg);
+
+  factory QuantitiesNorm.fromQuantite(Quantite qu) {
+    switch (qu.unite) {
+      case Unite.piece:
+        return QuantitiesNorm(pieces: qu.quantite);
+      case Unite.l:
+        return QuantitiesNorm(l: qu.quantite);
+      case Unite.cL:
+        return QuantitiesNorm(l: qu.quantite / 100);
+      case Unite.kg:
+        return QuantitiesNorm(kg: qu.quantite);
+      case Unite.g:
+        return QuantitiesNorm(kg: qu.quantite / 1000);
+    }
+  }
+
+  factory QuantitiesNorm.fromList(List<Quantite> list) {
+    QuantitiesNorm out = const QuantitiesNorm();
+    for (var item in list) {
+      out += QuantitiesNorm.fromQuantite(item);
+    }
+    return out;
+  }
+
+  @override
+  String toString() {
+    final list = [
+      if (pieces != 0) (pieces, Unite.piece),
+      if (l != 0) (l, Unite.l),
+      if (kg != 0) (kg, Unite.kg),
+    ];
+    return list.map((e) => formatQuantiteU(e.$1, e.$2)).join(" et ");
+  }
+
+  QuantitiesNorm operator +(QuantitiesNorm other) {
+    return QuantitiesNorm(
+        pieces: pieces + other.pieces, l: l + other.l, kg: kg + other.kg);
+  }
+
+  QuantitiesNorm operator -(QuantitiesNorm other) {
+    return QuantitiesNorm(
+        pieces: pieces - other.pieces, l: l - other.l, kg: kg - other.kg);
+  }
+
+  bool isPositive() => pieces >= 0 && l >= 0 && kg >= 0;
+}
 
 class StockEntry {
   final IdIngredient idIngredient;
@@ -47,11 +136,30 @@ class IngredientQuantitiesN {
 }
 
 class Stock {
-  final List<IngredientQuantitiesN> l;
-  const Stock(this.l);
+  final Map<IdIngredient, QuantitiesNorm> _m;
+  const Stock(this._m);
 
-  Map<IdIngredient, QuantitiesNorm> toMap() =>
-      Map.fromEntries(l.map((e) => MapEntry(e.ingredient.id, e.quantites)));
+  factory Stock.fromList(Iterable<StockEntry> l) => Stock(
+      Map.fromEntries(l.map((e) => MapEntry(e.idIngredient, e.quantites))));
+
+  QuantitiesNorm get(IdIngredient id) => _m[id] ?? const QuantitiesNorm();
+
+  int get length => _m.length;
+
+  List<IngredientQuantitiesN> toList(
+      Map<IdIngredient, Ingredient> allIngredients) {
+    final out = _m.entries
+        .map((e) => IngredientQuantitiesN(allIngredients[e.key]!, e.value))
+        .toList();
+    out.sort((a, b) => a.ingredient.kind.index - b.ingredient.kind.index);
+    return out;
+  }
+
+  /// returns true if stock has enough for all units
+  bool hasEnoughFor(IdIngredient id, QuantitiesNorm qu) {
+    final existing = get(id);
+    return (existing - qu).isPositive();
+  }
 
   List<IngredientQuantitiesN> missingFor(ResolvedMealQuantity meal) {
     final ingredients = <IdIngredient, Ingredient>{};
@@ -66,10 +174,9 @@ class Stock {
       }
     }
 
-    final stock = toMap();
     final missing = <IngredientQuantitiesN>[];
     for (var item in needed.entries) {
-      final diff = (stock[item.key] ?? const QuantitiesNorm()) - item.value;
+      final diff = get(item.key) - item.value;
       // missing values are the one with negative values : clamp the other to 0
       final clamped = QuantitiesNorm(
         pieces: diff.pieces < 0 ? -diff.pieces : 0,

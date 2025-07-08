@@ -1,4 +1,4 @@
-import 'package:atable/logic/shop.dart';
+import 'package:atable/logic/stock.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 main() {

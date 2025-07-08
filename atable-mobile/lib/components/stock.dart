@@ -1,7 +1,6 @@
 import 'package:atable/components/ingredient_editor.dart';
 import 'package:atable/components/shared.dart';
 import 'package:atable/logic/env.dart';
-import 'package:atable/logic/shop.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:atable/logic/stock.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
@@ -19,7 +18,7 @@ class StockW extends StatefulWidget {
 }
 
 class _StockWState extends State<StockW> {
-  Stock stock = const Stock([]);
+  List<IngredientQuantitiesN> stock = [];
 
   @override
   void initState() {
@@ -28,10 +27,10 @@ class _StockWState extends State<StockW> {
   }
 
   _loadStock() async {
+    final allIngredients = await widget.db.getIngredients();
     final s = await widget.db.getStock();
-    s.l.sort((a, b) => a.ingredient.kind.index - b.ingredient.kind.index);
     setState(() {
-      stock = s;
+      stock = s.toList({for (var item in allIngredients) item.id: item});
     });
   }
 
@@ -42,7 +41,7 @@ class _StockWState extends State<StockW> {
         title: const Text("Stock"),
       ),
       body: ListView(
-          children: stock.l
+          children: stock
               .map((ing) => DismissibleDelete(
                   itemKey: ing.ingredient.id,
                   onDissmissed: () => _deleteEntry(ing.ingredient),
@@ -71,8 +70,7 @@ class _StockWState extends State<StockW> {
         ? selected
         : await widget.db.insertIngredient(selected);
 
-    final existingL =
-        stock.l.where((ing) => ing.ingredient.id == ingredient.id);
+    final existingL = stock.where((ing) => ing.ingredient.id == ingredient.id);
     final IngredientQuantitiesN existing;
     if (existingL.isNotEmpty) {
       existing = existingL.first;
@@ -88,7 +86,7 @@ class _StockWState extends State<StockW> {
   _deleteEntry(Ingredient ing) async {
     await widget.db.deleteStock(ing.id);
     setState(() {
-      stock.l.removeWhere((e) => e.ingredient.id == ing.id);
+      stock.removeWhere((e) => e.ingredient.id == ing.id);
     });
   }
 
@@ -101,8 +99,8 @@ class _StockWState extends State<StockW> {
     final id = ingredient.ingredient.id;
     await widget.db.updateStock(StockEntry(id, newL));
     setState(() {
-      final index = stock.l.indexWhere((e) => e.ingredient.id == id);
-      stock.l[index] = IngredientQuantitiesN(ingredient.ingredient, newL);
+      final index = stock.indexWhere((e) => e.ingredient.id == id);
+      stock[index] = IngredientQuantitiesN(ingredient.ingredient, newL);
     });
   }
 }

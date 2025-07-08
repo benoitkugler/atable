@@ -837,13 +837,8 @@ class DBApi {
   }
 
   Future<Stock> getStock() async {
-    final allIngredients = Map.fromEntries(
-        (await getIngredients()).map((ing) => MapEntry(ing.id, ing)));
     final entries = (await db.query("stock")).map(StockEntry.fromSQLMap);
-    return Stock(entries
-        .map((entry) => IngredientQuantitiesN(
-            allIngredients[entry.idIngredient]!, entry.quantites))
-        .toList());
+    return Stock.fromList(entries);
   }
 
   Future<void> insertStock(StockEntry entry) async {
