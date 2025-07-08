@@ -414,6 +414,19 @@ class ResolvedQuantityIngredient {
 
 typedef ResolvedMealQuantity = Map<PlatKind, List<ResolvedQuantityIngredient>>;
 
+extension RMQ on ResolvedMealQuantity {
+  Map<IdIngredient, List<Quantite>> compile() {
+    final uses = <IdIngredient, List<Quantite>>{};
+    for (var platL in values) {
+      for (var ing in platL) {
+        final usesList = uses.putIfAbsent(ing.ingredient.id, () => []);
+        usesList.add(ing.quantity);
+      }
+    }
+    return uses;
+  }
+}
+
 class MealExt {
   final MealM meal;
   final MenuExt menu;
@@ -873,6 +886,27 @@ class DBApi {
             existing.copyWith(quantites: existing.quantites + newQuantites);
         batch.update("stock", updated.toSQLMap(),
             where: "idIngredient = ?", whereArgs: [entry.ingredient.id]);
+      }
+    }
+    await batch.commit();
+  }
+
+  Future<void> removeFromStock(
+      Map<IdIngredient, List<Quantite>> ingredients) async {
+    final existing = await getStock();
+    final batch = db.batch();
+    for (var ingredient in ingredients.entries) {
+      final existingQuantities = existing.get(ingredient.key);
+      final toRemove = QuantitiesNorm.fromList(ingredient.value);
+      final newEntry =
+          StockEntry(ingredient.key, existingQuantities - toRemove);
+      if (newEntry.quantites == const QuantitiesNorm()) {
+        // remove entirely
+        batch.delete("stock",
+            where: "idIngredient = ?", whereArgs: [newEntry.idIngredient]);
+      } else {
+        batch.update("stock", newEntry.toSQLMap(),
+            where: "idIngredient = ?", whereArgs: [newEntry.idIngredient]);
       }
     }
     await batch.commit();

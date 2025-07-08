@@ -80,13 +80,11 @@ class _MealListState extends State<MealList> {
                     onDissmissed: () => _deleteMeal(meals[index]),
                     confirmDismiss: () => _confirmeDelete(meals[index]),
                     child: _MealCard(
-                      stock,
-                      meals[index],
-                      selectedMeals.contains(index),
-                      () => _showMenuDetails(index),
-                      () => _onSelectMeal(index),
-                      (m) => _editMeal(index, m),
-                    ),
+                        stock,
+                        meals[index],
+                        selectedMeals.contains(index),
+                        () => _openMeal(index),
+                        () => _onSelectMeal(index)),
                   )),
     );
   }
@@ -204,14 +202,18 @@ class _MealListState extends State<MealList> {
         content: Text('Repas supprimé.'), backgroundColor: Colors.green));
   }
 
-  void _showMenuDetails(int menuIndex) async {
-    var menu = meals[menuIndex].menu;
+  void _openMeal(int mealIndex) async {
+    final meal = meals[mealIndex];
     await Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => DetailsMenu(widget.db, menu),
+      builder: (context) => _MealPannel(
+        widget.db,
+        meal,
+        (m) => _editMeal(mealIndex, m),
+      ),
     ));
 
     // met à jour les données
-    menu = await widget.db.getMenu(menu.menu.id);
+    final menu = await widget.db.getMenu(meal.menu.menu.id);
     setState(() {
       for (var i = 0; i < meals.length; i++) {
         if (meals[i].menu.menu.id == menu.menu.id) {
@@ -245,104 +247,59 @@ class _MealListState extends State<MealList> {
   }
 }
 
-class _MealCard extends StatefulWidget {
+class _MealCard extends StatelessWidget {
   final Stock stock;
   final MealExt meal;
   final bool isSelected;
 
   final void Function() onTap;
   final void Function() onLongPress;
-  final void Function(MealM meal) onEdit;
 
-  const _MealCard(this.stock, this.meal, this.isSelected, this.onTap,
-      this.onLongPress, this.onEdit,
+  const _MealCard(
+      this.stock, this.meal, this.isSelected, this.onTap, this.onLongPress,
       {super.key});
 
   @override
-  State<_MealCard> createState() => _MealCardState();
-}
-
-class _MealCardState extends State<_MealCard> {
-  bool isEditingNbPersonnes = false;
-  bool isShowingDetails = false;
-
-  @override
   Widget build(BuildContext context) {
-    final meal = widget.meal.meal;
-    final resolvedQuantities = widget.meal.requiredQuantities();
+    final resolvedQuantities = meal.requiredQuantities();
 
     final plats = resolvedQuantities.entries.toList();
     plats.sort((a, b) => -(a.key.index - b.key.index));
 
-    final missing = widget.stock.missingFor(resolvedQuantities);
-
+    final style = TextStyle(
+      color: Theme.of(context).primaryColor,
+      fontSize: 16,
+      fontWeight: FontWeight.w500,
+    );
     return Card(
-      color: widget.isSelected ? Colors.yellow.shade100 : Colors.white,
+      color: isSelected ? Colors.yellow.shade100 : Colors.white,
       child: InkWell(
         borderRadius: const BorderRadius.all(Radius.circular(4)),
-        onTap: widget.onTap,
-        onLongPress: widget.onLongPress,
+        onTap: onTap,
+        onLongPress: onLongPress,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(12.0),
               child: Row(children: [
-                TextButton(
-                  onPressed: _showDateEditor,
-                  child: Text(
-                    formatDate(widget.meal.meal.date),
-                    style: const TextStyle(fontSize: 16),
-                  ),
+                Text(
+                  formatDate(meal.meal.date),
+                  style: style,
                 ),
-                const Text(" -  "),
-                PopupMenuButton<Horaire>(
-                  itemBuilder: (context) => Horaire.values
-                      .map((e) => PopupMenuItem(value: e, child: Text(e.label)))
-                      .toList(),
-                  initialValue: HoraireE.fromDateTime(meal.date),
-                  onSelected: (m) => widget
-                      .onEdit(meal.copyWith(date: m.toDateTime(meal.date))),
-                  child: Text(
-                    formatHeure(widget.meal.meal.date),
-                    style: TextStyle(
-                      color: Theme.of(context).primaryColor,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+                const Text(" - "),
+                Text(
+                  formatHeure(meal.meal.date),
+                  style: style,
                 ),
                 const Spacer(),
-                isEditingNbPersonnes
-                    ? SizedBox(
-                        width: 100,
-                        child: TextField(
-                          autofocus: true,
-                          textAlign: TextAlign.center,
-                          textAlignVertical: TextAlignVertical.center,
-                          decoration: InputDecoration(
-                              isDense: true,
-                              prefixIcon: IconButton(
-                                  onPressed: () => setState(
-                                      () => isEditingNbPersonnes = false),
-                                  icon: const Icon(
-                                    Icons.clear,
-                                    color: Colors.orange,
-                                  ))),
-                          keyboardType: const TextInputType.numberWithOptions(
-                              signed: false, decimal: false),
-                          onSubmitted: _onEditNbDone,
-                        ))
-                    : TextButton(
-                        style: TextButton.styleFrom(
-                            visualDensity: const VisualDensity(vertical: -3)),
-                        onPressed: () =>
-                            setState(() => isEditingNbPersonnes = true),
-                        child: Text("Pour ${widget.meal.meal.for_}")),
+                Text(
+                  "Pour ${meal.meal.for_}",
+                  style: style,
+                ),
               ]),
             ),
-            widget.meal.menu.ingredients.isEmpty &&
-                    widget.meal.menu.receipes.isEmpty
+            meal.menu.ingredients.isEmpty && meal.menu.receipes.isEmpty
                 ? const Padding(
                     padding: EdgeInsets.all(12.0),
                     child: Text(
@@ -350,105 +307,9 @@ class _MealCardState extends State<_MealCard> {
                       style: TextStyle(fontStyle: FontStyle.italic),
                     ),
                   )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                        isShowingDetails
-                            ? Expanded(
-                                child: Padding(
-                                padding: const EdgeInsets.all(4.0),
-                                child: Column(
-                                    children: plats
-                                        .map((item) =>
-                                            _PlatCard(item.key, item.value))
-                                        .toList()),
-                              ))
-                            : Expanded(child: _MenuSummary(widget.meal.menu)),
-                        Column(
-                          children: [
-                            IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    isShowingDetails = !isShowingDetails;
-                                  });
-                                },
-                                icon: isShowingDetails
-                                    ? const Icon(Icons.clear)
-                                    : const Icon(Icons.list)),
-                            IconButton(
-                                onPressed: _copy, icon: const Icon(Icons.copy)),
-                            IconButton(
-                                onPressed: _showMissing,
-                                icon: missing.isEmpty
-                                    ? const Icon(
-                                        Icons.check,
-                                        color: Colors.green,
-                                      )
-                                    : const Icon(Icons.warning,
-                                        color: Colors.orange))
-                          ],
-                        )
-                      ])
+                : _MenuSummary(meal.menu)
           ],
         ),
-      ),
-    );
-  }
-
-  void _copy() async {
-    final plats = widget.meal.requiredQuantities().entries.toList();
-    plats.sort((a, b) => -(a.key.index - b.key.index));
-
-    final text = plats
-        .map((e) => e.value
-            .map((e) =>
-                "${e.ingredient.name} : ${formatQuantiteU(e.quantity.quantite, e.quantity.unite)}")
-            .join("\n"))
-        .join("\n\n");
-
-    await Clipboard.setData(ClipboardData(text: text));
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        backgroundColor: Colors.green,
-        content: Text("Menu copié dans le presse-papier")));
-  }
-
-  void _onEditNbDone(String value) {
-    widget.onEdit(widget.meal.meal.copyWith(for_: int.parse(value)));
-    setState(() {
-      isEditingNbPersonnes = false;
-    });
-  }
-
-  void _showDateEditor() async {
-    final date = widget.meal.meal.date;
-    final lastDate = DateTime.now().add(const Duration(days: 365));
-    final newDate = await showDatePicker(
-        context: context,
-        initialDate: date,
-        firstDate: date.subtract(const Duration(days: 365)),
-        lastDate: lastDate);
-
-    if (newDate == null) return;
-    widget.onEdit(widget.meal.meal.copyWith(
-        date: newDate.add(Duration(minutes: date.minute, hours: date.hour))));
-  }
-
-  void _showMissing() {
-    final resolvedQuantities = widget.meal.requiredQuantities();
-    final missing = widget.stock.missingFor(resolvedQuantities);
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Stock manquant"),
-        content: ListView(
-            children: missing
-                .map((e) => ListTile(
-                      title: Text(e.ingredient.name),
-                      trailing: Text(e.quantites.toString()),
-                    ))
-                .toList()),
       ),
     );
   }
@@ -528,5 +389,239 @@ class _IngQuantRow extends StatelessWidget {
         Text(formatQuantiteU(ing.quantity.quantite, ing.quantity.unite)),
       ],
     );
+  }
+}
+
+class _MealPannel extends StatefulWidget {
+  final DBApi db;
+  final MealExt meal;
+  final void Function(MealM meal) onEdit;
+
+  const _MealPannel(this.db, this.meal, this.onEdit, {super.key});
+
+  @override
+  State<_MealPannel> createState() => __MealPannelState();
+}
+
+class __MealPannelState extends State<_MealPannel> {
+  Stock stock = const Stock({});
+  late MealExt meal;
+  bool isEditingNbPersonnes = false;
+  bool isShowingDetails = false;
+
+  @override
+  void initState() {
+    meal = widget.meal;
+    _loadStock();
+    super.initState();
+  }
+
+  void _loadStock() async {
+    final s = await widget.db.getStock();
+    setState(() => stock = s);
+  }
+
+  void _removeFromStock() async {
+    await widget.db.removeFromStock(meal.requiredQuantities().compile());
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        backgroundColor: Colors.green,
+        content: Text("Stock mis à jour avec succès.")));
+    _loadStock();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final resolvedQuantities = meal.requiredQuantities();
+    final missing = stock.missingFor(resolvedQuantities);
+
+    final plats = resolvedQuantities.entries.toList();
+    plats.sort((a, b) => -(a.key.index - b.key.index));
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Détails du repas"),
+        actions: [
+          PopupMenuButton(
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                  onTap: _editMenu,
+                  child: const ListTile(
+                      title: Text("Editer les quantités"),
+                      trailing: Icon(Icons.edit))),
+              PopupMenuItem(
+                  onTap: _copy,
+                  child: const ListTile(
+                      title: Text("Copier"), trailing: Icon(Icons.copy))),
+            ],
+            child: const Icon(Icons.more_vert),
+          )
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Column(
+          children: [
+            Row(children: [
+              TextButton(
+                onPressed: _showDateEditor,
+                child: Text(
+                  formatDate(meal.meal.date),
+                  style: const TextStyle(fontSize: 16),
+                ),
+              ),
+              const Text(" -  "),
+              PopupMenuButton<Horaire>(
+                itemBuilder: (context) => Horaire.values
+                    .map((e) => PopupMenuItem(value: e, child: Text(e.label)))
+                    .toList(),
+                initialValue: HoraireE.fromDateTime(meal.meal.date),
+                onSelected: (m) => _onEditMeal(
+                    meal.meal.copyWith(date: m.toDateTime(meal.meal.date))),
+                child: Text(
+                  formatHeure(meal.meal.date),
+                  style: TextStyle(
+                    color: Theme.of(context).primaryColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              isEditingNbPersonnes
+                  ? SizedBox(
+                      width: 100,
+                      child: TextField(
+                        autofocus: true,
+                        textAlign: TextAlign.center,
+                        textAlignVertical: TextAlignVertical.center,
+                        decoration: InputDecoration(
+                            isDense: true,
+                            prefixIcon: IconButton(
+                                onPressed: () => setState(
+                                    () => isEditingNbPersonnes = false),
+                                icon: const Icon(
+                                  Icons.clear,
+                                  color: Colors.orange,
+                                ))),
+                        keyboardType: const TextInputType.numberWithOptions(
+                            signed: false, decimal: false),
+                        onSubmitted: _onEditNbDone,
+                      ))
+                  : TextButton(
+                      style: TextButton.styleFrom(
+                          visualDensity: const VisualDensity(vertical: -3)),
+                      onPressed: () =>
+                          setState(() => isEditingNbPersonnes = true),
+                      child: Text("Pour ${meal.meal.for_}")),
+            ]),
+            Column(
+                children: plats
+                    .map((item) => _PlatCard(item.key, item.value))
+                    .toList()),
+            TextButton.icon(
+                onPressed: _showStock,
+                label: missing.isNotEmpty
+                    ? const Text("Stock manquant")
+                    : const Text("Retirer du stock"),
+                icon: missing.isEmpty
+                    ? const Icon(
+                        Icons.checklist,
+                        color: Colors.green,
+                      )
+                    : const Icon(Icons.warning, color: Colors.orange)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _onEditMeal(MealM m) {
+    final newMeal = meal.copyWith(meal: m);
+    setState(() => meal = newMeal);
+    widget.onEdit(m);
+  }
+
+  void _showDateEditor() async {
+    final date = meal.meal.date;
+    final lastDate = DateTime.now().add(const Duration(days: 365));
+    final newDate = await showDatePicker(
+        context: context,
+        initialDate: date,
+        firstDate: date.subtract(const Duration(days: 365)),
+        lastDate: lastDate);
+    if (newDate == null) return;
+    _onEditMeal(meal.meal.copyWith(
+        date: newDate.add(Duration(minutes: date.minute, hours: date.hour))));
+  }
+
+  void _onEditNbDone(String value) {
+    _onEditMeal(meal.meal.copyWith(for_: int.parse(value)));
+    setState(() {
+      isEditingNbPersonnes = false;
+    });
+  }
+
+  void _copy() async {
+    final plats = widget.meal.requiredQuantities().entries.toList();
+    plats.sort((a, b) => -(a.key.index - b.key.index));
+
+    final text = plats
+        .map((e) => e.value
+            .map((e) =>
+                "${e.ingredient.name} : ${formatQuantiteU(e.quantity.quantite, e.quantity.unite)}")
+            .join("\n"))
+        .join("\n\n");
+
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        backgroundColor: Colors.green,
+        content: Text("Menu copié dans le presse-papier")));
+  }
+
+  void _editMenu() async {
+    await Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => DetailsMenu(widget.db, meal.menu),
+    ));
+    // met à jour les données
+    final updatedMenu = await widget.db.getMenu(meal.menu.menu.id);
+    setState(() => meal = meal.copyWith(menu: updatedMenu));
+  }
+
+  void _showStock() async {
+    final resolvedQuantities = meal.requiredQuantities();
+    final missing = stock.missingFor(resolvedQuantities);
+
+    if (missing.isEmpty) {
+      final confirm = await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+            title: const Text("Confirmation"),
+            content: const Text("Le stock va être diminué des ingrédients."),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text("Retirer du stock"))
+            ]),
+      );
+      if (confirm ?? false) {
+        _removeFromStock();
+      }
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Stock manquant"),
+          content: ListView(
+              children: missing
+                  .map((e) => ListTile(
+                        title: Text(e.ingredient.name),
+                        trailing: Text(e.quantites.toString()),
+                      ))
+                  .toList()),
+        ),
+      );
+    }
   }
 }

@@ -110,6 +110,12 @@ Future main() async {
 
     await db.insertStock(StockEntry(ing1.id, const QuantitiesNorm()));
 
+    await db.removeFromStock({
+      ing1.id: [
+        Quantite(2, Unite.kg, Origin(DateTime.now(), "", "")),
+      ],
+    });
+
     await db.addStockFromShop([
       IngredientUses(
           ing1,
