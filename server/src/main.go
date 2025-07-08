@@ -233,6 +233,8 @@ func setupRoutes(e *echo.Echo, uc *users.Controller, sc *sejours.Controller, lc 
 ) {
 	setupWebAPI(e, uc, sc, lc, oc)
 
+	e.Static("/.well-known/*", "static/.well-known")
+
 	// global static files used by frontend app
 	e.Group("/static", middleware.Gzip(), cacheStatic).Static("/*", "static")
 
