@@ -127,10 +127,6 @@ class _ShopSection extends StatelessWidget {
   }
 }
 
-String formatQuantites(CQuantites quantite) {
-  return quantite.map((e) => formatQuantiteU(e.value, e.key)).join(" et ");
-}
-
 class _IngredientRow extends StatefulWidget {
   final IngredientUses ingredient;
   final void Function(int, bool) onUpdate;
@@ -151,7 +147,7 @@ class _IngredientRowState extends State<_IngredientRow> {
         ExpansionTile(
           leading: Padding(
             padding: const EdgeInsets.only(top: 4.0),
-            child: Text(formatQuantites(widget.ingredient.compile())),
+            child: Text(widget.ingredient.compile().toString()),
           ),
           title: Text(widget.ingredient.ingredient.name),
           onExpansionChanged: (b) => setState(() => showUses = b),

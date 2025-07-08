@@ -438,7 +438,7 @@ class _MealCardState extends State<_MealCard> {
             children: missing
                 .map((e) => ListTile(
                       title: Text(e.ingredient.name),
-                      trailing: Text(e.quantites.join(" et ")),
+                      trailing: Text(e.quantites.toString()),
                     ))
                 .toList()),
       ),

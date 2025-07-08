@@ -1,4 +1,5 @@
 import 'package:atable/logic/env.dart';
+import 'package:atable/logic/shop.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:atable/logic/stock.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_sejours.dart';
@@ -97,9 +98,9 @@ Future main() async {
 
     expect((await db.getStock()).l.length, 0);
 
-    await db.insertStock(StockEntry(ing1.id,
-        const [QuantityAbs(Unite.cL, 23.3), QuantityAbs(Unite.piece, 4)]));
-    await db.updateStock(StockEntry(ing1.id, []));
+    await db.insertStock(
+        StockEntry(ing1.id, const QuantitiesNorm(l: 23.3, pieces: 4)));
+    await db.updateStock(StockEntry(ing1.id, const QuantitiesNorm()));
 
     expect((await db.getStock()).l.length, 1);
 
@@ -107,7 +108,7 @@ Future main() async {
 
     expect((await db.getStock()).l.length, 0);
 
-    await db.insertStock(StockEntry(ing1.id, []));
+    await db.insertStock(StockEntry(ing1.id, const QuantitiesNorm()));
 
     await db.addStockFromShop([
       IngredientUses(

@@ -1,9 +1,11 @@
 import 'package:atable/components/ingredient_editor.dart';
 import 'package:atable/components/shared.dart';
 import 'package:atable/logic/env.dart';
+import 'package:atable/logic/shop.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:atable/logic/stock.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
+import 'package:atable/logic/utils.dart';
 import 'package:flutter/material.dart';
 
 class StockW extends StatefulWidget {
@@ -71,13 +73,13 @@ class _StockWState extends State<StockW> {
 
     final existingL =
         stock.l.where((ing) => ing.ingredient.id == ingredient.id);
-    final IngredientQuantiteAbs existing;
+    final IngredientQuantitiesN existing;
     if (existingL.isNotEmpty) {
       existing = existingL.first;
     } else {
-      final quantites = [const QuantityAbs(Unite.kg, 1)];
-      await widget.db.insertStock(StockEntry(ingredient.id, quantites));
-      existing = IngredientQuantiteAbs(ingredient, quantites);
+      await widget.db
+          .insertStock(StockEntry(ingredient.id, const QuantitiesNorm()));
+      existing = IngredientQuantitiesN(ingredient, const QuantitiesNorm());
     }
     _loadStock();
     _startEditEntry(existing);
@@ -90,8 +92,8 @@ class _StockWState extends State<StockW> {
     });
   }
 
-  _startEditEntry(IngredientQuantiteAbs ingredient) async {
-    final newL = await showDialog<List<QuantityAbs>>(
+  _startEditEntry(IngredientQuantitiesN ingredient) async {
+    final newL = await showDialog<QuantitiesNorm>(
         context: context,
         builder: (context) => _QuantityDialog(ingredient.quantites));
     if (newL == null) return;
@@ -100,13 +102,13 @@ class _StockWState extends State<StockW> {
     await widget.db.updateStock(StockEntry(id, newL));
     setState(() {
       final index = stock.l.indexWhere((e) => e.ingredient.id == id);
-      stock.l[index] = IngredientQuantiteAbs(ingredient.ingredient, newL);
+      stock.l[index] = IngredientQuantitiesN(ingredient.ingredient, newL);
     });
   }
 }
 
 class _IngredientRow extends StatelessWidget {
-  final IngredientQuantiteAbs ingredient;
+  final IngredientQuantitiesN ingredient;
   final void Function() startEdit;
   const _IngredientRow(this.ingredient, this.startEdit, {super.key});
 
@@ -117,13 +119,13 @@ class _IngredientRow extends StatelessWidget {
         subtitle: Text(ingredientKindLabel(ingredient.ingredient.kind)),
         trailing: OutlinedButton(
           onPressed: startEdit,
-          child: Text(ingredient.quantites.join(" et ")),
+          child: Text(ingredient.quantites.toString()),
         ));
   }
 }
 
 class _QuantityDialog extends StatefulWidget {
-  final List<QuantityAbs> initial;
+  final QuantitiesNorm initial;
 
   const _QuantityDialog(this.initial, {super.key});
 
@@ -132,11 +134,11 @@ class _QuantityDialog extends StatefulWidget {
 }
 
 class __QuantityDialogState extends State<_QuantityDialog> {
-  List<QuantityAbs> quantites = [];
+  QuantitiesNorm quantites = const QuantitiesNorm();
 
   @override
   void initState() {
-    quantites = widget.initial.toList();
+    quantites = widget.initial;
     super.initState();
   }
 
@@ -144,20 +146,24 @@ class __QuantityDialogState extends State<_QuantityDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text("Modifier les quantités"),
-      content: ListView(
-          children: List.generate(
-        quantites.length,
-        (index) => QuantityAbsEditor(
-            quantites[index],
-            (q) => setState(() {
-                  quantites[index] = q;
-                })),
-      ).toList()),
+      content: Column(children: [
+        QuantiteField(
+          quantites.pieces,
+          (val) => setState(() => quantites = quantites.copyWith(pieces: val)),
+          label: formatUnite(Unite.piece),
+        ),
+        QuantiteField(
+          quantites.l,
+          (val) => setState(() => quantites = quantites.copyWith(l: val)),
+          label: formatUnite(Unite.l),
+        ),
+        QuantiteField(
+          quantites.kg,
+          (val) => setState(() => quantites = quantites.copyWith(kg: val)),
+          label: formatUnite(Unite.kg),
+        ),
+      ]),
       actions: [
-        TextButton(
-            onPressed: () => setState(
-                () => quantites.add(const QuantityAbs(Unite.piece, 0))),
-            child: const Text("Ajouter une unité")),
         TextButton(
             onPressed: () => Navigator.of(context).pop(quantites),
             child: const Text("Enregistrer"))

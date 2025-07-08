@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:atable/logic/env.dart';
+import 'package:atable/logic/shop.dart';
 import 'package:atable/logic/stock.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_sejours.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_shop-session.dart';
@@ -840,7 +841,7 @@ class DBApi {
         (await getIngredients()).map((ing) => MapEntry(ing.id, ing)));
     final entries = (await db.query("stock")).map(StockEntry.fromSQLMap);
     return Stock(entries
-        .map((entry) => IngredientQuantiteAbs(
+        .map((entry) => IngredientQuantitiesN(
             allIngredients[entry.idIngredient]!, entry.quantites))
         .toList());
   }
@@ -865,8 +866,7 @@ class DBApi {
         current.map((entry) => MapEntry(entry.idIngredient, entry)));
     final batch = db.batch();
     for (var entry in list) {
-      final newQuantites =
-          entry.quantites.map(QuantityAbs.fromQuantite).toList();
+      final newQuantites = QuantitiesNorm.fromList(entry.quantites);
       final existing = byIngredient[entry.ingredient.id];
       if (existing == null) {
         // insert
@@ -874,8 +874,9 @@ class DBApi {
             "stock", StockEntry(entry.ingredient.id, newQuantites).toSQLMap());
       } else {
         // merge and update
-        existing.quantites.addAll(newQuantites);
-        batch.update("stock", existing.toSQLMap(),
+        final updated =
+            existing.copyWith(quantites: existing.quantites + newQuantites);
+        batch.update("stock", updated.toSQLMap(),
             where: "idIngredient = ?", whereArgs: [entry.ingredient.id]);
       }
     }
