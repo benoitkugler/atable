@@ -388,15 +388,15 @@ type optionnalInt struct {
 // for the given sejour and day.
 func (ct *Controller) MealsLoadDay(c echo.Context) error {
 	uID := users.JWTUser(c)
-	idSejour_, err := utils.QueryParamInt64(c, "idSejour")
+	idSejour, err := utils.QueryParamInt[sej.IdSejour](c, "idSejour")
 	if err != nil {
 		return err
 	}
-	day, err := utils.QueryParamInt64(c, "day")
+	day, err := utils.QueryParamInt[int](c, "day")
 	if err != nil {
 		return err
 	}
-	out, err := ct.loadMeals(sej.IdSejour(idSejour_), optionnalInt{v: int(day), valid: true}, uID)
+	out, err := ct.loadMeals(idSejour, optionnalInt{v: day, valid: true}, uID)
 	if err != nil {
 		return err
 	}
@@ -407,11 +407,11 @@ func (ct *Controller) MealsLoadDay(c echo.Context) error {
 // for the given sejour, and all days
 func (ct *Controller) MealsLoadAll(c echo.Context) error {
 	uID := users.JWTUser(c)
-	idSejour_, err := utils.QueryParamInt64(c, "idSejour")
+	idSejour, err := utils.QueryParamInt[sej.IdSejour](c, "idSejour")
 	if err != nil {
 		return err
 	}
-	out, err := ct.loadMeals(sej.IdSejour(idSejour_), optionnalInt{}, uID)
+	out, err := ct.loadMeals(idSejour, optionnalInt{}, uID)
 	if err != nil {
 		return err
 	}
@@ -604,11 +604,11 @@ func (ct *Controller) updateMeal(in sej.Meal, uID us.IdUser) error {
 
 func (ct *Controller) MealsDelete(c echo.Context) error {
 	uID := users.JWTUser(c)
-	idMeal_, err := utils.QueryParamInt64(c, "idMeal")
+	idMeal, err := utils.QueryParamInt[sej.IdMeal](c, "idMeal")
 	if err != nil {
 		return err
 	}
-	err = ct.deleteMeal(sej.IdMeal(idMeal_), uID)
+	err = ct.deleteMeal(idMeal, uID)
 	if err != nil {
 		return err
 	}
@@ -782,13 +782,14 @@ func (ct *Controller) addReceipe(args AddReceipeIn, uID us.IdUser) (out lib.Menu
 }
 
 type AddIngredientIn struct {
+	IdSejour     sej.IdSejour
 	IdMenu       men.IdMenu
 	IdIngredient men.IdIngredient
 }
 
 // MealsAddIngredient add the given Ingredient to the given menu,
 // returning the updated [MenuExt]
-// The quantity should be edited right away
+// The quantity default to the last one used in the sejour, and should be edited right away
 func (ct *Controller) MealsAddIngredient(c echo.Context) error {
 	uID := users.JWTUser(c)
 
@@ -805,6 +806,28 @@ func (ct *Controller) MealsAddIngredient(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
+// compute an hint for the quantity
+func (ct *Controller) ingredientQuantityHint(idSejour sej.IdSejour, idIngredient men.IdIngredient) (men.QuantityR, error) {
+	meals, err := sej.SelectMealsBySejours(ct.db, idSejour)
+	if err != nil {
+		return men.QuantityR{}, utils.SQLError(err)
+	}
+	mt, err := lib.LoadMenus(ct.db, meals.Menus())
+	if err != nil {
+		return men.QuantityR{}, err
+	}
+	menus, _ := mt.Compile()
+	for _, menu := range menus {
+		for _, ing := range menu.Ingredients {
+			if ing.IdIngredient == idIngredient {
+				return ing.Quantity, nil
+			}
+		}
+	}
+
+	return men.QuantityR{Val: 10, For: 10, Unite: men.U_Piece}, nil
+}
+
 func (ct *Controller) addIngredient(args AddIngredientIn, uID us.IdUser) (out lib.MenuExt, _ error) {
 	menu, err := men.SelectMenu(ct.db, args.IdMenu)
 	if err != nil {
@@ -815,10 +838,15 @@ func (ct *Controller) addIngredient(args AddIngredientIn, uID us.IdUser) (out li
 		return out, errAccessForbidden
 	}
 
+	quantity, err := ct.ingredientQuantityHint(args.IdSejour, args.IdIngredient)
+	if err != nil {
+		return out, err
+	}
+
 	err = men.InsertMenuIngredient(ct.db, men.MenuIngredient{
 		IdMenu:       menu.Id,
 		IdIngredient: args.IdIngredient,
-		Quantity:     men.QuantityR{Val: 10, For: 10, Unite: men.U_Piece},
+		Quantity:     quantity,
 		Plat:         men.P_Empty,
 	})
 	if err != nil {
@@ -1040,11 +1068,11 @@ type PreviewQuantitiesOut struct {
 }
 
 func (ct *Controller) MealsPreviewQuantities(c echo.Context) error {
-	idMeal, err := utils.QueryParamInt64(c, "idMeal")
+	idMeal, err := utils.QueryParamInt[sej.IdMeal](c, "idMeal")
 	if err != nil {
 		return err
 	}
-	out, err := ct.previewQuantities(sej.IdMeal(idMeal))
+	out, err := ct.previewQuantities(idMeal)
 	if err != nil {
 		return err
 	}
