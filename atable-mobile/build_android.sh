@@ -1,3 +1,3 @@
 flutter build appbundle
 # apk for testing 
-# flutter build apk && flutter install
+flutter build apk && flutter install
