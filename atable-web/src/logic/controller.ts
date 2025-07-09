@@ -23,6 +23,9 @@ import {
   IdIngredient,
   IdSupplier,
   Int,
+  IdReceipe,
+  IdMeal,
+  IdMenu,
 } from "./api_gen";
 
 function arrayBufferToString(buffer: ArrayBuffer) {
@@ -48,7 +51,7 @@ class Controller extends AbstractAPI {
       isDev ? devLogMeta.Token : ""
     );
     if (isDev) {
-      this.idUser = devLogMeta.IdUser as Int;
+      this.idUser = devLogMeta.IdUser as IdUser;
     }
   }
 
@@ -65,12 +68,12 @@ class Controller extends AbstractAPI {
   }
 
   getURL(endpoint: string) {
-    return this.baseUrl + endpoint;
+    return this.baseURL + endpoint;
   }
 
   receipesExportURL() {
     return (
-      this.baseUrl + `/api/library/receipes/export?token=${this.authToken}`
+      this.baseURL + `/api/library/receipes/export?token=${this.authToken}`
     );
   }
 
@@ -225,7 +228,7 @@ export const horaireColors: { [key in Horaire]: string } = {
 };
 
 export interface MenuItem {
-  id: Int;
+  id: IdReceipe | IdIngredient;
   title: string;
   plat: PlatKind;
   isReceipe: boolean;
@@ -279,7 +282,7 @@ export function upperFirst(s: string) {
 }
 
 export interface MenuResource {
-  Id: Int;
+  Id: IdReceipe | IdIngredient;
   Title: string;
   Kind: "receipe" | "ingredient";
   IngredientKind?: IngredientKind;

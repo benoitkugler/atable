@@ -38,7 +38,7 @@ export interface DeleteIngredientOut {
 // github.com/benoitkugler/atable/controllers/library.ImportReceipes1Out
 export interface ImportReceipes1Out {
   Receipes: ReceipeI[] | null;
-  Map: { [key in string]: Ingredient } | null;
+  Map: Record<string, Ingredient> | null;
 }
 // github.com/benoitkugler/atable/controllers/library.IngredientHeader
 export interface IngredientHeader {
@@ -137,7 +137,7 @@ export interface ExportExcelIn {
   Mapping: IngredientMapping;
 }
 // github.com/benoitkugler/atable/controllers/order.IngredientMapping
-export type IngredientMapping = { [key in IdIngredient]: IdSupplier } | null;
+export type IngredientMapping = Record<IdIngredient, IdSupplier> | null;
 // github.com/benoitkugler/atable/controllers/order.IngredientQuantities
 export interface IngredientQuantities {
   Ingredient: Ingredient;
@@ -184,6 +184,7 @@ export interface UpdateProfileMapKindIn {
 }
 // github.com/benoitkugler/atable/controllers/sejours.AddIngredientIn
 export interface AddIngredientIn {
+  IdSejour: IdSejour;
   IdMenu: IdMenu;
   IdIngredient: IdIngredient;
 }
@@ -196,7 +197,7 @@ export interface AddReceipeIn {
 export interface AssistantMealsIn {
   IdSejour: IdSejour;
   DaysNumber: Int;
-  Excursions: { [key in Int]: IdGroup[] | null } | null;
+  Excursions: Record<Int, IdGroup[] | null> | null;
   WithGouter: boolean;
   GroupsForCinquieme: IdGroup[] | null;
   DeleteExisting: boolean;
@@ -219,7 +220,7 @@ export interface MealExt {
 }
 // github.com/benoitkugler/atable/controllers/sejours.MealsLoadOut
 export interface MealsLoadOut {
-  Menus: { [key in IdMenu]: MenuExt } | null;
+  Menus: Record<IdMenu, MenuExt> | null;
   Meals: MealExt[] | null;
 }
 // github.com/benoitkugler/atable/controllers/sejours.MoveGroupIn
@@ -286,12 +287,9 @@ export interface LogginOut {
   Token: string;
   Pseudo: string;
 }
-// github.com/benoitkugler/atable/sql/menus.IdIngredient
-export type IdIngredient = Int;
-// github.com/benoitkugler/atable/sql/menus.IdMenu
-export type IdMenu = Int;
-// github.com/benoitkugler/atable/sql/menus.IdReceipe
-export type IdReceipe = Int;
+export type IdIngredient = Int & { __opaque_int__: "IdIngredient" };
+export type IdMenu = Int & { __opaque_int__: "IdMenu" };
+export type IdReceipe = Int & { __opaque_int__: "IdReceipe" };
 // github.com/benoitkugler/atable/sql/menus.Ingredient
 export interface Ingredient {
   Id: IdIngredient;
@@ -312,7 +310,7 @@ export const IngredientKind = {
 export type IngredientKind =
   (typeof IngredientKind)[keyof typeof IngredientKind];
 
-export const IngredientKindLabels: { [key in IngredientKind]: string } = {
+export const IngredientKindLabels: Record<IngredientKind, string> = {
   [IngredientKind.I_Empty]: "Autre",
   [IngredientKind.I_Legumes]: "Fruits et légumes",
   [IngredientKind.I_Feculents]: "Féculents",
@@ -323,7 +321,7 @@ export const IngredientKindLabels: { [key in IngredientKind]: string } = {
 };
 
 // github.com/benoitkugler/atable/sql/menus.Ingredients
-export type Ingredients = { [key in IdIngredient]: Ingredient } | null;
+export type Ingredients = Record<IdIngredient, Ingredient> | null;
 // github.com/benoitkugler/atable/sql/menus.Menu
 export interface Menu {
   Id: IdMenu;
@@ -348,7 +346,7 @@ export const PlatKind = {
 } as const;
 export type PlatKind = (typeof PlatKind)[keyof typeof PlatKind];
 
-export const PlatKindLabels: { [key in PlatKind]: string } = {
+export const PlatKindLabels: Record<PlatKind, string> = {
   [PlatKind.P_Empty]: "Autre",
   [PlatKind.P_Dessert]: "Dessert",
   [PlatKind.P_PlatPrincipal]: "Plat principal",
@@ -378,7 +376,7 @@ export interface ReceipeIngredient {
   Quantity: QuantityR;
 }
 // github.com/benoitkugler/atable/sql/menus.Receipes
-export type Receipes = { [key in IdReceipe]: Receipe } | null;
+export type Receipes = Record<IdReceipe, Receipe> | null;
 // github.com/benoitkugler/atable/sql/menus.Unite
 export const Unite = {
   U_Piece: 0,
@@ -389,7 +387,7 @@ export const Unite = {
 } as const;
 export type Unite = (typeof Unite)[keyof typeof Unite];
 
-export const UniteLabels: { [key in Unite]: string } = {
+export const UniteLabels: Record<Unite, string> = {
   [Unite.U_Piece]: "pièces",
   [Unite.U_Kg]: "kg",
   [Unite.U_G]: "gr",
@@ -397,10 +395,8 @@ export const UniteLabels: { [key in Unite]: string } = {
   [Unite.U_CL]: "cL",
 };
 
-// github.com/benoitkugler/atable/sql/orders.IdProfile
-export type IdProfile = Int;
-// github.com/benoitkugler/atable/sql/orders.IdSupplier
-export type IdSupplier = Int;
+export type IdProfile = Int & { __opaque_int__: "IdProfile" };
+export type IdSupplier = Int & { __opaque_int__: "IdSupplier" };
 // github.com/benoitkugler/atable/sql/orders.Profile
 export interface Profile {
   Id: IdProfile;
@@ -414,7 +410,7 @@ export interface Supplier {
   Name: string;
 }
 // github.com/benoitkugler/atable/sql/orders.Suppliers
-export type Suppliers = { [key in IdSupplier]: Supplier } | null;
+export type Suppliers = Record<IdSupplier, Supplier> | null;
 // github.com/benoitkugler/atable/sql/sejours.Date
 export type Date = Date_;
 // github.com/benoitkugler/atable/sql/sejours.Group
@@ -435,7 +431,7 @@ export const Horaire = {
 } as const;
 export type Horaire = (typeof Horaire)[keyof typeof Horaire];
 
-export const HoraireLabels: { [key in Horaire]: string } = {
+export const HoraireLabels: Record<Horaire, string> = {
   [Horaire.PetitDejeuner]: "Petit déjeuner",
   [Horaire.Midi]: "Midi",
   [Horaire.Gouter]: "Goûter",
@@ -443,12 +439,9 @@ export const HoraireLabels: { [key in Horaire]: string } = {
   [Horaire.Cinquieme]: "Cinquième",
 };
 
-// github.com/benoitkugler/atable/sql/sejours.IdGroup
-export type IdGroup = Int;
-// github.com/benoitkugler/atable/sql/sejours.IdMeal
-export type IdMeal = Int;
-// github.com/benoitkugler/atable/sql/sejours.IdSejour
-export type IdSejour = Int;
+export type IdGroup = Int & { __opaque_int__: "IdGroup" };
+export type IdMeal = Int & { __opaque_int__: "IdMeal" };
+export type IdSejour = Int & { __opaque_int__: "IdSejour" };
 // github.com/benoitkugler/atable/sql/sejours.Meal
 export interface Meal {
   Id: IdMeal;
@@ -466,7 +459,7 @@ export interface MealGroup {
 // github.com/benoitkugler/atable/sql/sejours.MealGroups
 export type MealGroups = MealGroup[] | null;
 // github.com/benoitkugler/atable/sql/sejours.Meals
-export type Meals = { [key in IdMeal]: Meal } | null;
+export type Meals = Record<IdMeal, Meal> | null;
 // github.com/benoitkugler/atable/sql/sejours.OptionnalIdProfile
 export interface OptionnalIdProfile {
   Valid: boolean;
@@ -480,8 +473,7 @@ export interface Sejour {
   Name: string;
   IdProfile: OptionnalIdProfile;
 }
-// github.com/benoitkugler/atable/sql/users.IdUser
-export type IdUser = Int;
+export type IdUser = Int & { __opaque_int__: "IdUser" };
 // github.com/benoitkugler/atable/sql/users.User
 export interface User {
   Id: IdUser;
@@ -496,8 +488,8 @@ export interface User {
 	*/
 export abstract class AbstractAPI {
   constructor(
-    protected baseUrl: string,
-    protected authToken: string,
+    protected baseURL: string,
+    public authToken: string,
   ) {}
 
   protected abstract handleError(error: any): void;
@@ -508,1585 +500,1017 @@ export abstract class AbstractAPI {
     return { Authorization: "Bearer " + this.authToken };
   }
 
-  protected async rawAskInscription(params: AskInscriptionIn) {
-    const fullUrl = this.baseUrl + "/api/inscription";
-    const rep: AxiosResponse<AskInscriptionOut> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** AskInscription wraps rawAskInscription and handles the error */
+  /** AskInscription performs the request and handles the error */
   async AskInscription(params: AskInscriptionIn) {
+    const fullUrl = this.baseURL + "/api/inscription";
     this.startRequest();
     try {
-      const out = await this.rawAskInscription(params);
-      this.onSuccessAskInscription(out);
-      return out;
+      const rep: AxiosResponse<AskInscriptionOut> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessAskInscription(data: AskInscriptionOut): void {}
-
-  protected async rawValidateInscription(params: { data: string }) {
-    const fullUrl = this.baseUrl + "inscription";
-    await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { data: params["data"] },
-    });
-    return true;
-  }
-
-  /** ValidateInscription wraps rawValidateInscription and handles the error */
-  async ValidateInscription(params: { data: string }) {
-    this.startRequest();
-    try {
-      const out = await this.rawValidateInscription(params);
-      this.onSuccessValidateInscription();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessValidateInscription(): void {}
-
-  protected async rawLoggin(params: LogginIn) {
-    const fullUrl = this.baseUrl + "/api/loggin";
-    const rep: AxiosResponse<LogginOut> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** Loggin wraps rawLoggin and handles the error */
+  /** Loggin performs the request and handles the error */
   async Loggin(params: LogginIn) {
+    const fullUrl = this.baseURL + "/api/loggin";
     this.startRequest();
     try {
-      const out = await this.rawLoggin(params);
-      this.onSuccessLoggin(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessLoggin(data: LogginOut): void {}
-
-  protected async rawUserResetPassword(params: { mail: string }) {
-    const fullUrl = this.baseUrl + "/api/reset";
-    await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { mail: params["mail"] },
-    });
-    return true;
-  }
-
-  /** UserResetPassword wraps rawUserResetPassword and handles the error */
-  async UserResetPassword(params: { mail: string }) {
-    this.startRequest();
-    try {
-      const out = await this.rawUserResetPassword(params);
-      this.onSuccessUserResetPassword();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessUserResetPassword(): void {}
-
-  protected async rawUserGetSettings() {
-    const fullUrl = this.baseUrl + "/api/settings";
-    const rep: AxiosResponse<User> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** UserGetSettings wraps rawUserGetSettings and handles the error */
-  async UserGetSettings() {
-    this.startRequest();
-    try {
-      const out = await this.rawUserGetSettings();
-      this.onSuccessUserGetSettings(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessUserGetSettings(data: User): void {}
-
-  protected async rawUserUpdateSettings(params: User) {
-    const fullUrl = this.baseUrl + "/api/settings";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** UserUpdateSettings wraps rawUserUpdateSettings and handles the error */
-  async UserUpdateSettings(params: User) {
-    this.startRequest();
-    try {
-      const out = await this.rawUserUpdateSettings(params);
-      this.onSuccessUserUpdateSettings();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessUserUpdateSettings(): void {}
-
-  protected async rawSejoursGet() {
-    const fullUrl = this.baseUrl + "/api/sejours";
-    const rep: AxiosResponse<SejourExt[] | null> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** SejoursGet wraps rawSejoursGet and handles the error */
-  async SejoursGet() {
-    this.startRequest();
-    try {
-      const out = await this.rawSejoursGet();
-      this.onSuccessSejoursGet(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessSejoursGet(data: SejourExt[] | null): void {}
-
-  protected async rawSejoursCreate() {
-    const fullUrl = this.baseUrl + "/api/sejours";
-    const rep: AxiosResponse<SejourExt> = await Axios.put(fullUrl, null, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** SejoursCreate wraps rawSejoursCreate and handles the error */
-  async SejoursCreate() {
-    this.startRequest();
-    try {
-      const out = await this.rawSejoursCreate();
-      this.onSuccessSejoursCreate(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessSejoursCreate(data: SejourExt): void {}
-
-  protected async rawSejoursUpdate(params: Sejour) {
-    const fullUrl = this.baseUrl + "/api/sejours";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** SejoursUpdate wraps rawSejoursUpdate and handles the error */
-  async SejoursUpdate(params: Sejour) {
-    this.startRequest();
-    try {
-      const out = await this.rawSejoursUpdate(params);
-      this.onSuccessSejoursUpdate();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessSejoursUpdate(): void {}
-
-  protected async rawSejoursDelete(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/sejours";
-    await Axios.delete(fullUrl, {
-      headers: this.getHeaders(),
-      params: { id: String(params["id"]) },
-    });
-    return true;
-  }
-
-  /** SejoursDelete wraps rawSejoursDelete and handles the error */
-  async SejoursDelete(params: { id: Int }) {
-    this.startRequest();
-    try {
-      const out = await this.rawSejoursDelete(params);
-      this.onSuccessSejoursDelete();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessSejoursDelete(): void {}
-
-  protected async rawSejoursDuplicate(params: { "id-sejour": Int }) {
-    const fullUrl = this.baseUrl + "/api/sejours/duplicate";
-    const rep: AxiosResponse<SejourExt> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { "id-sejour": String(params["id-sejour"]) },
-    });
-    return rep.data;
-  }
-
-  /** SejoursDuplicate wraps rawSejoursDuplicate and handles the error */
-  async SejoursDuplicate(params: { "id-sejour": Int }) {
-    this.startRequest();
-    try {
-      const out = await this.rawSejoursDuplicate(params);
-      this.onSuccessSejoursDuplicate(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessSejoursDuplicate(data: SejourExt): void {}
-
-  protected async rawSejoursCreateGroupe(params: { "id-sejour": Int }) {
-    const fullUrl = this.baseUrl + "/api/sejours/groups";
-    const rep: AxiosResponse<Group> = await Axios.put(fullUrl, null, {
-      headers: this.getHeaders(),
-      params: { "id-sejour": String(params["id-sejour"]) },
-    });
-    return rep.data;
-  }
-
-  /** SejoursCreateGroupe wraps rawSejoursCreateGroupe and handles the error */
-  async SejoursCreateGroupe(params: { "id-sejour": Int }) {
-    this.startRequest();
-    try {
-      const out = await this.rawSejoursCreateGroupe(params);
-      this.onSuccessSejoursCreateGroupe(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessSejoursCreateGroupe(data: Group): void {}
-
-  protected async rawSejoursUpdateGroupe(params: Group) {
-    const fullUrl = this.baseUrl + "/api/sejours/groups";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** SejoursUpdateGroupe wraps rawSejoursUpdateGroupe and handles the error */
-  async SejoursUpdateGroupe(params: Group) {
-    this.startRequest();
-    try {
-      const out = await this.rawSejoursUpdateGroupe(params);
-      this.onSuccessSejoursUpdateGroupe();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessSejoursUpdateGroupe(): void {}
-
-  protected async rawSejoursDeleteGroupe(params: { "id-group": Int }) {
-    const fullUrl = this.baseUrl + "/api/sejours/groups";
-    await Axios.delete(fullUrl, {
-      headers: this.getHeaders(),
-      params: { "id-group": String(params["id-group"]) },
-    });
-    return true;
-  }
-
-  /** SejoursDeleteGroupe wraps rawSejoursDeleteGroupe and handles the error */
-  async SejoursDeleteGroupe(params: { "id-group": Int }) {
-    this.startRequest();
-    try {
-      const out = await this.rawSejoursDeleteGroupe(params);
-      this.onSuccessSejoursDeleteGroupe();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessSejoursDeleteGroupe(): void {}
-
-  protected async rawMealsLoadDay(params: { idSejour: Int; day: Int }) {
-    const fullUrl = this.baseUrl + "/api/meals";
-    const rep: AxiosResponse<MealsLoadOut> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: {
-        idSejour: String(params["idSejour"]),
-        day: String(params["day"]),
-      },
-    });
-    return rep.data;
-  }
-
-  /** MealsLoadDay wraps rawMealsLoadDay and handles the error */
-  async MealsLoadDay(params: { idSejour: Int; day: Int }) {
-    this.startRequest();
-    try {
-      const out = await this.rawMealsLoadDay(params);
-      this.onSuccessMealsLoadDay(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessMealsLoadDay(data: MealsLoadOut): void {}
-
-  protected async rawMealsLoadAll(params: { idSejour: Int }) {
-    const fullUrl = this.baseUrl + "/api/meals-all";
-    const rep: AxiosResponse<MealsLoadOut> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { idSejour: String(params["idSejour"]) },
-    });
-    return rep.data;
-  }
-
-  /** MealsLoadAll wraps rawMealsLoadAll and handles the error */
-  async MealsLoadAll(params: { idSejour: Int }) {
-    this.startRequest();
-    try {
-      const out = await this.rawMealsLoadAll(params);
-      this.onSuccessMealsLoadAll(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessMealsLoadAll(data: MealsLoadOut): void {}
-
-  protected async rawMealsWizzard(params: AssistantMealsIn) {
-    const fullUrl = this.baseUrl + "/api/meals/wizzard";
-    const rep: AxiosResponse<MealsLoadOut> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** MealsWizzard wraps rawMealsWizzard and handles the error */
-  async MealsWizzard(params: AssistantMealsIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawMealsWizzard(params);
-      this.onSuccessMealsWizzard(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessMealsWizzard(data: MealsLoadOut): void {}
-
-  protected async rawMealsSearch(params: { search: string }) {
-    const fullUrl = this.baseUrl + "/api/meals/search";
-    const rep: AxiosResponse<ResourceSearchOut> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { search: params["search"] },
-    });
-    return rep.data;
-  }
-
-  /** MealsSearch wraps rawMealsSearch and handles the error */
-  async MealsSearch(params: { search: string }) {
-    this.startRequest();
-    try {
-      const out = await this.rawMealsSearch(params);
-      this.onSuccessMealsSearch(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessMealsSearch(data: ResourceSearchOut): void {}
-
-  protected async rawMealsPreviewQuantities(params: { idMeal: Int }) {
-    const fullUrl = this.baseUrl + "/api/meals/quantities";
-    const rep: AxiosResponse<PreviewQuantitiesOut> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { idMeal: String(params["idMeal"]) },
-    });
-    return rep.data;
-  }
-
-  /** MealsPreviewQuantities wraps rawMealsPreviewQuantities and handles the error */
-  async MealsPreviewQuantities(params: { idMeal: Int }) {
-    this.startRequest();
-    try {
-      const out = await this.rawMealsPreviewQuantities(params);
-      this.onSuccessMealsPreviewQuantities(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessMealsPreviewQuantities(data: PreviewQuantitiesOut): void {}
-
-  protected async rawMealsCreate(params: MealCreateIn) {
-    const fullUrl = this.baseUrl + "/api/meals/details";
-    const rep: AxiosResponse<MealExt> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** MealsCreate wraps rawMealsCreate and handles the error */
-  async MealsCreate(params: MealCreateIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawMealsCreate(params);
-      this.onSuccessMealsCreate(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessMealsCreate(data: MealExt): void {}
-
-  protected async rawMealsUpdate(params: Meal) {
-    const fullUrl = this.baseUrl + "/api/meals/details";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** MealsUpdate wraps rawMealsUpdate and handles the error */
-  async MealsUpdate(params: Meal) {
-    this.startRequest();
-    try {
-      const out = await this.rawMealsUpdate(params);
-      this.onSuccessMealsUpdate();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessMealsUpdate(): void {}
-
-  protected async rawMealsDelete(params: { idMeal: Int }) {
-    const fullUrl = this.baseUrl + "/api/meals/details";
-    await Axios.delete(fullUrl, {
-      headers: this.getHeaders(),
-      params: { idMeal: String(params["idMeal"]) },
-    });
-    return true;
-  }
-
-  /** MealsDelete wraps rawMealsDelete and handles the error */
-  async MealsDelete(params: { idMeal: Int }) {
-    this.startRequest();
-    try {
-      const out = await this.rawMealsDelete(params);
-      this.onSuccessMealsDelete();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessMealsDelete(): void {}
-
-  protected async rawMealsMoveGroup(params: MoveGroupIn) {
-    const fullUrl = this.baseUrl + "/api/meals/groups";
-    const rep: AxiosResponse<Ar2_MealGroups> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** MealsMoveGroup wraps rawMealsMoveGroup and handles the error */
-  async MealsMoveGroup(params: MoveGroupIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawMealsMoveGroup(params);
-      this.onSuccessMealsMoveGroup(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessMealsMoveGroup(data: Ar2_MealGroups): void {}
-
-  protected async rawMealsAddIngredient(params: AddIngredientIn) {
-    const fullUrl = this.baseUrl + "/api/meals/ingredients";
-    const rep: AxiosResponse<MenuExt> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** MealsAddIngredient wraps rawMealsAddIngredient and handles the error */
-  async MealsAddIngredient(params: AddIngredientIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawMealsAddIngredient(params);
-      this.onSuccessMealsAddIngredient(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessMealsAddIngredient(data: MenuExt): void {}
-
-  protected async rawMealsUpdateMenuIngredient(params: MenuIngredient) {
-    const fullUrl = this.baseUrl + "/api/meals/ingredients";
-    const rep: AxiosResponse<MenuExt> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** MealsUpdateMenuIngredient wraps rawMealsUpdateMenuIngredient and handles the error */
-  async MealsUpdateMenuIngredient(params: MenuIngredient) {
-    this.startRequest();
-    try {
-      const out = await this.rawMealsUpdateMenuIngredient(params);
-      this.onSuccessMealsUpdateMenuIngredient(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessMealsUpdateMenuIngredient(data: MenuExt): void {}
-
-  protected async rawMealsAddReceipe(params: AddReceipeIn) {
-    const fullUrl = this.baseUrl + "/api/meals/receipes";
-    const rep: AxiosResponse<MenuExt> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** MealsAddReceipe wraps rawMealsAddReceipe and handles the error */
-  async MealsAddReceipe(params: AddReceipeIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawMealsAddReceipe(params);
-      this.onSuccessMealsAddReceipe(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessMealsAddReceipe(data: MenuExt): void {}
-
-  protected async rawMealsRemoveItem(params: RemoveItemIn) {
-    const fullUrl = this.baseUrl + "/api/meals/remove";
-    const rep: AxiosResponse<MenuExt> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** MealsRemoveItem wraps rawMealsRemoveItem and handles the error */
-  async MealsRemoveItem(params: RemoveItemIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawMealsRemoveItem(params);
-      this.onSuccessMealsRemoveItem(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessMealsRemoveItem(data: MenuExt): void {}
-
-  protected async rawMealsSetMenu(params: SetMenuIn) {
-    const fullUrl = this.baseUrl + "/api/meals/menus";
-    const rep: AxiosResponse<MenuExt> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** MealsSetMenu wraps rawMealsSetMenu and handles the error */
-  async MealsSetMenu(params: SetMenuIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawMealsSetMenu(params);
-      this.onSuccessMealsSetMenu(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessMealsSetMenu(data: MenuExt): void {}
-
-  protected async rawMealsSwapMenus(params: SwapMenusIn) {
-    const fullUrl = this.baseUrl + "/api/meals/swap";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** MealsSwapMenus wraps rawMealsSwapMenus and handles the error */
-  async MealsSwapMenus(params: SwapMenusIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawMealsSwapMenus(params);
-      this.onSuccessMealsSwapMenus();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessMealsSwapMenus(): void {}
-
-  protected async rawMealsExportCookbook(params: ExportCookbookIn) {
-    const fullUrl = this.baseUrl + "/api/meals/cookbook";
-    const rep: AxiosResponse<Blob> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-      responseType: "arraybuffer",
-    });
-
-    const header = rep.headers["content-disposition"];
-    const startIndex = header.indexOf("filename=") + 9;
-    const endIndex = header.length;
-    const filename = decodeURIComponent(header.substring(startIndex, endIndex));
-    return { blob: rep.data, filename: filename };
-  }
-
-  /** MealsExportCookbook wraps rawMealsExportCookbook and handles the error */
-  async MealsExportCookbook(params: ExportCookbookIn) {
-    this.startRequest();
-    try {
-      const out = await this.rawMealsExportCookbook(params);
-      this.onSuccessMealsExportCookbook(out.blob);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessMealsExportCookbook(data: Blob): void {}
-
-  protected async rawLibraryLoadIngredients() {
-    const fullUrl = this.baseUrl + "/api/library/all-ingredients";
-    const rep: AxiosResponse<Ingredients> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** LibraryLoadIngredients wraps rawLibraryLoadIngredients and handles the error */
-  async LibraryLoadIngredients() {
-    this.startRequest();
-    try {
-      const out = await this.rawLibraryLoadIngredients();
-      this.onSuccessLibraryLoadIngredients(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessLibraryLoadIngredients(data: Ingredients): void {}
-
-  protected async rawLibraryCreateIngredient(params: Ingredient) {
-    const fullUrl = this.baseUrl + "/api/library/all-ingredients";
-    const rep: AxiosResponse<Ingredient> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** LibraryCreateIngredient wraps rawLibraryCreateIngredient and handles the error */
-  async LibraryCreateIngredient(params: Ingredient) {
-    this.startRequest();
-    try {
-      const out = await this.rawLibraryCreateIngredient(params);
-      this.onSuccessLibraryCreateIngredient(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessLibraryCreateIngredient(data: Ingredient): void {}
-
-  protected async rawLibraryLoadReceipes() {
-    const fullUrl = this.baseUrl + "/api/library/all-receipes";
-    const rep: AxiosResponse<Receipes> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** LibraryLoadReceipes wraps rawLibraryLoadReceipes and handles the error */
-  async LibraryLoadReceipes() {
-    this.startRequest();
-    try {
-      const out = await this.rawLibraryLoadReceipes();
-      this.onSuccessLibraryLoadReceipes(out);
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessLibraryLoadReceipes(data: Receipes): void {}
-
-  protected async rawLibraryUpdateIngredient(params: Ingredient) {
-    const fullUrl = this.baseUrl + "/api/library/all-ingredients";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** LibraryUpdateIngredient wraps rawLibraryUpdateIngredient and handles the error */
-  async LibraryUpdateIngredient(params: Ingredient) {
-    this.startRequest();
-    try {
-      const out = await this.rawLibraryUpdateIngredient(params);
-      this.onSuccessLibraryUpdateIngredient();
-      return out;
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  protected onSuccessLibraryUpdateIngredient(): void {}
-
-  protected async rawLibraryDeleteIngredient(params: { idIngredient: Int }) {
-    const fullUrl = this.baseUrl + "/api/library/all-ingredients";
-    const rep: AxiosResponse<DeleteIngredientOut> = await Axios.delete(
-      fullUrl,
-      {
+      const rep: AxiosResponse<LogginOut> = await Axios.post(fullUrl, params, {
         headers: this.getHeaders(),
-        params: { idIngredient: String(params["idIngredient"]) },
-      },
-    );
-    return rep.data;
-  }
-
-  /** LibraryDeleteIngredient wraps rawLibraryDeleteIngredient and handles the error */
-  async LibraryDeleteIngredient(params: { idIngredient: Int }) {
-    this.startRequest();
-    try {
-      const out = await this.rawLibraryDeleteIngredient(params);
-      this.onSuccessLibraryDeleteIngredient(out);
-      return out;
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessLibraryDeleteIngredient(data: DeleteIngredientOut): void {}
-
-  protected async rawLibraryImportReceipes1(params: {}, file: File) {
-    const fullUrl = this.baseUrl + "/api/library/receipes/import";
-    const formData = new FormData();
-    formData.append("file", file, file.name);
-    const rep: AxiosResponse<ImportReceipes1Out> = await Axios.post(
-      fullUrl,
-      formData,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** LibraryImportReceipes1 wraps rawLibraryImportReceipes1 and handles the error */
-  async LibraryImportReceipes1(params: {}, file: File) {
+  /** UserResetPassword performs the request and handles the error */
+  async UserResetPassword(params: { mail: string }) {
+    const fullUrl = this.baseURL + "/api/reset";
     this.startRequest();
     try {
-      const out = await this.rawLibraryImportReceipes1(params, file);
-      this.onSuccessLibraryImportReceipes1(out);
-      return out;
+      await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { mail: params["mail"] },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessLibraryImportReceipes1(data: ImportReceipes1Out): void {}
-
-  protected async rawLibraryImportReceipes2(params: ImportReceipes1Out) {
-    const fullUrl = this.baseUrl + "/api/library/receipes/import";
-    const rep: AxiosResponse<ReceipeExt[] | null> = await Axios.put(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
+  /** UserGetSettings performs the request and handles the error */
+  async UserGetSettings() {
+    const fullUrl = this.baseURL + "/api/settings";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<User> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
   }
 
-  /** LibraryImportReceipes2 wraps rawLibraryImportReceipes2 and handles the error */
+  /** UserUpdateSettings performs the request and handles the error */
+  async UserUpdateSettings(params: User) {
+    const fullUrl = this.baseURL + "/api/settings";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** SejoursGet performs the request and handles the error */
+  async SejoursGet() {
+    const fullUrl = this.baseURL + "/api/sejours";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<SejourExt[] | null> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** SejoursCreate performs the request and handles the error */
+  async SejoursCreate() {
+    const fullUrl = this.baseURL + "/api/sejours";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<SejourExt> = await Axios.put(fullUrl, null, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** SejoursUpdate performs the request and handles the error */
+  async SejoursUpdate(params: Sejour) {
+    const fullUrl = this.baseURL + "/api/sejours";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** SejoursDelete performs the request and handles the error */
+  async SejoursDelete(params: { id: IdSejour }) {
+    const fullUrl = this.baseURL + "/api/sejours";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** SejoursDuplicate performs the request and handles the error */
+  async SejoursDuplicate(params: { idSejour: IdSejour }) {
+    const fullUrl = this.baseURL + "/api/sejours/duplicate";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<SejourExt> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { idSejour: String(params["idSejour"]) },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** SejoursCreateGroupe performs the request and handles the error */
+  async SejoursCreateGroupe(params: { idSejour: IdSejour }) {
+    const fullUrl = this.baseURL + "/api/sejours/groups";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Group> = await Axios.put(fullUrl, null, {
+        headers: this.getHeaders(),
+        params: { idSejour: String(params["idSejour"]) },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** SejoursUpdateGroupe performs the request and handles the error */
+  async SejoursUpdateGroupe(params: Group) {
+    const fullUrl = this.baseURL + "/api/sejours/groups";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** SejoursDeleteGroupe performs the request and handles the error */
+  async SejoursDeleteGroupe(params: { idGroup: IdGroup }) {
+    const fullUrl = this.baseURL + "/api/sejours/groups";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { idGroup: String(params["idGroup"]) },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** MealsLoadDay performs the request and handles the error */
+  async MealsLoadDay(params: { idSejour: IdSejour; day: Int }) {
+    const fullUrl = this.baseURL + "/api/meals";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<MealsLoadOut> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: {
+          idSejour: String(params["idSejour"]),
+          day: String(params["day"]),
+        },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** MealsLoadAll performs the request and handles the error */
+  async MealsLoadAll(params: { idSejour: IdSejour }) {
+    const fullUrl = this.baseURL + "/api/meals-all";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<MealsLoadOut> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { idSejour: String(params["idSejour"]) },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** MealsWizzard performs the request and handles the error */
+  async MealsWizzard(params: AssistantMealsIn) {
+    const fullUrl = this.baseURL + "/api/meals/wizzard";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<MealsLoadOut> = await Axios.put(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** MealsSearch performs the request and handles the error */
+  async MealsSearch(params: { search: string }) {
+    const fullUrl = this.baseURL + "/api/meals/search";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<ResourceSearchOut> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { search: params["search"] },
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** MealsPreviewQuantities performs the request and handles the error */
+  async MealsPreviewQuantities(params: { idMeal: IdMeal }) {
+    const fullUrl = this.baseURL + "/api/meals/quantities";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<PreviewQuantitiesOut> = await Axios.get(
+        fullUrl,
+        {
+          headers: this.getHeaders(),
+          params: { idMeal: String(params["idMeal"]) },
+        },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** MealsCreate performs the request and handles the error */
+  async MealsCreate(params: MealCreateIn) {
+    const fullUrl = this.baseURL + "/api/meals/details";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<MealExt> = await Axios.put(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** MealsUpdate performs the request and handles the error */
+  async MealsUpdate(params: Meal) {
+    const fullUrl = this.baseURL + "/api/meals/details";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** MealsDelete performs the request and handles the error */
+  async MealsDelete(params: { idMeal: IdMeal }) {
+    const fullUrl = this.baseURL + "/api/meals/details";
+    this.startRequest();
+    try {
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { idMeal: String(params["idMeal"]) },
+      });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** MealsMoveGroup performs the request and handles the error */
+  async MealsMoveGroup(params: MoveGroupIn) {
+    const fullUrl = this.baseURL + "/api/meals/groups";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Ar2_MealGroups> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** MealsAddIngredient performs the request and handles the error */
+  async MealsAddIngredient(params: AddIngredientIn) {
+    const fullUrl = this.baseURL + "/api/meals/ingredients";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<MenuExt> = await Axios.put(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** MealsUpdateMenuIngredient performs the request and handles the error */
+  async MealsUpdateMenuIngredient(params: MenuIngredient) {
+    const fullUrl = this.baseURL + "/api/meals/ingredients";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<MenuExt> = await Axios.post(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** MealsAddReceipe performs the request and handles the error */
+  async MealsAddReceipe(params: AddReceipeIn) {
+    const fullUrl = this.baseURL + "/api/meals/receipes";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<MenuExt> = await Axios.put(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** MealsRemoveItem performs the request and handles the error */
+  async MealsRemoveItem(params: RemoveItemIn) {
+    const fullUrl = this.baseURL + "/api/meals/remove";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<MenuExt> = await Axios.post(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** MealsSetMenu performs the request and handles the error */
+  async MealsSetMenu(params: SetMenuIn) {
+    const fullUrl = this.baseURL + "/api/meals/menus";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<MenuExt> = await Axios.post(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** MealsSwapMenus performs the request and handles the error */
+  async MealsSwapMenus(params: SwapMenusIn) {
+    const fullUrl = this.baseURL + "/api/meals/swap";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** MealsExportCookbook performs the request and handles the error */
+  async MealsExportCookbook(params: ExportCookbookIn) {
+    const fullUrl = this.baseURL + "/api/meals/cookbook";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Blob> = await Axios.post(fullUrl, params, {
+        headers: this.getHeaders(),
+        responseType: "arraybuffer",
+      });
+
+      const header = rep.headers["content-disposition"];
+      const startIndex = header.indexOf("filename=") + 9;
+      const endIndex = header.length;
+      const filename = decodeURIComponent(
+        header.substring(startIndex, endIndex),
+      );
+      return { blob: rep.data, filename: filename };
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** LibraryLoadIngredients performs the request and handles the error */
+  async LibraryLoadIngredients() {
+    const fullUrl = this.baseURL + "/api/library/all-ingredients";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Ingredients> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** LibraryCreateIngredient performs the request and handles the error */
+  async LibraryCreateIngredient(params: Ingredient) {
+    const fullUrl = this.baseURL + "/api/library/all-ingredients";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Ingredient> = await Axios.put(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** LibraryLoadReceipes performs the request and handles the error */
+  async LibraryLoadReceipes() {
+    const fullUrl = this.baseURL + "/api/library/all-receipes";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<Receipes> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** LibraryUpdateIngredient performs the request and handles the error */
+  async LibraryUpdateIngredient(params: Ingredient) {
+    const fullUrl = this.baseURL + "/api/library/all-ingredients";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** LibraryDeleteIngredient performs the request and handles the error */
+  async LibraryDeleteIngredient(params: { idIngredient: IdIngredient }) {
+    const fullUrl = this.baseURL + "/api/library/all-ingredients";
+    this.startRequest();
+    try {
+      const rep: AxiosResponse<DeleteIngredientOut> = await Axios.delete(
+        fullUrl,
+        {
+          headers: this.getHeaders(),
+          params: { idIngredient: String(params["idIngredient"]) },
+        },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** LibraryImportReceipes1 performs the request and handles the error */
+  async LibraryImportReceipes1(file: File) {
+    const fullUrl = this.baseURL + "/api/library/receipes/import";
+    this.startRequest();
+    try {
+      const formData = new FormData();
+      formData.append("file", file, file.name);
+      const rep: AxiosResponse<ImportReceipes1Out> = await Axios.post(
+        fullUrl,
+        formData,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** LibraryImportReceipes2 performs the request and handles the error */
   async LibraryImportReceipes2(params: ImportReceipes1Out) {
+    const fullUrl = this.baseURL + "/api/library/receipes/import";
     this.startRequest();
     try {
-      const out = await this.rawLibraryImportReceipes2(params);
-      this.onSuccessLibraryImportReceipes2(out);
-      return out;
+      const rep: AxiosResponse<ReceipeExt[] | null> = await Axios.put(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessLibraryImportReceipes2(data: ReceipeExt[] | null): void {}
-
-  protected async rawLibraryLoadMenu(params: { idMenu: Int }) {
-    const fullUrl = this.baseUrl + "/api/library/menus";
-    const rep: AxiosResponse<MenuExt> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { idMenu: String(params["idMenu"]) },
-    });
-    return rep.data;
-  }
-
-  /** LibraryLoadMenu wraps rawLibraryLoadMenu and handles the error */
-  async LibraryLoadMenu(params: { idMenu: Int }) {
+  /** LibraryLoadMenu performs the request and handles the error */
+  async LibraryLoadMenu(params: { idMenu: IdMenu }) {
+    const fullUrl = this.baseURL + "/api/library/menus";
     this.startRequest();
     try {
-      const out = await this.rawLibraryLoadMenu(params);
-      this.onSuccessLibraryLoadMenu(out);
-      return out;
+      const rep: AxiosResponse<MenuExt> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { idMenu: String(params["idMenu"]) },
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessLibraryLoadMenu(data: MenuExt): void {}
-
-  protected async rawLibraryCreateMenu() {
-    const fullUrl = this.baseUrl + "/api/library/menus";
-    const rep: AxiosResponse<ResourceHeader> = await Axios.put(fullUrl, null, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** LibraryCreateMenu wraps rawLibraryCreateMenu and handles the error */
+  /** LibraryCreateMenu performs the request and handles the error */
   async LibraryCreateMenu() {
+    const fullUrl = this.baseURL + "/api/library/menus";
     this.startRequest();
     try {
-      const out = await this.rawLibraryCreateMenu();
-      this.onSuccessLibraryCreateMenu(out);
-      return out;
+      const rep: AxiosResponse<ResourceHeader> = await Axios.put(
+        fullUrl,
+        null,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessLibraryCreateMenu(data: ResourceHeader): void {}
-
-  protected async rawLibraryUpdateMenu(params: Menu) {
-    const fullUrl = this.baseUrl + "/api/library/menus";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** LibraryUpdateMenu wraps rawLibraryUpdateMenu and handles the error */
+  /** LibraryUpdateMenu performs the request and handles the error */
   async LibraryUpdateMenu(params: Menu) {
+    const fullUrl = this.baseURL + "/api/library/menus";
     this.startRequest();
     try {
-      const out = await this.rawLibraryUpdateMenu(params);
-      this.onSuccessLibraryUpdateMenu();
-      return out;
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessLibraryUpdateMenu(): void {}
-
-  protected async rawLibraryDeleteMenu(params: { idMenu: Int }) {
-    const fullUrl = this.baseUrl + "/api/library/menus";
-    await Axios.delete(fullUrl, {
-      headers: this.getHeaders(),
-      params: { idMenu: String(params["idMenu"]) },
-    });
-    return true;
-  }
-
-  /** LibraryDeleteMenu wraps rawLibraryDeleteMenu and handles the error */
-  async LibraryDeleteMenu(params: { idMenu: Int }) {
+  /** LibraryDeleteMenu performs the request and handles the error */
+  async LibraryDeleteMenu(params: { idMenu: IdMenu }) {
+    const fullUrl = this.baseURL + "/api/library/menus";
     this.startRequest();
     try {
-      const out = await this.rawLibraryDeleteMenu(params);
-      this.onSuccessLibraryDeleteMenu();
-      return out;
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { idMenu: String(params["idMenu"]) },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessLibraryDeleteMenu(): void {}
-
-  protected async rawLibraryLoadReceipe(params: { idReceipe: Int }) {
-    const fullUrl = this.baseUrl + "/api/library/receipes";
-    const rep: AxiosResponse<ReceipeExt> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { idReceipe: String(params["idReceipe"]) },
-    });
-    return rep.data;
-  }
-
-  /** LibraryLoadReceipe wraps rawLibraryLoadReceipe and handles the error */
-  async LibraryLoadReceipe(params: { idReceipe: Int }) {
+  /** LibraryLoadReceipe performs the request and handles the error */
+  async LibraryLoadReceipe(params: { idReceipe: IdReceipe }) {
+    const fullUrl = this.baseURL + "/api/library/receipes";
     this.startRequest();
     try {
-      const out = await this.rawLibraryLoadReceipe(params);
-      this.onSuccessLibraryLoadReceipe(out);
-      return out;
+      const rep: AxiosResponse<ReceipeExt> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { idReceipe: String(params["idReceipe"]) },
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessLibraryLoadReceipe(data: ReceipeExt): void {}
-
-  protected async rawLibraryCreateReceipe() {
-    const fullUrl = this.baseUrl + "/api/library/receipes";
-    const rep: AxiosResponse<ReceipeHeader> = await Axios.put(fullUrl, null, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** LibraryCreateReceipe wraps rawLibraryCreateReceipe and handles the error */
+  /** LibraryCreateReceipe performs the request and handles the error */
   async LibraryCreateReceipe() {
+    const fullUrl = this.baseURL + "/api/library/receipes";
     this.startRequest();
     try {
-      const out = await this.rawLibraryCreateReceipe();
-      this.onSuccessLibraryCreateReceipe(out);
-      return out;
+      const rep: AxiosResponse<ReceipeHeader> = await Axios.put(fullUrl, null, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessLibraryCreateReceipe(data: ReceipeHeader): void {}
-
-  protected async rawLibraryUpdateReceipe(params: Receipe) {
-    const fullUrl = this.baseUrl + "/api/library/receipes";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** LibraryUpdateReceipe wraps rawLibraryUpdateReceipe and handles the error */
+  /** LibraryUpdateReceipe performs the request and handles the error */
   async LibraryUpdateReceipe(params: Receipe) {
+    const fullUrl = this.baseURL + "/api/library/receipes";
     this.startRequest();
     try {
-      const out = await this.rawLibraryUpdateReceipe(params);
-      this.onSuccessLibraryUpdateReceipe();
-      return out;
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessLibraryUpdateReceipe(): void {}
-
-  protected async rawLibraryDeleteReceipe(params: { idReceipe: Int }) {
-    const fullUrl = this.baseUrl + "/api/library/receipes";
-    await Axios.delete(fullUrl, {
-      headers: this.getHeaders(),
-      params: { idReceipe: String(params["idReceipe"]) },
-    });
-    return true;
-  }
-
-  /** LibraryDeleteReceipe wraps rawLibraryDeleteReceipe and handles the error */
-  async LibraryDeleteReceipe(params: { idReceipe: Int }) {
+  /** LibraryDeleteReceipe performs the request and handles the error */
+  async LibraryDeleteReceipe(params: { idReceipe: IdReceipe }) {
+    const fullUrl = this.baseURL + "/api/library/receipes";
     this.startRequest();
     try {
-      const out = await this.rawLibraryDeleteReceipe(params);
-      this.onSuccessLibraryDeleteReceipe();
-      return out;
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { idReceipe: String(params["idReceipe"]) },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessLibraryDeleteReceipe(): void {}
-
-  protected async rawLibraryAddReceipeIngredient(
-    params: AddReceipeIngredientIn,
-  ) {
-    const fullUrl = this.baseUrl + "/api/library/receipes/ingredients";
-    const rep: AxiosResponse<ReceipeIngredientExt> = await Axios.put(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** LibraryAddReceipeIngredient wraps rawLibraryAddReceipeIngredient and handles the error */
+  /** LibraryAddReceipeIngredient performs the request and handles the error */
   async LibraryAddReceipeIngredient(params: AddReceipeIngredientIn) {
+    const fullUrl = this.baseURL + "/api/library/receipes/ingredients";
     this.startRequest();
     try {
-      const out = await this.rawLibraryAddReceipeIngredient(params);
-      this.onSuccessLibraryAddReceipeIngredient(out);
-      return out;
+      const rep: AxiosResponse<ReceipeIngredientExt> = await Axios.put(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessLibraryAddReceipeIngredient(
-    data: ReceipeIngredientExt,
-  ): void {}
-
-  protected async rawLibraryUpdateReceipeIngredient(params: ReceipeIngredient) {
-    const fullUrl = this.baseUrl + "/api/library/receipes/ingredients";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** LibraryUpdateReceipeIngredient wraps rawLibraryUpdateReceipeIngredient and handles the error */
+  /** LibraryUpdateReceipeIngredient performs the request and handles the error */
   async LibraryUpdateReceipeIngredient(params: ReceipeIngredient) {
+    const fullUrl = this.baseURL + "/api/library/receipes/ingredients";
     this.startRequest();
     try {
-      const out = await this.rawLibraryUpdateReceipeIngredient(params);
-      this.onSuccessLibraryUpdateReceipeIngredient();
-      return out;
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessLibraryUpdateReceipeIngredient(): void {}
-
-  protected async rawLibraryDeleteReceipeIngredient(params: {
-    idReceipe: Int;
-    idIngredient: Int;
-  }) {
-    const fullUrl = this.baseUrl + "/api/library/receipes/ingredients";
-    await Axios.delete(fullUrl, {
-      headers: this.getHeaders(),
-      params: {
-        idReceipe: String(params["idReceipe"]),
-        idIngredient: String(params["idIngredient"]),
-      },
-    });
-    return true;
-  }
-
-  /** LibraryDeleteReceipeIngredient wraps rawLibraryDeleteReceipeIngredient and handles the error */
+  /** LibraryDeleteReceipeIngredient performs the request and handles the error */
   async LibraryDeleteReceipeIngredient(params: {
-    idReceipe: Int;
-    idIngredient: Int;
+    idReceipe: IdReceipe;
+    idIngredient: IdIngredient;
   }) {
+    const fullUrl = this.baseURL + "/api/library/receipes/ingredients";
     this.startRequest();
     try {
-      const out = await this.rawLibraryDeleteReceipeIngredient(params);
-      this.onSuccessLibraryDeleteReceipeIngredient();
-      return out;
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: {
+          idReceipe: String(params["idReceipe"]),
+          idIngredient: String(params["idIngredient"]),
+        },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessLibraryDeleteReceipeIngredient(): void {}
-
-  protected async rawLibraryAddMenuIngredient(params: AddMenuIngredientIn) {
-    const fullUrl = this.baseUrl + "/api/library/menus/ingredients";
-    const rep: AxiosResponse<MenuIngredientExt> = await Axios.put(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** LibraryAddMenuIngredient wraps rawLibraryAddMenuIngredient and handles the error */
+  /** LibraryAddMenuIngredient performs the request and handles the error */
   async LibraryAddMenuIngredient(params: AddMenuIngredientIn) {
+    const fullUrl = this.baseURL + "/api/library/menus/ingredients";
     this.startRequest();
     try {
-      const out = await this.rawLibraryAddMenuIngredient(params);
-      this.onSuccessLibraryAddMenuIngredient(out);
-      return out;
+      const rep: AxiosResponse<MenuIngredientExt> = await Axios.put(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessLibraryAddMenuIngredient(data: MenuIngredientExt): void {}
-
-  protected async rawLibraryUpdateMenuIngredient(params: MenuIngredient) {
-    const fullUrl = this.baseUrl + "/api/library/menus/ingredients";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** LibraryUpdateMenuIngredient wraps rawLibraryUpdateMenuIngredient and handles the error */
+  /** LibraryUpdateMenuIngredient performs the request and handles the error */
   async LibraryUpdateMenuIngredient(params: MenuIngredient) {
+    const fullUrl = this.baseURL + "/api/library/menus/ingredients";
     this.startRequest();
     try {
-      const out = await this.rawLibraryUpdateMenuIngredient(params);
-      this.onSuccessLibraryUpdateMenuIngredient();
-      return out;
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessLibraryUpdateMenuIngredient(): void {}
-
-  protected async rawLibraryDeleteMenuIngredient(params: {
-    idMenu: Int;
-    idIngredient: Int;
-  }) {
-    const fullUrl = this.baseUrl + "/api/library/menus/ingredients";
-    await Axios.delete(fullUrl, {
-      headers: this.getHeaders(),
-      params: {
-        idMenu: String(params["idMenu"]),
-        idIngredient: String(params["idIngredient"]),
-      },
-    });
-    return true;
-  }
-
-  /** LibraryDeleteMenuIngredient wraps rawLibraryDeleteMenuIngredient and handles the error */
+  /** LibraryDeleteMenuIngredient performs the request and handles the error */
   async LibraryDeleteMenuIngredient(params: {
-    idMenu: Int;
-    idIngredient: Int;
+    idMenu: IdMenu;
+    idIngredient: IdIngredient;
   }) {
+    const fullUrl = this.baseURL + "/api/library/menus/ingredients";
     this.startRequest();
     try {
-      const out = await this.rawLibraryDeleteMenuIngredient(params);
-      this.onSuccessLibraryDeleteMenuIngredient();
-      return out;
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: {
+          idMenu: String(params["idMenu"]),
+          idIngredient: String(params["idIngredient"]),
+        },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessLibraryDeleteMenuIngredient(): void {}
-
-  protected async rawLibraryAddMenuReceipe(params: AddMenuReceipeIn) {
-    const fullUrl = this.baseUrl + "/api/library/menus/receipes";
-    const rep: AxiosResponse<Receipe> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** LibraryAddMenuReceipe wraps rawLibraryAddMenuReceipe and handles the error */
+  /** LibraryAddMenuReceipe performs the request and handles the error */
   async LibraryAddMenuReceipe(params: AddMenuReceipeIn) {
+    const fullUrl = this.baseURL + "/api/library/menus/receipes";
     this.startRequest();
     try {
-      const out = await this.rawLibraryAddMenuReceipe(params);
-      this.onSuccessLibraryAddMenuReceipe(out);
-      return out;
+      const rep: AxiosResponse<Receipe> = await Axios.put(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessLibraryAddMenuReceipe(data: Receipe): void {}
-
-  protected async rawLibraryDeleteMenuReceipe(params: {
-    idMenu: Int;
-    idReceipe: Int;
+  /** LibraryDeleteMenuReceipe performs the request and handles the error */
+  async LibraryDeleteMenuReceipe(params: {
+    idMenu: IdMenu;
+    idReceipe: IdReceipe;
   }) {
-    const fullUrl = this.baseUrl + "/api/library/menus/receipes";
-    await Axios.delete(fullUrl, {
-      headers: this.getHeaders(),
-      params: {
-        idMenu: String(params["idMenu"]),
-        idReceipe: String(params["idReceipe"]),
-      },
-    });
-    return true;
-  }
-
-  /** LibraryDeleteMenuReceipe wraps rawLibraryDeleteMenuReceipe and handles the error */
-  async LibraryDeleteMenuReceipe(params: { idMenu: Int; idReceipe: Int }) {
+    const fullUrl = this.baseURL + "/api/library/menus/receipes";
     this.startRequest();
     try {
-      const out = await this.rawLibraryDeleteMenuReceipe(params);
-      this.onSuccessLibraryDeleteMenuReceipe();
-      return out;
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: {
+          idMenu: String(params["idMenu"]),
+          idReceipe: String(params["idReceipe"]),
+        },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessLibraryDeleteMenuReceipe(): void {}
-
-  protected async rawOrderGetDays(params: { idSejour: Int }) {
-    const fullUrl = this.baseUrl + "/api/order/days";
-    const rep: AxiosResponse<Int[] | null> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { idSejour: String(params["idSejour"]) },
-    });
-    return rep.data;
-  }
-
-  /** OrderGetDays wraps rawOrderGetDays and handles the error */
-  async OrderGetDays(params: { idSejour: Int }) {
+  /** OrderGetDays performs the request and handles the error */
+  async OrderGetDays(params: { idSejour: IdSejour }) {
+    const fullUrl = this.baseURL + "/api/order/days";
     this.startRequest();
     try {
-      const out = await this.rawOrderGetDays(params);
-      this.onSuccessOrderGetDays(out);
-      return out;
+      const rep: AxiosResponse<Int[] | null> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { idSejour: String(params["idSejour"]) },
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessOrderGetDays(data: Int[] | null): void {}
-
-  protected async rawOrderCompileIngredients(params: CompileIngredientsIn) {
-    const fullUrl = this.baseUrl + "/api/order/ingredients";
-    const rep: AxiosResponse<CompileIngredientsOut> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** OrderCompileIngredients wraps rawOrderCompileIngredients and handles the error */
+  /** OrderCompileIngredients performs the request and handles the error */
   async OrderCompileIngredients(params: CompileIngredientsIn) {
+    const fullUrl = this.baseURL + "/api/order/ingredients";
     this.startRequest();
     try {
-      const out = await this.rawOrderCompileIngredients(params);
-      this.onSuccessOrderCompileIngredients(out);
-      return out;
+      const rep: AxiosResponse<CompileIngredientsOut> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessOrderCompileIngredients(
-    data: CompileIngredientsOut,
-  ): void {}
-
-  protected async rawOrderGetProfiles() {
-    const fullUrl = this.baseUrl + "/api/order/profiles";
-    const rep: AxiosResponse<ProfileHeader[] | null> = await Axios.get(
-      fullUrl,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** OrderGetProfiles wraps rawOrderGetProfiles and handles the error */
+  /** OrderGetProfiles performs the request and handles the error */
   async OrderGetProfiles() {
+    const fullUrl = this.baseURL + "/api/order/profiles";
     this.startRequest();
     try {
-      const out = await this.rawOrderGetProfiles();
-      this.onSuccessOrderGetProfiles(out);
-      return out;
+      const rep: AxiosResponse<ProfileHeader[] | null> = await Axios.get(
+        fullUrl,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessOrderGetProfiles(data: ProfileHeader[] | null): void {}
-
-  protected async rawOrderCreateProfile() {
-    const fullUrl = this.baseUrl + "/api/order/profiles";
-    const rep: AxiosResponse<Profile> = await Axios.put(fullUrl, null, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** OrderCreateProfile wraps rawOrderCreateProfile and handles the error */
+  /** OrderCreateProfile performs the request and handles the error */
   async OrderCreateProfile() {
+    const fullUrl = this.baseURL + "/api/order/profiles";
     this.startRequest();
     try {
-      const out = await this.rawOrderCreateProfile();
-      this.onSuccessOrderCreateProfile(out);
-      return out;
+      const rep: AxiosResponse<Profile> = await Axios.put(fullUrl, null, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessOrderCreateProfile(data: Profile): void {}
-
-  protected async rawOrderUpdateProfile(params: Profile) {
-    const fullUrl = this.baseUrl + "/api/order/profiles";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** OrderUpdateProfile wraps rawOrderUpdateProfile and handles the error */
+  /** OrderUpdateProfile performs the request and handles the error */
   async OrderUpdateProfile(params: Profile) {
+    const fullUrl = this.baseURL + "/api/order/profiles";
     this.startRequest();
     try {
-      const out = await this.rawOrderUpdateProfile(params);
-      this.onSuccessOrderUpdateProfile();
-      return out;
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessOrderUpdateProfile(): void {}
-
-  protected async rawOrderDeleteProfile(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/order/profiles";
-    await Axios.delete(fullUrl, {
-      headers: this.getHeaders(),
-      params: { id: String(params["id"]) },
-    });
-    return true;
-  }
-
-  /** OrderDeleteProfile wraps rawOrderDeleteProfile and handles the error */
-  async OrderDeleteProfile(params: { id: Int }) {
+  /** OrderDeleteProfile performs the request and handles the error */
+  async OrderDeleteProfile(params: { id: IdProfile }) {
+    const fullUrl = this.baseURL + "/api/order/profiles";
     this.startRequest();
     try {
-      const out = await this.rawOrderDeleteProfile(params);
-      this.onSuccessOrderDeleteProfile();
-      return out;
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessOrderDeleteProfile(): void {}
-
-  protected async rawOrderLoadProfile(params: { idProfile: Int }) {
-    const fullUrl = this.baseUrl + "/api/order/profile/suppliers";
-    const rep: AxiosResponse<ProfileExt> = await Axios.get(fullUrl, {
-      headers: this.getHeaders(),
-      params: { idProfile: String(params["idProfile"]) },
-    });
-    return rep.data;
-  }
-
-  /** OrderLoadProfile wraps rawOrderLoadProfile and handles the error */
-  async OrderLoadProfile(params: { idProfile: Int }) {
+  /** OrderLoadProfile performs the request and handles the error */
+  async OrderLoadProfile(params: { idProfile: IdProfile }) {
+    const fullUrl = this.baseURL + "/api/order/profile/suppliers";
     this.startRequest();
     try {
-      const out = await this.rawOrderLoadProfile(params);
-      this.onSuccessOrderLoadProfile(out);
-      return out;
+      const rep: AxiosResponse<ProfileExt> = await Axios.get(fullUrl, {
+        headers: this.getHeaders(),
+        params: { idProfile: String(params["idProfile"]) },
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessOrderLoadProfile(data: ProfileExt): void {}
-
-  protected async rawOrderAddSupplier(params: Supplier) {
-    const fullUrl = this.baseUrl + "/api/order/profile/suppliers";
-    const rep: AxiosResponse<Supplier> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** OrderAddSupplier wraps rawOrderAddSupplier and handles the error */
+  /** OrderAddSupplier performs the request and handles the error */
   async OrderAddSupplier(params: Supplier) {
+    const fullUrl = this.baseURL + "/api/order/profile/suppliers";
     this.startRequest();
     try {
-      const out = await this.rawOrderAddSupplier(params);
-      this.onSuccessOrderAddSupplier(out);
-      return out;
+      const rep: AxiosResponse<Supplier> = await Axios.put(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessOrderAddSupplier(data: Supplier): void {}
-
-  protected async rawOrderUpdateSupplier(params: Supplier) {
-    const fullUrl = this.baseUrl + "/api/order/profile/suppliers";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** OrderUpdateSupplier wraps rawOrderUpdateSupplier and handles the error */
+  /** OrderUpdateSupplier performs the request and handles the error */
   async OrderUpdateSupplier(params: Supplier) {
+    const fullUrl = this.baseURL + "/api/order/profile/suppliers";
     this.startRequest();
     try {
-      const out = await this.rawOrderUpdateSupplier(params);
-      this.onSuccessOrderUpdateSupplier();
-      return out;
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessOrderUpdateSupplier(): void {}
-
-  protected async rawOrderDeleteSupplier(params: { id: Int }) {
-    const fullUrl = this.baseUrl + "/api/order/profile/suppliers";
-    await Axios.delete(fullUrl, {
-      headers: this.getHeaders(),
-      params: { id: String(params["id"]) },
-    });
-    return true;
-  }
-
-  /** OrderDeleteSupplier wraps rawOrderDeleteSupplier and handles the error */
-  async OrderDeleteSupplier(params: { id: Int }) {
+  /** OrderDeleteSupplier performs the request and handles the error */
+  async OrderDeleteSupplier(params: { id: IdSupplier }) {
+    const fullUrl = this.baseURL + "/api/order/profile/suppliers";
     this.startRequest();
     try {
-      const out = await this.rawOrderDeleteSupplier(params);
-      this.onSuccessOrderDeleteSupplier();
-      return out;
+      await Axios.delete(fullUrl, {
+        headers: this.getHeaders(),
+        params: { id: String(params["id"]) },
+      });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessOrderDeleteSupplier(): void {}
-
-  protected async rawOrderUpdateProfileMapIng(params: UpdateProfileMapIngIn) {
-    const fullUrl = this.baseUrl + "/api/order/profile/map-ing";
-    const rep: AxiosResponse<ProfileExt> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** OrderUpdateProfileMapIng wraps rawOrderUpdateProfileMapIng and handles the error */
+  /** OrderUpdateProfileMapIng performs the request and handles the error */
   async OrderUpdateProfileMapIng(params: UpdateProfileMapIngIn) {
+    const fullUrl = this.baseURL + "/api/order/profile/map-ing";
     this.startRequest();
     try {
-      const out = await this.rawOrderUpdateProfileMapIng(params);
-      this.onSuccessOrderUpdateProfileMapIng(out);
-      return out;
+      const rep: AxiosResponse<ProfileExt> = await Axios.post(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessOrderUpdateProfileMapIng(data: ProfileExt): void {}
-
-  protected async rawOrderUpdateProfileMapKind(params: UpdateProfileMapKindIn) {
-    const fullUrl = this.baseUrl + "/api/order/profile/map-kind";
-    const rep: AxiosResponse<ProfileExt> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** OrderUpdateProfileMapKind wraps rawOrderUpdateProfileMapKind and handles the error */
+  /** OrderUpdateProfileMapKind performs the request and handles the error */
   async OrderUpdateProfileMapKind(params: UpdateProfileMapKindIn) {
+    const fullUrl = this.baseURL + "/api/order/profile/map-kind";
     this.startRequest();
     try {
-      const out = await this.rawOrderUpdateProfileMapKind(params);
-      this.onSuccessOrderUpdateProfileMapKind(out);
-      return out;
+      const rep: AxiosResponse<ProfileExt> = await Axios.post(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessOrderUpdateProfileMapKind(data: ProfileExt): void {}
-
-  protected async rawOrderTidyMapping(params: TidyIn) {
-    const fullUrl = this.baseUrl + "/api/order/profile/tidy";
-    const rep: AxiosResponse<ProfileExt> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-    });
-    return rep.data;
-  }
-
-  /** OrderTidyMapping wraps rawOrderTidyMapping and handles the error */
+  /** OrderTidyMapping performs the request and handles the error */
   async OrderTidyMapping(params: TidyIn) {
+    const fullUrl = this.baseURL + "/api/order/profile/tidy";
     this.startRequest();
     try {
-      const out = await this.rawOrderTidyMapping(params);
-      this.onSuccessOrderTidyMapping(out);
-      return out;
+      const rep: AxiosResponse<ProfileExt> = await Axios.post(fullUrl, params, {
+        headers: this.getHeaders(),
+      });
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessOrderTidyMapping(data: ProfileExt): void {}
-
-  protected async rawOrderGetDefaultMapping(params: DefaultMappingIn) {
-    const fullUrl = this.baseUrl + "/api/order/profile/default-map";
-    const rep: AxiosResponse<IngredientMapping> = await Axios.post(
-      fullUrl,
-      params,
-      { headers: this.getHeaders() },
-    );
-    return rep.data;
-  }
-
-  /** OrderGetDefaultMapping wraps rawOrderGetDefaultMapping and handles the error */
+  /** OrderGetDefaultMapping performs the request and handles the error */
   async OrderGetDefaultMapping(params: DefaultMappingIn) {
+    const fullUrl = this.baseURL + "/api/order/profile/default-map";
     this.startRequest();
     try {
-      const out = await this.rawOrderGetDefaultMapping(params);
-      this.onSuccessOrderGetDefaultMapping(out);
-      return out;
+      const rep: AxiosResponse<IngredientMapping> = await Axios.post(
+        fullUrl,
+        params,
+        { headers: this.getHeaders() },
+      );
+      return rep.data;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessOrderGetDefaultMapping(data: IngredientMapping): void {}
-
-  protected async rawOrderSetDefaultProfile(params: SetDefaultProfile) {
-    const fullUrl = this.baseUrl + "/api/order/profile/default";
-    await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-    return true;
-  }
-
-  /** OrderSetDefaultProfile wraps rawOrderSetDefaultProfile and handles the error */
+  /** OrderSetDefaultProfile performs the request and handles the error */
   async OrderSetDefaultProfile(params: SetDefaultProfile) {
+    const fullUrl = this.baseURL + "/api/order/profile/default";
     this.startRequest();
     try {
-      const out = await this.rawOrderSetDefaultProfile(params);
-      this.onSuccessOrderSetDefaultProfile();
-      return out;
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  protected onSuccessOrderSetDefaultProfile(): void {}
-
-  protected async rawOrderExportExcel(params: ExportExcelIn) {
-    const fullUrl = this.baseUrl + "/api/order/export";
-    const rep: AxiosResponse<Blob> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders(),
-      responseType: "arraybuffer",
-    });
-
-    const header = rep.headers["content-disposition"];
-    const startIndex = header.indexOf("filename=") + 9;
-    const endIndex = header.length;
-    const filename = decodeURIComponent(header.substring(startIndex, endIndex));
-    return { blob: rep.data, filename: filename };
-  }
-
-  /** OrderExportExcel wraps rawOrderExportExcel and handles the error */
+  /** OrderExportExcel performs the request and handles the error */
   async OrderExportExcel(params: ExportExcelIn) {
+    const fullUrl = this.baseURL + "/api/order/export";
     this.startRequest();
     try {
-      const out = await this.rawOrderExportExcel(params);
-      this.onSuccessOrderExportExcel(out.blob);
-      return out;
+      const rep: AxiosResponse<Blob> = await Axios.post(fullUrl, params, {
+        headers: this.getHeaders(),
+        responseType: "arraybuffer",
+      });
+
+      const header = rep.headers["content-disposition"];
+      const startIndex = header.indexOf("filename=") + 9;
+      const endIndex = header.length;
+      const filename = decodeURIComponent(
+        header.substring(startIndex, endIndex),
+      );
+      return { blob: rep.data, filename: filename };
     } catch (error) {
       this.handleError(error);
     }
   }
-
-  protected onSuccessOrderExportExcel(data: Blob): void {}
 }

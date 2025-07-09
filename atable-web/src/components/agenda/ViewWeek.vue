@@ -154,6 +154,7 @@ import {
   AssistantMealsIn,
   Horaire,
   IdMeal,
+  IdMenu,
   MealExt,
   MealsLoadOut,
   ResourceHeader,
@@ -270,16 +271,17 @@ function onDragMenu(event: DragEvent, menu: ResourceHeader) {
 }
 
 async function setMenu(menu: ResourceHeader, meal: MealExt) {
+  const idMenu = menu.ID as IdMenu;
   const res = await controller.MealsSetMenu({
     IdMeal: meal.Meal.Id,
-    IdMenu: menu.ID,
+    IdMenu: idMenu,
   });
   if (res === undefined) return;
   controller.showMessage("Menu mis en place avec succès");
 
-  meals.Menus![menu.ID] = res;
+  meals.Menus![idMenu] = res;
   // redirect the meal to the updated menu
   const m = meals.Meals?.find((ml) => ml.Meal.Id == meal.Meal.Id)!;
-  m.Meal.Menu = menu.ID;
+  m.Meal.Menu = idMenu;
 }
 </script>

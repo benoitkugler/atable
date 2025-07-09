@@ -76,7 +76,7 @@ enum steps {
 const step = ref<steps>(steps.importFile);
 const receipesToMap = ref<ImportReceipes1Out>({ Map: {}, Receipes: [] });
 async function startImport(file: File) {
-  const res = await controller.LibraryImportReceipes1({}, file);
+  const res = await controller.LibraryImportReceipes1(file);
   if (res === undefined) return;
 
   receipesToMap.value = res;

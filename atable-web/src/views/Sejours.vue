@@ -233,7 +233,7 @@ async function createSejour() {
 async function duplicateSejour() {
   if (rc.activeSejour == null) return;
   const res = await controller.SejoursDuplicate({
-    "id-sejour": rc.activeSejour.Sejour.Id,
+    idSejour: rc.activeSejour.Sejour.Id,
   });
   if (res === undefined) return;
 
@@ -291,7 +291,7 @@ async function createGroup() {
   if (rc.activeSejour == null) return;
 
   const res = await controller.SejoursCreateGroupe({
-    "id-sejour": rc.activeSejour.Sejour.Id,
+    idSejour: rc.activeSejour.Sejour.Id,
   });
   if (res == undefined) return;
   controller.showMessage("Groupe ajouté avec succès.");
@@ -311,7 +311,7 @@ async function updateGroup(group: Group) {
 }
 
 async function deleteGroup(group: Group) {
-  const res = await controller.SejoursDeleteGroupe({ "id-group": group.Id });
+  const res = await controller.SejoursDeleteGroupe({ idGroup: group.Id });
   if (res == undefined) return;
   controller.showMessage("Groupe supprimé avec succès.");
 

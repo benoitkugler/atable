@@ -219,12 +219,12 @@ func (ct *Controller) updateSejour(in sej.Sejour, uID us.IdUser) error {
 func (ct *Controller) SejoursDelete(c echo.Context) error {
 	uID := users.JWTUser(c)
 
-	id_, err := utils.QueryParamInt64(c, "id")
+	id, err := utils.QueryParamInt[sej.IdSejour](c, "id")
 	if err != nil {
 		return err
 	}
 
-	err = ct.deleteSejour(sej.IdSejour(id_), uID)
+	err = ct.deleteSejour(id, uID)
 	if err != nil {
 		return err
 	}
@@ -251,12 +251,12 @@ func (ct *Controller) deleteSejour(id sej.IdSejour, uID us.IdUser) error {
 func (ct *Controller) SejoursCreateGroupe(c echo.Context) error {
 	uID := users.JWTUser(c)
 
-	id_, err := utils.QueryParamInt64(c, "id-sejour")
+	id, err := utils.QueryParamInt[sej.IdSejour](c, "idSejour")
 	if err != nil {
 		return err
 	}
 
-	out, err := ct.createGroup(sej.IdSejour(id_), uID)
+	out, err := ct.createGroup(id, uID)
 	if err != nil {
 		return err
 	}
@@ -335,12 +335,12 @@ func (ct *Controller) updateGroup(in sej.Group, uID us.IdUser) error {
 func (ct *Controller) SejoursDeleteGroupe(c echo.Context) error {
 	uID := users.JWTUser(c)
 
-	id_, err := utils.QueryParamInt64(c, "id-group")
+	id, err := utils.QueryParamInt[sej.IdGroup](c, "idGroup")
 	if err != nil {
 		return err
 	}
 
-	err = ct.deleteGroup(sej.IdGroup(id_), uID)
+	err = ct.deleteGroup(id, uID)
 	if err != nil {
 		return err
 	}
@@ -371,12 +371,12 @@ func (ct *Controller) deleteGroup(id sej.IdGroup, uID us.IdUser) error {
 func (ct *Controller) SejoursDuplicate(c echo.Context) error {
 	uID := users.JWTUser(c)
 
-	id_, err := utils.QueryParamInt64(c, "id-sejour")
+	id, err := utils.QueryParamInt[sej.IdSejour](c, "idSejour")
 	if err != nil {
 		return err
 	}
 
-	sejour, err := ct.duplicateSejour(sej.IdSejour(id_), uID)
+	sejour, err := ct.duplicateSejour(id, uID)
 	if err != nil {
 		return err
 	}

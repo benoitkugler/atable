@@ -22,7 +22,7 @@
                     <v-list-item-title> {{ item.ing.Name }}</v-list-item-title>
                     <v-list-item-subtitle>
                       {{
-                        IngredientKindLabels[item.ing.Kind]
+                        IngredientKindLabels[(item.ing as Ingredient).Kind]
                       }}</v-list-item-subtitle
                     >
                   </v-col>
@@ -79,6 +79,8 @@
 
 <script setup lang="ts">
 import {
+  IdIngredient,
+  IdUser,
   ImportReceipes1Out,
   Ingredient,
   IngredientKindLabels,
@@ -112,20 +114,20 @@ function editItem(index: number) {
 
 function updateMap(index: number, ing: MenuResource) {
   toMap.value[index].ing = {
-    Id: ing.Id,
+    Id: ing.Id as IdIngredient,
     Name: ing.Title,
     Kind: ing.IngredientKind!,
-    Owner: -1 as Int,
+    Owner: -1 as IdUser,
   };
   indexToEdit.value = -1;
 }
 
 function updateMapNew(index: number, ing: Ingredient) {
   toMap.value[index].ing = {
-    Id: -1 as Int, // mark as new
+    Id: -1 as IdIngredient, // mark as new
     Name: ing.Name,
     Kind: ing.Kind,
-    Owner: -1 as Int,
+    Owner: -1 as IdUser,
   };
   indexToEdit.value = -1;
 }

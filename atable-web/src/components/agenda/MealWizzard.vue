@@ -75,7 +75,7 @@
                       :items="groupItems"
                       :model-value="excursionForIndex(i - 1)"
                       @update:model-value="
-                        (l) => setExcursionForIndex(l, i - 1)
+                        (l: IdGroup[]) => setExcursionForIndex(l, i - 1)
                       "
                     ></v-select>
                   </v-card-text>
@@ -113,7 +113,7 @@
 </template>
 
 <script lang="ts" setup>
-import { AssistantMealsIn, Int, SejourExt } from "@/logic/api_gen";
+import { AssistantMealsIn, IdGroup, Int, SejourExt } from "@/logic/api_gen";
 import { addDays, formatDate } from "@/logic/controller";
 import { computed } from "vue";
 import { watch } from "vue";
@@ -158,7 +158,7 @@ function dayForIndex(i: number) {
 function excursionForIndex(i: number) {
   return (args.value.Excursions || {})[i as Int] || [];
 }
-function setExcursionForIndex(ids: Int[], i: number) {
+function setExcursionForIndex(ids: IdGroup[], i: number) {
   const m = args.value.Excursions || {};
   m[i as Int] = ids;
   args.value.Excursions = m;

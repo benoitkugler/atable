@@ -55,14 +55,18 @@ func InTx(db *sql.DB, fn func(tx *sql.Tx) error) error {
 	return nil
 }
 
-// QueryParamInt64 parse the query param `name` to an int64
-func QueryParamInt64(c echo.Context, name string) (int64, error) {
-	idS := c.QueryParam(name)
-	id, err := strconv.ParseInt(idS, 10, 64)
+// ParseInt parse [v] to an int
+func ParseInt[T interface{ ~int64 | int }](v string) (T, error) {
+	id, err := strconv.ParseInt(v, 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("invalid ID parameter %s : %s", idS, err)
+		return 0, fmt.Errorf("invalid ID parameter %s : %s", v, err)
 	}
-	return id, nil
+	return T(id), nil
+}
+
+// QueryParamInt parse the query param `name` to an int
+func QueryParamInt[T interface{ ~int64 | int }](c echo.Context, name string) (T, error) {
+	return ParseInt[T](c.QueryParam(name))
 }
 
 // QueryParamBool parse the query param `name` to a boolean

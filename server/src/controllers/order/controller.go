@@ -49,12 +49,12 @@ func (ct *Controller) checkSejourOwner(id sej.IdSejour, uID uID) (sej.Sejour, er
 func (ct *Controller) OrderGetDays(c echo.Context) error {
 	uID := users.JWTUser(c)
 
-	id_, err := utils.QueryParamInt64(c, "idSejour")
+	id, err := utils.QueryParamInt[sej.IdSejour](c, "idSejour")
 	if err != nil {
 		return err
 	}
 
-	out, err := ct.getDays(sej.IdSejour(id_), uID)
+	out, err := ct.getDays(id, uID)
 	if err != nil {
 		return err
 	}

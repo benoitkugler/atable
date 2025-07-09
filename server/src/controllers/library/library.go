@@ -168,12 +168,12 @@ func (ct *Controller) createReceipe(uID us.IdUser) (out ReceipeHeader, _ error) 
 // LibraryLoadReceipe load the full content of the given receipe
 func (ct *Controller) LibraryLoadReceipe(c echo.Context) error {
 	// uID := users.JWTUser(c)
-	id_, err := utils.QueryParamInt64(c, "idReceipe")
+	id, err := utils.QueryParamInt[men.IdReceipe](c, "idReceipe")
 	if err != nil {
 		return err
 	}
 
-	out, err := ct.loadReceipe(men.IdReceipe(id_))
+	out, err := ct.loadReceipe(id)
 	if err != nil {
 		return err
 	}
@@ -228,12 +228,12 @@ func (ct *Controller) updateReceipe(args men.Receipe, uID us.IdUser) error {
 func (ct *Controller) LibraryDeleteReceipe(c echo.Context) error {
 	uID := users.JWTUser(c)
 
-	id, err := utils.QueryParamInt64(c, "idReceipe")
+	id, err := utils.QueryParamInt[men.IdReceipe](c, "idReceipe")
 	if err != nil {
 		return err
 	}
 
-	err = ct.deleteReceipe(men.IdReceipe(id), uID)
+	err = ct.deleteReceipe(id, uID)
 	if err != nil {
 		return err
 	}
@@ -369,16 +369,16 @@ func (ct *Controller) updateReceipeIngredient(link men.ReceipeIngredient, uID us
 func (ct *Controller) LibraryDeleteReceipeIngredient(c echo.Context) error {
 	uID := users.JWTUser(c)
 
-	idR_, err := utils.QueryParamInt64(c, "idReceipe")
+	idR, err := utils.QueryParamInt[men.IdReceipe](c, "idReceipe")
 	if err != nil {
 		return err
 	}
-	idG_, err := utils.QueryParamInt64(c, "idIngredient")
+	idG, err := utils.QueryParamInt[men.IdIngredient](c, "idIngredient")
 	if err != nil {
 		return err
 	}
 
-	err = ct.deleteReceipeIngredient(men.IdReceipe(idR_), men.IdIngredient(idG_), uID)
+	err = ct.deleteReceipeIngredient(idR, idG, uID)
 	if err != nil {
 		return err
 	}
@@ -410,12 +410,12 @@ func (ct *Controller) deleteReceipeIngredient(idR men.IdReceipe, idG men.IdIngre
 // LibraryLoadMenu load the full content of the given Menu
 func (ct *Controller) LibraryLoadMenu(c echo.Context) error {
 	// uID := users.JWTUser(c)
-	id_, err := utils.QueryParamInt64(c, "idMenu")
+	id, err := utils.QueryParamInt[men.IdMenu](c, "idMenu")
 	if err != nil {
 		return err
 	}
 
-	out, err := LoadMenu(ct.db, men.IdMenu(id_))
+	out, err := LoadMenu(ct.db, id)
 	if err != nil {
 		return err
 	}
@@ -459,12 +459,12 @@ func (ct *Controller) updateMenu(args men.Menu, uID us.IdUser) error {
 func (ct *Controller) LibraryDeleteMenu(c echo.Context) error {
 	uID := users.JWTUser(c)
 
-	id, err := utils.QueryParamInt64(c, "idMenu")
+	id, err := utils.QueryParamInt[men.IdMenu](c, "idMenu")
 	if err != nil {
 		return err
 	}
 
-	err = ct.deleteMenu(men.IdMenu(id), uID)
+	err = ct.deleteMenu(id, uID)
 	if err != nil {
 		return err
 	}
@@ -653,16 +653,16 @@ func UpdateMenuIngredient(db *sql.DB, link men.MenuIngredient, uID us.IdUser) er
 func (ct *Controller) LibraryDeleteMenuIngredient(c echo.Context) error {
 	uID := users.JWTUser(c)
 
-	idR_, err := utils.QueryParamInt64(c, "idMenu")
+	idM, err := utils.QueryParamInt[men.IdMenu](c, "idMenu")
 	if err != nil {
 		return err
 	}
-	idG_, err := utils.QueryParamInt64(c, "idIngredient")
+	idG, err := utils.QueryParamInt[men.IdIngredient](c, "idIngredient")
 	if err != nil {
 		return err
 	}
 
-	err = ct.deleteMenuIngredient(men.IdMenu(idR_), men.IdIngredient(idG_), uID)
+	err = ct.deleteMenuIngredient(idM, idG, uID)
 	if err != nil {
 		return err
 	}
@@ -694,16 +694,16 @@ func (ct *Controller) deleteMenuIngredient(idR men.IdMenu, idG men.IdIngredient,
 func (ct *Controller) LibraryDeleteMenuReceipe(c echo.Context) error {
 	uID := users.JWTUser(c)
 
-	idR_, err := utils.QueryParamInt64(c, "idMenu")
+	idM, err := utils.QueryParamInt[men.IdMenu](c, "idMenu")
 	if err != nil {
 		return err
 	}
-	idG_, err := utils.QueryParamInt64(c, "idReceipe")
+	idR, err := utils.QueryParamInt[men.IdReceipe](c, "idReceipe")
 	if err != nil {
 		return err
 	}
 
-	err = ct.deleteMenuReceipe(men.IdMenu(idR_), men.IdReceipe(idG_), uID)
+	err = ct.deleteMenuReceipe(idM, idR, uID)
 	if err != nil {
 		return err
 	}
@@ -1013,12 +1013,12 @@ func (ct *Controller) updateIngredient(args men.Ingredient, userID us.IdUser) er
 func (ct *Controller) LibraryDeleteIngredient(c echo.Context) error {
 	uID := users.JWTUser(c)
 
-	idI_, err := utils.QueryParamInt64(c, "idIngredient")
+	idI, err := utils.QueryParamInt[men.IdIngredient](c, "idIngredient")
 	if err != nil {
 		return err
 	}
 
-	out, err := ct.deleteIngredient(men.IdIngredient(idI_), uID)
+	out, err := ct.deleteIngredient(idI, uID)
 	if err != nil {
 		return err
 	}

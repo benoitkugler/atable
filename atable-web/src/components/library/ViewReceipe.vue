@@ -99,7 +99,7 @@
               <ResourceSelector
                 :items="DB"
                 label="Ajouter un ingrédient"
-                @selected="(item) => addIngredient(item.Id)"
+                @selected="(item) => addIngredient(item.Id as IdIngredient)"
                 @create-ingredient="createAndAddIngredient"
               ></ResourceSelector>
             </template>

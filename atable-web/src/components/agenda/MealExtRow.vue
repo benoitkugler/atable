@@ -57,8 +57,8 @@
               class="my-1 pr-2"
               @click="
                 item.isReceipe
-                  ? emit('goToReceipe', item.id)
-                  : emit('updateMenuIngredient', item.id)
+                  ? emit('goToReceipe', item.id as IdReceipe)
+                  : emit('updateMenuIngredient', item.id as IdIngredient)
               "
               :disabled="props.menu.Menu.IsFavorite"
             >

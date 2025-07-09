@@ -233,6 +233,7 @@ import {
   IngredientKind,
   Time,
   Int,
+  IdUser,
 } from "@/logic/api_gen";
 import ResourceSearch from "./ResourceSearch.vue";
 import IngredientEditor from "@/components/IngredientEditor.vue";
@@ -373,16 +374,17 @@ async function moveGroup(idGroup: IdGroup, from: IdMeal, to: IdMeal) {
 function addResource(payload: ResourceDrag, target: Meal) {
   switch (payload.kind) {
     case DragKind.ingredient:
-      return addIngredient(payload.item.ID, target);
+      return addIngredient(payload.item.ID as IdIngredient, target);
     case DragKind.receipe:
-      return addReceipe(payload.item.ID, target);
+      return addReceipe(payload.item.ID as IdReceipe, target);
     case DragKind.menu:
-      return setMenu(payload.item.ID, target);
+      return setMenu(payload.item.ID as IdMenu, target);
   }
 }
 
 async function addIngredient(id: IdIngredient, target: Meal) {
   const res = await controller.MealsAddIngredient({
+    IdSejour: target.Sejour,
     IdIngredient: id,
     IdMenu: target.Menu,
   });
@@ -476,9 +478,9 @@ const ingToCreate = ref<Ingredient | null>(null);
 function showCreateIngredient(name: string) {
   ingToCreate.value = {
     Name: name,
-    Id: -1 as Int,
+    Id: -1 as IdIngredient,
     Kind: IngredientKind.I_Empty,
-    Owner: -1 as Int,
+    Owner: -1 as IdUser,
   };
 }
 async function createIngredient(ing: Ingredient) {

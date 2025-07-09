@@ -49,7 +49,13 @@
 </template>
 
 <script setup lang="ts">
-import { Ingredient, IngredientKind, Int } from "@/logic/api_gen";
+import {
+  IdIngredient,
+  IdUser,
+  Ingredient,
+  IngredientKind,
+  Int,
+} from "@/logic/api_gen";
 import { MenuResource, upperFirst } from "@/logic/controller";
 import { nextTick } from "vue";
 import { ref } from "vue";
@@ -94,10 +100,10 @@ function onAdd(v: MenuResource | null) {
 const newIngredient = ref<Ingredient | null>(null);
 function startCreateIngredient() {
   newIngredient.value = {
-    Id: 0 as Int,
+    Id: 0 as IdIngredient,
     Name: upperFirst(search.value),
     Kind: IngredientKind.I_Empty,
-    Owner: -1 as Int,
+    Owner: -1 as IdUser,
   };
   // clear the selector
   nextTick(() => {

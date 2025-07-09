@@ -2,7 +2,7 @@
   <v-card
     @dragover="onDragover"
     @dragleave="isDraggingOver = false"
-    @drop="(ev) => onDrop(ev)"
+    @drop="(ev:DragEvent) => onDrop(ev)"
     :class="{ 'bg-blue-lighten-4': isDraggingOver }"
   >
     <v-row no-gutters>

@@ -121,7 +121,7 @@
             label="Rechercher un menu ou une recette"
             :model-value="props.searchPattern"
             @update:model-value="
-              (p) => {
+              (p: string) => {
                 emit('update:searchPattern', p);
                 debounce.onType(p);
               }
@@ -154,7 +154,7 @@
         <v-col>
           <v-pagination
             :model-value="props.pageIndex"
-            @update:model-value="(p) => emit('update:pageIndex', p)"
+            @update:model-value="(p: number) => emit('update:pageIndex', p)"
             :length="Math.ceil(resourcesLength / pagination)"
           ></v-pagination> </v-col
       ></v-row>
@@ -165,6 +165,8 @@
 <script lang="ts" setup>
 import ListPage from "@/components/library/ListPage.vue";
 import {
+  IdMenu,
+  IdReceipe,
   ReceipeExt,
   ReceipeHeader,
   ResourceHeader,
@@ -242,7 +244,7 @@ async function createMenu() {
 
 const menuToDelete = ref<ResourceHeader | null>(null);
 async function deleteMenu() {
-  const toDelete = menuToDelete.value!.ID;
+  const toDelete = menuToDelete.value!.ID as IdMenu;
   const res = await controller.LibraryDeleteMenu({
     idMenu: toDelete,
   });
@@ -265,7 +267,7 @@ async function createReceipe() {
 
 const receipeToDelete = ref<ReceipeHeader | null>(null);
 async function deleteReceipe() {
-  const toDelete = receipeToDelete.value!.ID;
+  const toDelete = receipeToDelete.value!.ID as IdReceipe;
   const res = await controller.LibraryDeleteReceipe({
     idReceipe: toDelete,
   });

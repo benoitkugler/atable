@@ -156,7 +156,7 @@ const columns = computed(() => {
   return [
     {
       supplier: {
-        Id: -1 as Int,
+        Id: -1 as IdSupplier,
         Name: "Sans fournisseur",
         IdProfile: 0 as IdProfile,
       },
@@ -174,7 +174,7 @@ async function addSupplier() {
   const res = await controller.OrderAddSupplier({
     Name: "Fournisseur",
     IdProfile: props.profile.Profile.Id,
-    Id: 0 as Int,
+    Id: 0 as IdSupplier,
   });
   if (res === undefined) return;
 

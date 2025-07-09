@@ -13,7 +13,7 @@ func setupWebAPI(e *echo.Echo, tvc *users.Controller, sej *sejours.Controller, l
 	ord *order.Controller,
 ) {
 	e.POST("/api/inscription", tvc.AskInscription)
-	e.GET(users.ValidateInscriptionEndPoint, tvc.ValidateInscription)
+	e.GET(users.ValidateInscriptionEndPoint, tvc.ValidateInscription) // ignore
 	e.POST("/api/loggin", tvc.Loggin)
 	e.GET("/api/reset", tvc.UserResetPassword)
 

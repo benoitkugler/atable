@@ -57,11 +57,11 @@ func (ct *Controller) getProfiles() ([]ProfileHeader, error) {
 }
 
 func (ct *Controller) OrderLoadProfile(c echo.Context) error {
-	id, err := utils.QueryParamInt64(c, "idProfile")
+	id, err := utils.QueryParamInt[ord.IdProfile](c, "idProfile")
 	if err != nil {
 		return err
 	}
-	out, err := ct.loadProfile(ord.IdProfile(id))
+	out, err := ct.loadProfile(id)
 	if err != nil {
 		return err
 	}
@@ -151,12 +151,12 @@ func (ct *Controller) createProfile(uID uID) (ord.Profile, error) {
 func (ct *Controller) OrderDeleteProfile(c echo.Context) error {
 	uID := users.JWTUser(c)
 
-	id_, err := utils.QueryParamInt64(c, "id")
+	id, err := utils.QueryParamInt[ord.IdProfile](c, "id")
 	if err != nil {
 		return err
 	}
 
-	err = ct.deleteProfile(ord.IdProfile(id_), uID)
+	err = ct.deleteProfile(id, uID)
 	if err != nil {
 		return err
 	}
@@ -249,12 +249,12 @@ func (ct *Controller) updateSupplier(args ord.Supplier, uID uID) error {
 func (ct *Controller) OrderDeleteSupplier(c echo.Context) error {
 	uID := users.JWTUser(c)
 
-	id_, err := utils.QueryParamInt64(c, "id")
+	id, err := utils.QueryParamInt[ord.IdSupplier](c, "id")
 	if err != nil {
 		return err
 	}
 
-	err = ct.deleteSupplier(ord.IdSupplier(id_), uID)
+	err = ct.deleteSupplier(id, uID)
 	if err != nil {
 		return err
 	}

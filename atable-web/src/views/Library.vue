@@ -6,13 +6,13 @@
       v-model:search-pattern="searchPattern"
       @update-menu="
         (m) => {
-          currentMenu = m.ID;
+          currentMenu = m.ID as IdMenu;
           viewMode = 'menu';
         }
       "
       @update-receipe="
         (m) => {
-          currentReceipe = m.ID;
+          currentReceipe = m.ID as IdReceipe;
           viewMode = 'receipe';
         }
       "

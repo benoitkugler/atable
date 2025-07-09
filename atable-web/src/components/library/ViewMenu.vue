@@ -236,7 +236,7 @@ async function save() {
 
 async function addResource(item: MenuResource) {
   if (item.Kind == "ingredient") {
-    addIngredient(item.Id);
+    addIngredient(item.Id as IdIngredient);
   } else {
     addReceipe(item);
   }
@@ -276,7 +276,7 @@ async function addReceipe(item: MenuResource) {
 
   const res = await controller.LibraryAddMenuReceipe({
     IdMenu: props.menu,
-    IdReceipe: item.Id,
+    IdReceipe: item.Id as IdReceipe,
   });
   if (res == undefined) return;
 
@@ -293,7 +293,7 @@ const hasSameForPeople = computed(() => {
 
 async function updateIngredient(item: MenuItem, qu: QuantityR) {
   const res = await controller.LibraryUpdateMenuIngredient({
-    IdIngredient: item.id,
+    IdIngredient: item.id as IdIngredient,
     IdMenu: props.menu,
     Quantity: qu,
     Plat: item.plat,
@@ -310,7 +310,7 @@ async function updateIngredient(item: MenuItem, qu: QuantityR) {
 
 async function updatePlat(item: MenuItem, plat: PlatKind) {
   const res = await controller.LibraryUpdateMenuIngredient({
-    IdIngredient: item.id,
+    IdIngredient: item.id as IdIngredient,
     IdMenu: props.menu,
     Quantity: item.quantity!,
     Plat: plat,
@@ -327,9 +327,9 @@ async function updatePlat(item: MenuItem, plat: PlatKind) {
 
 function deleteResource(item: MenuItem) {
   if (item.isReceipe) {
-    deleteReceipe(item.id);
+    deleteReceipe(item.id as IdReceipe);
   } else {
-    deleteIngredient(item.id);
+    deleteIngredient(item.id as IdIngredient);
   }
 }
 
@@ -361,6 +361,6 @@ async function deleteReceipe(id: IdReceipe) {
 }
 
 function goTo(item: MenuItem) {
-  emit("goToReceipe", item.id);
+  emit("goToReceipe", item.id as IdReceipe);
 }
 </script>

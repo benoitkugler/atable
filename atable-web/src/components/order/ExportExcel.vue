@@ -173,7 +173,7 @@ async function syncProfileContent() {
   if (res == undefined) return;
 
   Object.entries(res).forEach((e) =>
-    currentProfileContent.value.set(Number(e[0]) as Int, e[1])
+    currentProfileContent.value.set(Number(e[0]) as IdIngredient, e[1])
   );
 }
 

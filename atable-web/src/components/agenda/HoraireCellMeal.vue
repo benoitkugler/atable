@@ -6,10 +6,10 @@
     class="px-2 py-1 text-body-2"
     style="cursor: grab"
     :draggable="true"
-    @dragstart="(ev) => onDragstart(ev)"
+    @dragstart="(ev:DragEvent) => onDragstart(ev)"
     @dragover="onDragover"
     @dragleave="isDraggingOver = false"
-    @drop="(ev) => onDrop(ev)"
+    @drop="(ev:DragEvent) => onDrop(ev)"
   >
     <v-tooltip
       location="bottom"
@@ -100,7 +100,7 @@ function onDrop(event: DragEvent) {
   if (types?.includes("json/swap-meals")) {
     const idSource = JSON.parse(
       event.dataTransfer?.getData("json/swap-meals") || ""
-    ) as Int;
+    ) as IdMeal;
     const idTarget = props.meal.Meal.Id;
     if (idSource == idTarget) return;
     emit("swapMeals", idSource, idTarget);
