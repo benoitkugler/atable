@@ -202,6 +202,13 @@ export interface AssistantMealsIn {
   GroupsForCinquieme: IdGroup[] | null;
   DeleteExisting: boolean;
 }
+// github.com/benoitkugler/atable/controllers/sejours.CreateReceipeFromMealIn
+export interface CreateReceipeFromMealIn {
+  IdMeal: IdMeal;
+  IdIngredients: IdIngredient[] | null;
+  Name: string;
+  ReplaceInMeal: boolean;
+}
 // github.com/benoitkugler/atable/controllers/sejours.ExportCookbookIn
 export interface ExportCookbookIn {
   IdSejour: IdSejour;
@@ -895,6 +902,18 @@ export abstract class AbstractAPI {
   /** MealsSwapMenus performs the request and handles the error */
   async MealsSwapMenus(params: SwapMenusIn) {
     const fullUrl = this.baseURL + "/api/meals/swap";
+    this.startRequest();
+    try {
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+      return true;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  /** MealsCreateReceipeFromMeal performs the request and handles the error */
+  async MealsCreateReceipeFromMeal(params: CreateReceipeFromMealIn) {
+    const fullUrl = this.baseURL + "/api/meals/receipe-from-meal";
     this.startRequest();
     try {
       await Axios.post(fullUrl, params, { headers: this.getHeaders() });

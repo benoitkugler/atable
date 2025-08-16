@@ -144,6 +144,21 @@
                 Enregistrer comme favori
               </v-btn>
             </v-list-item>
+            <v-list-item
+              title="Créer une recette"
+              subtitle="à partir des ingrédients libres"
+              prepend-icon="mdi-plus"
+              :disabled="!menu.Ingredients?.length"
+              @click="
+                showCreateReceipeFromMeal = true;
+                createReceipeArgs.IdIngredients = (menu.Ingredients || []).map(
+                  (ing) => ing.IdIngredient
+                );
+                createReceipeArgs.IdMeal = props.meal.Meal.Id;
+              "
+            >
+            </v-list-item>
+            <v-divider thickness="1"></v-divider>
             <v-list-item>
               <v-btn flat @click="emit('delete')">
                 <template v-slot:prepend>
@@ -156,6 +171,66 @@
         </v-menu>
       </v-col>
     </v-row>
+
+    <v-dialog v-model="showCreateReceipeFromMeal" max-width="800px">
+      <v-card title="Créer une recette">
+        <v-card-text>
+          <v-list
+            v-model:selected="createReceipeArgs.IdIngredients"
+            select-strategy="leaf"
+          >
+            <v-list-item
+              class="my-1"
+              rounded
+              v-for="ing in props.menu.Ingredients"
+              :title="ing.Ingredient.Name"
+              :key="ing.IdIngredient"
+              :value="ing.IdIngredient"
+            >
+              <template #append="{ isSelected, select }">
+                <v-checkbox-btn
+                  :model-value="isSelected"
+                  @update:model-value="select"
+                ></v-checkbox-btn>
+              </template>
+            </v-list-item>
+          </v-list>
+          <v-row>
+            <v-col>
+              <v-text-field
+                variant="outlined"
+                density="compact"
+                v-model="createReceipeArgs.Name"
+                label="Nom de la recette"
+                hide-details
+              ></v-text-field>
+            </v-col>
+            <v-col cols="4">
+              <v-checkbox
+                v-model="createReceipeArgs.ReplaceInMeal"
+                label="Remplacer dans le menu"
+                hide-details
+              >
+              </v-checkbox>
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            :disabled="
+              !createReceipeArgs.Name.length ||
+              !createReceipeArgs.IdIngredients?.length
+            "
+            @click="
+              emit('createReceipeFromMeal', createReceipeArgs);
+              showCreateReceipeFromMeal = false;
+            "
+            >Créer la recette</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-list-item>
 </template>
 
@@ -170,6 +245,7 @@ import {
   type Group,
   Int,
   IdMeal,
+  CreateReceipeFromMealIn,
 } from "@/logic/api_gen";
 import {
   ResourceDrag,
@@ -199,6 +275,7 @@ const emit = defineEmits<{
   (event: "goToMenu"): void;
   (event: "goToReceipe", id: IdReceipe): void;
   (event: "previewQuantities"): void;
+  (event: "createReceipeFromMeal", args: CreateReceipeFromMealIn): void;
 }>();
 
 function onGroupDragStart(event: DragEvent, idGroup: number) {
@@ -242,4 +319,12 @@ function onDrop(event: DragEvent) {
 }
 
 const sortedMenuContent = computed(() => sortMenuContent(props.menu));
+
+const showCreateReceipeFromMeal = ref(false);
+const createReceipeArgs = ref<CreateReceipeFromMealIn>({
+  IdIngredients: [],
+  IdMeal: 0 as IdMeal,
+  Name: "",
+  ReplaceInMeal: true,
+});
 </script>

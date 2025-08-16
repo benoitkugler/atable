@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/url"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -1140,4 +1141,77 @@ func ResolveSize(links sej.MealGroups, groups sej.Groups, additionnalPeople int)
 		forNb += gr.Size
 	}
 	return forNb
+}
+
+type CreateReceipeFromMealIn struct {
+	IdMeal        sej.IdMeal
+	IdIngredients []men.IdIngredient
+	Name          string
+	ReplaceInMeal bool
+}
+
+func (ct *Controller) MealsCreateReceipeFromMeal(c echo.Context) error {
+	uID := users.JWTUser(c)
+
+	var args CreateReceipeFromMealIn
+	if err := c.Bind(&args); err != nil {
+		return err
+	}
+
+	err := ct.createReceipeFromMeal(args, uID)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(200)
+}
+
+func (ct *Controller) createReceipeFromMeal(args CreateReceipeFromMealIn, uID us.IdUser) error {
+	meal, err := sej.SelectMeal(ct.db, args.IdMeal)
+	if err != nil {
+		return utils.SQLError(err)
+	}
+
+	if _, err := ct.checkSejourOwner(meal.Sejour, uID); err != nil {
+		return err
+	}
+
+	menu, err := lib.LoadMenu(ct.db, meal.Menu)
+	if err != nil {
+		return err
+	}
+
+	return utils.InTx(ct.db, func(tx *sql.Tx) error {
+		rec, err := men.Receipe{
+			Name:  args.Name,
+			Owner: uID, Plat: men.P_PlatPrincipal, Updated: men.Time(time.Now()),
+		}.Insert(tx)
+		if err != nil {
+			return err
+		}
+		var ings []men.ReceipeIngredient
+		for _, ingredient := range menu.Ingredients {
+			// restrict to selected ingredients
+			if !slices.Contains(args.IdIngredients, ingredient.IdIngredient) {
+				continue
+			}
+			ings = append(ings, men.ReceipeIngredient{IdReceipe: rec.Id, IdIngredient: ingredient.IdIngredient, Quantity: ingredient.Quantity})
+		}
+		err = men.InsertManyReceipeIngredients(tx, ings...)
+		if err != nil {
+			return err
+		}
+		if args.ReplaceInMeal {
+			// remove from the meal and insert the receipe
+			_, err = men.DeleteMenuIngredientsByIdIngredients(tx, args.IdIngredients...)
+			if err != nil {
+				return err
+			}
+			err = men.InsertMenuReceipe(tx, men.MenuReceipe{IdMenu: meal.Menu, IdReceipe: rec.Id})
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }

@@ -195,6 +195,7 @@
                 markMenuFavorite((data.Menus || {})[meal.Meal.Menu])
               "
               @preview-quantities="() => showPreviewQuantities(meal.Meal.Id)"
+              @create-receipe-from-meal="createReceipeFromMeal"
               @go-to-menu="goToMenu(meal.Meal.Menu)"
               @go-to-receipe="goToReceipe"
             ></meal-ext-row>
@@ -234,6 +235,7 @@ import {
   Time,
   Int,
   IdUser,
+  CreateReceipeFromMealIn,
 } from "@/logic/api_gen";
 import ResourceSearch from "./ResourceSearch.vue";
 import IngredientEditor from "@/components/IngredientEditor.vue";
@@ -489,6 +491,13 @@ async function createIngredient(ing: Ingredient) {
   if (res === undefined) return;
   controller.showMessage("Ingrédient ajouté avec succès.");
   resourceSearch.value?.refreshSearch();
+}
+
+async function createReceipeFromMeal(args: CreateReceipeFromMealIn) {
+  const res = await controller.MealsCreateReceipeFromMeal(args);
+  if (res === undefined) return;
+  controller.showMessage("Recette créée avec succès.");
+  fetchMeals();
 }
 
 const router = useRouter();

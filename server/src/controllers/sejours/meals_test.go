@@ -160,6 +160,12 @@ func TestUpdateMenu(t *testing.T) {
 	_, err = ct.updateMenuIngredient(menus.MenuIngredient{IdMenu: meal.Meal.Menu, IdIngredient: 2, Quantity: menus.QuantityR{}, Plat: menus.P_Entree}, user.Id)
 	tu.AssertNoErr(t, err)
 
+	err = ct.createReceipeFromMeal(CreateReceipeFromMealIn{IdMeal: meal.Meal.Id, IdIngredients: []menus.IdIngredient{2}, Name: "Autre recette", ReplaceInMeal: false}, user.Id)
+	tu.AssertNoErr(t, err)
+
+	err = ct.createReceipeFromMeal(CreateReceipeFromMealIn{IdMeal: meal.Meal.Id, IdIngredients: []menus.IdIngredient{2}, Name: "Autre recette 2", ReplaceInMeal: true}, user.Id)
+	tu.AssertNoErr(t, err)
+
 	oldMenu := meal.Meal.Menu
 	_, err = ct.setMenu(SetMenuIn{IdMeal: meal.Meal.Id, IdMenu: menu.Id}, user.Id)
 	tu.AssertNoErr(t, err)

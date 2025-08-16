@@ -9,6 +9,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+//go:generate /home/benoit/go/src/github.com/benoitkugler/gomacro/cmd/gomacro routes.go typescript/api:../../atable-web/src/logic/api_gen.ts
+
 func setupWebAPI(e *echo.Echo, tvc *users.Controller, sej *sejours.Controller, lib *library.Controller,
 	ord *order.Controller,
 ) {
@@ -48,6 +50,7 @@ func setupWebAPI(e *echo.Echo, tvc *users.Controller, sej *sejours.Controller, l
 	gr.POST("/api/meals/remove", sej.MealsRemoveItem)
 	gr.POST("/api/meals/menus", sej.MealsSetMenu)
 	gr.POST("/api/meals/swap", sej.MealsSwapMenus)
+	gr.POST("/api/meals/receipe-from-meal", sej.MealsCreateReceipeFromMeal)
 
 	gr.POST("/api/meals/cookbook", sej.MealsExportCookbook)
 
