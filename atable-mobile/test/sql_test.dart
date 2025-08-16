@@ -116,7 +116,8 @@ Future main() async {
 
     await db.removeFromStock({
       ing1.id: [
-        Quantite(2, Unite.kg, Origin(DateTime.now(), Horaire.gouter, [], "")),
+        Quantite(
+            2, Unite.kg, OriginMeal(DateTime.now(), Horaire.gouter, [], "")),
       ],
     });
 
@@ -124,10 +125,10 @@ Future main() async {
       IngredientUses(
           ing1,
           [
-            Quantite(
-                2, Unite.kg, Origin(DateTime.now(), Horaire.cinquieme, [], "")),
+            Quantite(2, Unite.kg,
+                OriginMeal(DateTime.now(), Horaire.cinquieme, [], "")),
             Quantite(2.3, Unite.l,
-                Origin(DateTime.now(), Horaire.cinquieme, [], "")),
+                OriginMeal(DateTime.now(), Horaire.cinquieme, [], "")),
           ],
           false),
       IngredientUses(ing2, [], false),
@@ -139,10 +140,10 @@ Future main() async {
       IngredientUses(
           ing1,
           [
-            Quantite(
-                2, Unite.kg, Origin(DateTime.now(), Horaire.cinquieme, [], "")),
+            Quantite(2, Unite.kg,
+                OriginMeal(DateTime.now(), Horaire.cinquieme, [], "")),
             Quantite(2.3, Unite.l,
-                Origin(DateTime.now(), Horaire.cinquieme, [], "")),
+                OriginMeal(DateTime.now(), Horaire.cinquieme, [], "")),
           ],
           false),
       IngredientUses(ing2, [], false),

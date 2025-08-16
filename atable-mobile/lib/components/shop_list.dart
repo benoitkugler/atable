@@ -190,21 +190,40 @@ class _IngredientRowState extends State<_IngredientRow> {
                 widget.onUpdate(widget.ingredient.ingredient.id, value!),
           ),
           children: widget.ingredient.quantites
-              .map((use) => ListTile(
-                    dense: true,
-                    titleAlignment: ListTileTitleAlignment.center,
-                    leading: Text(formatQuantiteU(use.quantite, use.unite)),
-                    title: Text(formatDate(use.origin.mealDate)),
-                    subtitle: Text(horaireLabel(use.origin.mealHoraire)),
-                    trailing: use.origin.receipeName.isEmpty
-                        ? null
-                        : Text(use.origin.receipeName),
-                  ))
+              .map((use) => _originTile(use))
               .toList(),
         ),
       ],
     );
   }
+}
+
+ListTile _originTile(Quantite use) {
+  final Widget? title;
+  final Widget? subtitle;
+  final Widget? trailing;
+  final origin = use.origin;
+  if (origin is OriginMeal) {
+    title = Text(formatDate(origin.mealDate));
+    subtitle = Text(horaireLabel(origin.mealHoraire));
+    trailing = origin.receipeName.isEmpty ? null : Text(origin.receipeName);
+  } else if (use.origin is OriginStock) {
+    title = const Text("En stock");
+    subtitle = null;
+    trailing = null;
+  } else {
+    title = null;
+    subtitle = null;
+    trailing = null;
+  }
+  return ListTile(
+    dense: true,
+    titleAlignment: ListTileTitleAlignment.center,
+    leading: Text(formatQuantiteU(use.quantite, use.unite)),
+    title: title,
+    subtitle: subtitle,
+    trailing: trailing,
+  );
 }
 
 class _ShareQRCode extends StatelessWidget {

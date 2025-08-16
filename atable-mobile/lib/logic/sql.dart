@@ -459,7 +459,7 @@ class MealExt {
     // resolve free ingredients
     for (var ing in menu.ingredients) {
       final quantite = ing.link.quantity.resolveFor(meal.for_);
-      final origin = Origin(meal.date, meal.horaire, meal.groupes, "");
+      final origin = OriginMeal(meal.date, meal.horaire, meal.groupes, "");
       final ingQuant = ResolvedQuantityIngredient(
           ing.ingredient, Quantite(quantite, ing.link.quantity.unite, origin));
       final l = out.putIfAbsent(ing.link.plat, () => []);
@@ -469,8 +469,8 @@ class MealExt {
     for (var receipe in menu.receipes) {
       for (var ing in receipe.ingredients) {
         final quantite = ing.link.quantity.resolveFor(meal.for_);
-        final origin =
-            Origin(meal.date, meal.horaire, meal.groupes, receipe.receipe.name);
+        final origin = OriginMeal(
+            meal.date, meal.horaire, meal.groupes, receipe.receipe.name);
         final ingQuant = ResolvedQuantityIngredient(ing.ingredient,
             Quantite(quantite, ing.link.quantity.unite, origin));
         final l = out.putIfAbsent(receipe.receipe.plat, () => []);

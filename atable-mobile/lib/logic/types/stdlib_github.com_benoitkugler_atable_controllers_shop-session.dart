@@ -53,37 +53,84 @@ Map<String, dynamic> ingredientUsesToJson(IngredientUses item) {
   };
 }
 
-// github.com/benoitkugler/atable/controllers/shop-session.Origin
-class Origin {
+/// github.com/benoitkugler/atable/controllers/shop-session.Origin
+abstract class Origin {}
+
+Origin originFromJson(dynamic json_) {
+  final json = json_ as Map<String, dynamic>;
+  final kind = json['Kind'] as String;
+  final data = json['Data'];
+  switch (kind) {
+    case "OriginMeal":
+      return originMealFromJson(data);
+    case "OriginStock":
+      return originStockFromJson(data);
+    default:
+      throw ("unexpected type");
+  }
+}
+
+Map<String, dynamic> originToJson(Origin item) {
+  if (item is OriginMeal) {
+    return {'Kind': "OriginMeal", 'Data': originMealToJson(item)};
+  } else if (item is OriginStock) {
+    return {'Kind': "OriginStock", 'Data': originStockToJson(item)};
+  } else {
+    throw ("unexpected type");
+  }
+}
+
+// github.com/benoitkugler/atable/controllers/shop-session.OriginMeal
+class OriginMeal implements Origin {
   final Date mealDate;
   final Horaire mealHoraire;
   final List<String> groupes;
   final String receipeName;
 
-  const Origin(this.mealDate, this.mealHoraire, this.groupes, this.receipeName);
+  const OriginMeal(
+      this.mealDate, this.mealHoraire, this.groupes, this.receipeName);
 
   @override
   String toString() {
-    return "Origin($mealDate, $mealHoraire, $groupes, $receipeName)";
+    return "OriginMeal($mealDate, $mealHoraire, $groupes, $receipeName)";
   }
 }
 
-Origin originFromJson(dynamic json_) {
+OriginMeal originMealFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return Origin(
+  return OriginMeal(
       dateTimeFromJson(json['MealDate']),
       horaireFromJson(json['MealHoraire']),
       listStringFromJson(json['Groupes']),
       stringFromJson(json['ReceipeName']));
 }
 
-Map<String, dynamic> originToJson(Origin item) {
+Map<String, dynamic> originMealToJson(OriginMeal item) {
   return {
     "MealDate": dateTimeToJson(item.mealDate),
     "MealHoraire": horaireToJson(item.mealHoraire),
     "Groupes": listStringToJson(item.groupes),
     "ReceipeName": stringToJson(item.receipeName)
   };
+}
+
+// github.com/benoitkugler/atable/controllers/shop-session.OriginStock
+class OriginStock implements Origin {
+  const OriginStock();
+
+  @override
+  String toString() {
+    return "OriginStock()";
+  }
+}
+
+OriginStock originStockFromJson(dynamic json_) {
+  final json = (json_ as Map<String, dynamic>);
+  return OriginStock();
+}
+
+Map<String, dynamic> originStockToJson(OriginStock item) {
+  return {};
 }
 
 // github.com/benoitkugler/atable/controllers/shop-session.Quantite

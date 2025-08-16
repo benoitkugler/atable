@@ -90,7 +90,23 @@ class QuantitiesNorm {
         pieces: pieces - other.pieces, l: l - other.l, kg: kg - other.kg);
   }
 
+  /// [isPositive] returns true if all units are positive or zero.
   bool isPositive() => pieces >= 0 && l >= 0 && kg >= 0;
+
+  QuantitiesNorm clamped() => QuantitiesNorm(
+        pieces: pieces >= 0 ? pieces : 0,
+        l: l >= 0 ? l : 0,
+        kg: kg >= 0 ? kg : 0,
+      );
+
+  QuantitiesNorm negate() => const QuantitiesNorm() - this;
+
+  /// use [OriginStock]
+  List<Quantite> asInStock() => [
+        if (pieces != 0) Quantite(pieces, Unite.piece, const OriginStock()),
+        if (l != 0) Quantite(l, Unite.l, const OriginStock()),
+        if (kg != 0) Quantite(kg, Unite.kg, const OriginStock()),
+      ];
 }
 
 class StockEntry {

@@ -48,11 +48,20 @@ extension SL on ShopList {
         }
       }
     }
-    return uses.entries
-        .where((entry) => !stock.hasEnoughFor(
-            entry.key, QuantitiesNorm.fromList(entry.value)))
+
+    // remove ingredients fully in stock
+    final out = uses.entries
+        .where(
+            (e) => !stock.hasEnoughFor(e.key, QuantitiesNorm.fromList(e.value)))
         .map((e) => IngredientUses(ingredients[e.key]!, uses[e.key]!, false))
         .toList();
+    // update quantities to remove the existing stock :
+    // we do it by adding the existing stock as a negative value
+    for (var e in out) {
+      final existing = stock.get(e.ingredient.id);
+      e.quantites.addAll(existing.negate().asInStock());
+    }
+    return out;
   }
 
   bool get isStarted => any((element) => element.checked);
