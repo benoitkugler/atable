@@ -1,11 +1,12 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:atable/logic/env.dart';
-import 'package:atable/logic/shop.dart';
 import 'package:atable/logic/stock.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_sejours.dart';
-import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_shop-session.dart';
+import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_shop-session.dart'
+    hide listStringFromJson, listStringToJson;
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_sejours.dart';
 import 'package:flutter/widgets.dart';
@@ -75,8 +76,10 @@ const _createSQLStatements = [
   CREATE TABLE meals(
     id INTEGER PRIMARY KEY, 
     idMenu INTEGER NOT NULL,
-    name TEXT NOT NULL,
+    sejour TEXT NOT NULL,
+    groupes TEXT NOT NULL,
     date TEXT NOT NULL,
+    horaire INTEGER NOT NULL,
     for_ INTEGER NOT NULL,
     FOREIGN KEY(idMenu) REFERENCES menus(id)
   );
@@ -291,8 +294,10 @@ extension Mea on MealM {
     return MealM(
       map["id"],
       map["idMenu"],
-      map["name"],
+      map["sejour"],
+      listStringFromJson(jsonDecode(map["groupes"])),
       DateTime.parse(map["date"]),
+      Horaire.values[map["horaire"] as int],
       map["for_"],
     );
   }
@@ -300,8 +305,10 @@ extension Mea on MealM {
   Map<String, dynamic> toSQLMap(bool ignoreID) {
     final out = {
       "idMenu": idMenu,
-      "name": name,
+      "sejour": sejour,
+      "groupes": jsonEncode(listStringToJson(groupes)),
       "date": date.toIso8601String(),
+      "horaire": horaire.index,
       "for_": for_,
     };
     if (!ignoreID) {
@@ -313,12 +320,20 @@ extension Mea on MealM {
   MealM copyWith({
     int? id,
     int? idMenu,
-    String? name,
+    String? sejour,
+    List<String>? groupes,
     DateTime? date,
+    Horaire? horaire,
     int? for_,
   }) {
-    return MealM(id ?? this.id, idMenu ?? this.idMenu, name ?? this.name,
-        date ?? this.date, for_ ?? this.for_);
+    return MealM(
+        id ?? this.id,
+        idMenu ?? this.idMenu,
+        sejour ?? this.sejour,
+        groupes ?? this.groupes,
+        date ?? this.date,
+        horaire ?? this.horaire,
+        for_ ?? this.for_);
   }
 }
 
@@ -444,7 +459,7 @@ class MealExt {
     // resolve free ingredients
     for (var ing in menu.ingredients) {
       final quantite = ing.link.quantity.resolveFor(meal.for_);
-      final origin = Origin(meal.date, meal.name, "");
+      final origin = Origin(meal.date, meal.horaire, meal.groupes, "");
       final ingQuant = ResolvedQuantityIngredient(
           ing.ingredient, Quantite(quantite, ing.link.quantity.unite, origin));
       final l = out.putIfAbsent(ing.link.plat, () => []);
@@ -454,7 +469,8 @@ class MealExt {
     for (var receipe in menu.receipes) {
       for (var ing in receipe.ingredients) {
         final quantite = ing.link.quantity.resolveFor(meal.for_);
-        final origin = Origin(meal.date, meal.name, receipe.receipe.name);
+        final origin =
+            Origin(meal.date, meal.horaire, meal.groupes, receipe.receipe.name);
         final ingQuant = ResolvedQuantityIngredient(ing.ingredient,
             Quantite(quantite, ing.link.quantity.unite, origin));
         final l = out.putIfAbsent(receipe.receipe.plat, () => []);
@@ -503,7 +519,7 @@ class DBApi {
       final fi = File(dbPath);
       if (await fi.exists()) {
         await fi.delete();
-        print("DB deleted");
+        log("DB deleted");
       }
     }
 
@@ -934,7 +950,8 @@ Future<void> _insertDevMeals(Database db) async {
   for (var i = 0; i < 40; i++) {
     batch.insert(
         "meals",
-        MealM(0, idMenu, "test", startTime.add(Duration(minutes: i)), 24)
+        MealM(0, idMenu, "test", ["Groupe 1", "Groupe 2"],
+                startTime.add(Duration(minutes: i)), Horaire.diner, 24)
             .toSQLMap(true));
   }
   await batch.commit();

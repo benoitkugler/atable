@@ -4,6 +4,7 @@ import 'package:atable/logic/env.dart';
 import 'package:atable/logic/shop.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:atable/logic/stock.dart';
+import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_sejours.dart';
 import 'package:atable/logic/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -128,7 +129,7 @@ class _ShopSection extends StatelessWidget {
   final ShopSection section;
   final void Function(int, bool) onUpdate;
 
-  const _ShopSection(this.section, this.onUpdate, {super.key});
+  const _ShopSection(this.section, this.onUpdate);
 
   @override
   Widget build(BuildContext context) {
@@ -161,7 +162,7 @@ class _IngredientRow extends StatefulWidget {
   final IngredientUses ingredient;
   final void Function(int, bool) onUpdate;
 
-  const _IngredientRow(this.ingredient, this.onUpdate, {super.key});
+  const _IngredientRow(this.ingredient, this.onUpdate);
 
   @override
   State<_IngredientRow> createState() => _IngredientRowState();
@@ -194,7 +195,7 @@ class _IngredientRowState extends State<_IngredientRow> {
                     titleAlignment: ListTileTitleAlignment.center,
                     leading: Text(formatQuantiteU(use.quantite, use.unite)),
                     title: Text(formatDate(use.origin.mealDate)),
-                    subtitle: Text(use.origin.mealName),
+                    subtitle: Text(horaireLabel(use.origin.mealHoraire)),
                     trailing: use.origin.receipeName.isEmpty
                         ? null
                         : Text(use.origin.receipeName),
@@ -209,7 +210,7 @@ class _IngredientRowState extends State<_IngredientRow> {
 class _ShareQRCode extends StatelessWidget {
   final String url;
 
-  const _ShareQRCode(this.url, {super.key});
+  const _ShareQRCode(this.url);
 
   @override
   Widget build(BuildContext context) {
@@ -231,7 +232,7 @@ class _ShareQRCode extends StatelessWidget {
 class _ShopListImpl extends StatefulWidget {
   final ShopController controller;
 
-  const _ShopListImpl(this.controller, {super.key});
+  const _ShopListImpl(this.controller);
 
   @override
   State<_ShopListImpl> createState() => _ShopListImplState();

@@ -1,5 +1,4 @@
 import 'package:atable/logic/sql.dart';
-import 'package:atable/logic/stock.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
 import 'package:atable/logic/utils.dart';
 import 'package:flutter/material.dart';
@@ -183,7 +182,7 @@ class QuantiteField extends StatelessWidget {
 class _QuantityEditor extends StatefulWidget {
   final QuantityR quantity;
 
-  const _QuantityEditor(this.quantity, {super.key});
+  const _QuantityEditor(this.quantity);
 
   @override
   State<_QuantityEditor> createState() => __QuantityEditorState();

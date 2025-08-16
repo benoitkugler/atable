@@ -8,15 +8,18 @@ import 'stdlib_github.com_benoitkugler_atable_sql_sejours.dart';
 class MealM {
   final IdMeal id;
   final IdMenu idMenu;
-  final String name;
+  final String sejour;
+  final List<String> groupes;
   final Date date;
+  final Horaire horaire;
   final int for_;
 
-  const MealM(this.id, this.idMenu, this.name, this.date, this.for_);
+  const MealM(this.id, this.idMenu, this.sejour, this.groupes, this.date,
+      this.horaire, this.for_);
 
   @override
   String toString() {
-    return "MealM($id, $idMenu, $name, $date, $for_)";
+    return "MealM($id, $idMenu, $sejour, $groupes, $date, $horaire, $for_)";
   }
 }
 
@@ -25,8 +28,10 @@ MealM mealMFromJson(dynamic json_) {
   return MealM(
       intFromJson(json['Id']),
       intFromJson(json['IdMenu']),
-      stringFromJson(json['Name']),
+      stringFromJson(json['Sejour']),
+      listStringFromJson(json['Groupes']),
       dateTimeFromJson(json['Date']),
+      horaireFromJson(json['Horaire']),
       intFromJson(json['For_']));
 }
 
@@ -34,8 +39,10 @@ Map<String, dynamic> mealMToJson(MealM item) {
   return {
     "Id": intToJson(item.id),
     "IdMenu": intToJson(item.idMenu),
-    "Name": stringToJson(item.name),
+    "Sejour": stringToJson(item.sejour),
+    "Groupes": listStringToJson(item.groupes),
     "Date": dateTimeToJson(item.date),
+    "Horaire": horaireToJson(item.horaire),
     "For_": intToJson(item.for_)
   };
 }
@@ -125,4 +132,15 @@ List<Receipe> listReceipeFromJson(dynamic json) {
 
 List<dynamic> listReceipeToJson(List<Receipe> item) {
   return item.map(receipeToJson).toList();
+}
+
+List<String> listStringFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(stringFromJson).toList();
+}
+
+List<dynamic> listStringToJson(List<String> item) {
+  return item.map(stringToJson).toList();
 }

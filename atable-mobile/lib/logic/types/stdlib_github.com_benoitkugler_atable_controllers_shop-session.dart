@@ -56,27 +56,32 @@ Map<String, dynamic> ingredientUsesToJson(IngredientUses item) {
 // github.com/benoitkugler/atable/controllers/shop-session.Origin
 class Origin {
   final Date mealDate;
-  final String mealName;
+  final Horaire mealHoraire;
+  final List<String> groupes;
   final String receipeName;
 
-  const Origin(this.mealDate, this.mealName, this.receipeName);
+  const Origin(this.mealDate, this.mealHoraire, this.groupes, this.receipeName);
 
   @override
   String toString() {
-    return "Origin($mealDate, $mealName, $receipeName)";
+    return "Origin($mealDate, $mealHoraire, $groupes, $receipeName)";
   }
 }
 
 Origin originFromJson(dynamic json_) {
   final json = (json_ as Map<String, dynamic>);
-  return Origin(dateTimeFromJson(json['MealDate']),
-      stringFromJson(json['MealName']), stringFromJson(json['ReceipeName']));
+  return Origin(
+      dateTimeFromJson(json['MealDate']),
+      horaireFromJson(json['MealHoraire']),
+      listStringFromJson(json['Groupes']),
+      stringFromJson(json['ReceipeName']));
 }
 
 Map<String, dynamic> originToJson(Origin item) {
   return {
     "MealDate": dateTimeToJson(item.mealDate),
-    "MealName": stringToJson(item.mealName),
+    "MealHoraire": horaireToJson(item.mealHoraire),
+    "Groupes": listStringToJson(item.groupes),
     "ReceipeName": stringToJson(item.receipeName)
   };
 }
@@ -185,4 +190,15 @@ List<Quantite> listQuantiteFromJson(dynamic json) {
 
 List<dynamic> listQuantiteToJson(List<Quantite> item) {
   return item.map(quantiteToJson).toList();
+}
+
+List<String> listStringFromJson(dynamic json) {
+  if (json == null) {
+    return [];
+  }
+  return (json as List<dynamic>).map(stringFromJson).toList();
+}
+
+List<dynamic> listStringToJson(List<String> item) {
+  return item.map(stringToJson).toList();
 }

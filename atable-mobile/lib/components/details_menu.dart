@@ -158,7 +158,9 @@ class _DetailsMenuState extends State<DetailsMenu> {
   void _updateMenuIng(MenuIngredientExt ing, QuantityR newQuantity) async {
     if (ing.link.quantity.val == newQuantity.val &&
         ing.link.quantity.unite == newQuantity.unite &&
-        ing.link.quantity.for_ == newQuantity.for_) return;
+        ing.link.quantity.for_ == newQuantity.for_) {
+      return;
+    }
 
     final newLink = ing.link.copyWith(quantity: newQuantity);
     await widget.db.updateMenuIngredient(newLink);
@@ -180,7 +182,9 @@ class _DetailsMenuState extends State<DetailsMenu> {
       ReceipeIngredientExt toChange, QuantityR newQuantity) async {
     if (toChange.link.quantity.val == newQuantity.val &&
         toChange.link.quantity.unite == newQuantity.unite &&
-        toChange.link.quantity.for_ == newQuantity.for_) return;
+        toChange.link.quantity.for_ == newQuantity.for_) {
+      return;
+    }
 
     final newLink = toChange.link.copyWith(quantity: newQuantity);
     await widget.db.updateReceipeIngredient(newLink);
@@ -237,13 +241,12 @@ class _PlatCard extends StatelessWidget {
       this.swapCategorie,
       this.updateMenuIng,
       this.updateReceipeIng,
-      this.showIngredient,
-      {super.key});
+      this.showIngredient);
 
   @override
   Widget build(BuildContext context) {
     return DragTarget<MenuIngredientExt>(
-      onAccept: (data) => swapCategorie(data, plat),
+      onAcceptWithDetails: (details) => swapCategorie(details.data, plat),
       builder: (context, candidateData, rejectedData) => Card(
         color: plat.color,
         elevation: candidateData.isEmpty ? null : 10,
@@ -302,8 +305,7 @@ class _RecetteCard extends StatefulWidget {
   final void Function(Ingredient) showIngredient;
 
   const _RecetteCard(
-      this.receipe, this.showFor, this.updateReceipeIng, this.showIngredient,
-      {super.key});
+      this.receipe, this.showFor, this.updateReceipeIng, this.showIngredient);
 
   @override
   State<_RecetteCard> createState() => _RecetteCardState();

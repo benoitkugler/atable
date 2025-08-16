@@ -8,9 +8,13 @@ import (
 type MealM struct {
 	Id     sej.IdMeal
 	IdMenu men.IdMenu
-	Name   string
-	Date   sej.Date
-	For    int `json:"For_"`
+	Sejour string
+	// Groupes is non empty when it is a strict subset
+	// of the Sejour groups
+	Groupes []string
+	Date    sej.Date
+	Horaire sej.Horaire
+	For     int `json:"For_"`
 }
 
 // we avoid maps since json store keys as String,

@@ -1,10 +1,10 @@
 import 'package:atable/logic/env.dart';
-import 'package:atable/logic/shop.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:atable/logic/stock.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_sejours.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_shop-session.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
+import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_sejours.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -32,8 +32,10 @@ Future main() async {
     // nouveau menu
     final menu1 = await db.db.insert(
         "menus", Menu(-1, 0, false, false, DateTime.now()).toSQLMap(true));
-    final meal1 = await db.db
-        .insert("meals", MealM(0, menu1, "", DateTime.now(), 7).toSQLMap(true));
+    final meal1 = await db.db.insert(
+        "meals",
+        MealM(0, menu1, "", ["g1", "g2"], DateTime.now(), Horaire.gouter, 7)
+            .toSQLMap(true));
 
     await db.insertMenuIngredient(MenuIngredient(
         menu1, ing1.id, const QuantityR(0.1245, Unite.l, 8), PlatKind.dessert));
@@ -55,7 +57,9 @@ Future main() async {
     final menu2 = await db.db.insert(
         "menus", Menu(0, 0, false, false, DateTime.now()).toSQLMap(true));
     await db.db.insert(
-        "meals", MealM(0, menu2, "", DateTime.now(), 50).toSQLMap(true));
+        "meals",
+        MealM(0, menu2, "", [], DateTime.now(), Horaire.gouter, 50)
+            .toSQLMap(true));
 
     await db.close();
   });
@@ -112,7 +116,7 @@ Future main() async {
 
     await db.removeFromStock({
       ing1.id: [
-        Quantite(2, Unite.kg, Origin(DateTime.now(), "", "")),
+        Quantite(2, Unite.kg, Origin(DateTime.now(), Horaire.gouter, [], "")),
       ],
     });
 
@@ -120,8 +124,10 @@ Future main() async {
       IngredientUses(
           ing1,
           [
-            Quantite(2, Unite.kg, Origin(DateTime.now(), "", "")),
-            Quantite(2.3, Unite.l, Origin(DateTime.now(), "", "")),
+            Quantite(
+                2, Unite.kg, Origin(DateTime.now(), Horaire.cinquieme, [], "")),
+            Quantite(2.3, Unite.l,
+                Origin(DateTime.now(), Horaire.cinquieme, [], "")),
           ],
           false),
       IngredientUses(ing2, [], false),
@@ -133,8 +139,10 @@ Future main() async {
       IngredientUses(
           ing1,
           [
-            Quantite(2, Unite.kg, Origin(DateTime.now(), "", "")),
-            Quantite(2.3, Unite.l, Origin(DateTime.now(), "", "")),
+            Quantite(
+                2, Unite.kg, Origin(DateTime.now(), Horaire.cinquieme, [], "")),
+            Quantite(2.3, Unite.l,
+                Origin(DateTime.now(), Horaire.cinquieme, [], "")),
           ],
           false),
       IngredientUses(ing2, [], false),

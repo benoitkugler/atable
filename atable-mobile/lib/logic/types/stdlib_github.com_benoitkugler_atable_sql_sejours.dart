@@ -5,5 +5,37 @@ import 'predefined.dart';
 // github.com/benoitkugler/atable/sql/sejours.Date
 typedef Date = DateTime;
 
+// github.com/benoitkugler/atable/sql/sejours.Horaire
+enum Horaire { petitDejeuner, midi, gouter, diner, cinquieme }
+
+extension _HoraireExt on Horaire {
+  static Horaire fromValue(int i) {
+    return Horaire.values[i];
+  }
+
+  int toValue() {
+    return index;
+  }
+}
+
+String horaireLabel(Horaire v) {
+  switch (v) {
+    case Horaire.petitDejeuner:
+      return "Petit déjeuner";
+    case Horaire.midi:
+      return "Midi";
+    case Horaire.gouter:
+      return "Goûter";
+    case Horaire.diner:
+      return "Dîner";
+    case Horaire.cinquieme:
+      return "Cinquième";
+  }
+}
+
+Horaire horaireFromJson(dynamic json) => _HoraireExt.fromValue(json as int);
+
+dynamic horaireToJson(Horaire item) => item.toValue();
+
 // github.com/benoitkugler/atable/sql/sejours.IdMeal
 typedef IdMeal = int;

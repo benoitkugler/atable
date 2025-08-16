@@ -6,12 +6,12 @@ import 'package:atable/components/shared.dart';
 import 'package:atable/components/shop_list.dart';
 import 'package:atable/components/stock.dart';
 import 'package:atable/logic/env.dart';
-import 'package:atable/logic/shop.dart';
 import 'package:atable/logic/sql.dart';
 import 'package:atable/logic/stock.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_sejours.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_controllers_shop-session.dart';
 import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_menus.dart';
+import 'package:atable/logic/types/stdlib_github.com_benoitkugler_atable_sql_sejours.dart';
 import 'package:atable/logic/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -256,8 +256,7 @@ class _MealCard extends StatelessWidget {
   final void Function() onLongPress;
 
   const _MealCard(
-      this.stock, this.meal, this.isSelected, this.onTap, this.onLongPress,
-      {super.key});
+      this.stock, this.meal, this.isSelected, this.onTap, this.onLongPress);
 
   @override
   Widget build(BuildContext context) {
@@ -289,7 +288,7 @@ class _MealCard extends StatelessWidget {
                 ),
                 const Text(" - "),
                 Text(
-                  formatHeure(meal.meal.date),
+                  horaireLabel(meal.meal.horaire),
                   style: style,
                 ),
                 const Spacer(),
@@ -317,7 +316,7 @@ class _MealCard extends StatelessWidget {
 
 class _MenuSummary extends StatelessWidget {
   final MenuExt menu;
-  const _MenuSummary(this.menu, {super.key});
+  const _MenuSummary(this.menu);
 
   @override
   Widget build(BuildContext context) {
@@ -337,12 +336,12 @@ class _MenuSummary extends StatelessWidget {
     plats.sort((a, b) => -(a.key.index - b.key.index));
 
     return Padding(
-      padding: const EdgeInsets.all(4.0),
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: plats
               .map((item) => Card(
-                    color: item.key.color.withOpacity(0.8),
+                    color: item.key.color.withValues(alpha: 0.8),
                     child: Padding(
                       padding: const EdgeInsets.all(4.0),
                       child: Column(
@@ -358,13 +357,13 @@ class _MenuSummary extends StatelessWidget {
 class _PlatCard extends StatelessWidget {
   final PlatKind plat;
   final List<ResolvedQuantityIngredient> ingredients;
-  const _PlatCard(this.plat, this.ingredients, {super.key});
+  const _PlatCard(this.plat, this.ingredients);
 
   @override
   Widget build(BuildContext context) {
     return Card(
       elevation: 0.5,
-      color: plat.color.withOpacity(0.8),
+      color: plat.color.withValues(alpha: 0.8),
       child: Padding(
         padding: const EdgeInsets.all(4.0),
         child: Column(
@@ -377,7 +376,7 @@ class _PlatCard extends StatelessWidget {
 
 class _IngQuantRow extends StatelessWidget {
   final ResolvedQuantityIngredient ing;
-  const _IngQuantRow(this.ing, {super.key});
+  const _IngQuantRow(this.ing);
 
   @override
   Widget build(BuildContext context) {
@@ -397,7 +396,7 @@ class _MealPannel extends StatefulWidget {
   final MealExt meal;
   final void Function(MealM meal) onEdit;
 
-  const _MealPannel(this.db, this.meal, this.onEdit, {super.key});
+  const _MealPannel(this.db, this.meal, this.onEdit);
 
   @override
   State<_MealPannel> createState() => __MealPannelState();
@@ -432,6 +431,8 @@ class __MealPannelState extends State<_MealPannel> {
 
   @override
   Widget build(BuildContext context) {
+    final denseStyle = ElevatedButton.styleFrom(
+        visualDensity: const VisualDensity(vertical: -2));
     final resolvedQuantities = meal.requiredQuantities();
     final missing = stock.missingFor(resolvedQuantities);
 
@@ -463,29 +464,35 @@ class __MealPannelState extends State<_MealPannel> {
         child: Column(
           children: [
             Row(children: [
-              TextButton(
+              ElevatedButton(
+                style: denseStyle,
                 onPressed: _showDateEditor,
                 child: Text(
                   formatDate(meal.meal.date),
                   style: const TextStyle(fontSize: 16),
                 ),
               ),
-              const Text(" -  "),
-              PopupMenuButton<Horaire>(
-                itemBuilder: (context) => Horaire.values
-                    .map((e) => PopupMenuItem(value: e, child: Text(e.label)))
+              const SizedBox(width: 4),
+              MenuAnchor(
+                builder: (context, controller, child) => ElevatedButton(
+                    style: denseStyle,
+                    onPressed: () => controller.isOpen
+                        ? controller.close()
+                        : controller.open(),
+                    child: Text(
+                      horaireLabel(meal.meal.horaire),
+                      style: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    )),
+                menuChildren: Horaire.values
+                    .map((e) => MenuItemButton(
+                        onPressed: () =>
+                            _onEditMeal(meal.meal.copyWith(horaire: e)),
+                        child: Text(horaireLabel(e))))
                     .toList(),
-                initialValue: HoraireE.fromDateTime(meal.meal.date),
-                onSelected: (m) => _onEditMeal(
-                    meal.meal.copyWith(date: m.toDateTime(meal.meal.date))),
-                child: Text(
-                  formatHeure(meal.meal.date),
-                  style: TextStyle(
-                    color: Theme.of(context).primaryColor,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
               ),
               const Spacer(),
               isEditingNbPersonnes
@@ -508,9 +515,8 @@ class __MealPannelState extends State<_MealPannel> {
                             signed: false, decimal: false),
                         onSubmitted: _onEditNbDone,
                       ))
-                  : TextButton(
-                      style: TextButton.styleFrom(
-                          visualDensity: const VisualDensity(vertical: -3)),
+                  : ElevatedButton(
+                      style: denseStyle,
                       onPressed: () =>
                           setState(() => isEditingNbPersonnes = true),
                       child: Text("Pour ${meal.meal.for_}")),

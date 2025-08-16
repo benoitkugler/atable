@@ -1,9 +1,7 @@
 package sejours
 
 import (
-	"fmt"
 	"sort"
-	"strings"
 
 	lib "github.com/benoitkugler/atable/controllers/library"
 	"github.com/benoitkugler/atable/pass"
@@ -43,7 +41,7 @@ func (ct *Controller) exportToClient(idSejour sej.IdSejour) (out TablesM, _ erro
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
-	groups, err := sej.SelectGroupsBySejours(ct.db, sejour.Id)
+	sejourGroups, err := sej.SelectGroupsBySejours(ct.db, sejour.Id)
 	if err != nil {
 		return out, utils.SQLError(err)
 	}
@@ -81,23 +79,15 @@ func (ct *Controller) exportToClient(idSejour sej.IdSejour) (out TablesM, _ erro
 	out.Meals = make([]MealM, 0, len(meals))
 	for _, meal := range meals {
 		// compute the number of people from the groups and bonus
-		forNb := ResolveSize(mealsToGroups[meal.Id], groups, meal.AdditionalPeople)
+		forNb := ResolveSize(mealsToGroups[meal.Id], sejourGroups, meal.AdditionalPeople)
 
-		// build the name from the sejour and groups
 		var mealGroups []string
-		for _, link := range mealsToGroups[meal.Id] {
-			gr := groups[link.IdGroup]
-			mealGroups = append(mealGroups, gr.Name)
-		}
-		sort.Strings(mealGroups)
-
-		name := sejour.Name
-		if len(mealGroups) == 0 {
-			// do not include group names
-		} else if len(mealGroups) == len(groups) && len(groups) > 1 {
-			name += " (Tous)"
-		} else {
-			name += fmt.Sprintf(" (%s)", strings.Join(mealGroups, ", "))
+		if links := mealsToGroups[meal.Id]; len(links) != len(sejourGroups) {
+			for _, link := range mealsToGroups[meal.Id] {
+				gr := sejourGroups[link.IdGroup]
+				mealGroups = append(mealGroups, gr.Name)
+			}
+			sort.Strings(mealGroups)
 		}
 
 		// adjust the date, also encoding the horaire
@@ -105,11 +95,13 @@ func (ct *Controller) exportToClient(idSejour sej.IdSejour) (out TablesM, _ erro
 		date = meal.Horaire.ApplyTo(date)
 
 		out.Meals = append(out.Meals, MealM{
-			Id:     meal.Id,
-			IdMenu: meal.Menu,
-			Name:   name,
-			Date:   sej.Date(date),
-			For:    forNb,
+			meal.Id,
+			meal.Menu,
+			sejour.Name,
+			mealGroups,
+			sej.Date(date),
+			meal.Horaire,
+			forNb,
 		})
 	}
 

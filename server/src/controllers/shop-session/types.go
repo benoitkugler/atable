@@ -35,6 +35,7 @@ type Quantite struct {
 
 type Origin struct {
 	MealDate    sejours.Date
-	MealName    string
+	MealHoraire sejours.Horaire
+	Groupes     []string
 	ReceipeName string // empty for free ingredients
 }
