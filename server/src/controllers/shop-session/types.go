@@ -5,6 +5,8 @@ import (
 	"github.com/benoitkugler/atable/sql/sejours"
 )
 
+//go:generate /home/benoit/go/src/github.com/benoitkugler/gomacro/cmd/gomacro types.go go/unions:types_gen.go
+
 type Session struct {
 	Id   string
 	List ShopList
@@ -33,9 +35,18 @@ type Quantite struct {
 	Origin   Origin
 }
 
-type Origin struct {
+type Origin interface {
+	isOrigin()
+}
+
+type OriginMeal struct {
 	MealDate    sejours.Date
 	MealHoraire sejours.Horaire
 	Groupes     []string
 	ReceipeName string // empty for free ingredients
 }
+
+type OriginStock struct{}
+
+func (OriginMeal) isOrigin()  {}
+func (OriginStock) isOrigin() {}
