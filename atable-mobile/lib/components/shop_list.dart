@@ -178,7 +178,7 @@ class _IngredientRowState extends State<_IngredientRow> {
         ExpansionTile(
           leading: Padding(
             padding: const EdgeInsets.only(top: 4.0),
-            child: Text(widget.ingredient.compile().toString()),
+            child: Text(widget.ingredient.compile().clamped().toString()),
           ),
           title: Text(widget.ingredient.ingredient.name),
           onExpansionChanged: (b) => setState(() => showUses = b),

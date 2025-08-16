@@ -890,7 +890,7 @@ class DBApi {
         current.map((entry) => MapEntry(entry.idIngredient, entry)));
     final batch = db.batch();
     for (var entry in list) {
-      final newQuantites = QuantitiesNorm.fromList(entry.quantites);
+      final newQuantites = QuantitiesNorm.fromList(entry.quantites).clamped();
       final existing = byIngredient[entry.ingredient.id];
       if (existing == null) {
         // insert
