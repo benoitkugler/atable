@@ -176,7 +176,8 @@
       <v-card title="Créer une recette">
         <v-card-text>
           <v-list
-            v-model:selected="createReceipeArgs.IdIngredients"
+            :selected="createReceipeArgs.IdIngredients || []"
+            @update:selected="(s: IdIngredient[]) => (createReceipeArgs.IdIngredients = s)"
             select-strategy="leaf"
           >
             <v-list-item
@@ -257,6 +258,7 @@ import GroupChip from "./GroupChip.vue";
 import AddPeopleChip from "./AddPeopleChip.vue";
 import { ref } from "vue";
 import { computed } from "vue";
+import { create } from "domain";
 
 const props = defineProps<{
   meal: MealExt;
